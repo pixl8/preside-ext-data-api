@@ -81,6 +81,25 @@ component {
 		return result;
 	}
 
+	public any function getSingleRecord( required string entity, required string recordId ) {
+		var configService  = _getConfigService();
+		var dao            = $getPresideObject( configService.getEntityObject( arguments.entity ) );
+		var selectDataArgs = {
+			  id                 = arguments.recordId
+			, selectFields       = configService.getSelectFields( arguments.entity )
+			, fromVersionTable   = false
+			, allowDraftVersions = false
+		};
+
+		var records = dao.selectData( argumentCollection=selectDataArgs );
+
+		for( var r in records ) {
+			return r;
+		}
+
+		return {};
+	}
+
 	public any function batchCreateRecords() {
 		return { todo=true };
 	}
@@ -93,9 +112,6 @@ component {
 		return { todo=true };
 	}
 
-	public any function getSingleRecord() {
-		return { todo=true };
-	}
 
 	public any function updateSingleRecord() {
 		return { todo=true };
