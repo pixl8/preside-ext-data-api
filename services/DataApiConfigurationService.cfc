@@ -35,6 +35,26 @@ component {
 		} );
 	}
 
+	public string function getEntityObject( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getEntityObject" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities();
+			return entities[ args.entity ].objectName ?: "";
+		} );
+	}
+
+	public array function getSelectFields( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getSelectFields" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities();
+			return entities[ args.entity ].selectFields ?: [];
+		} );
+	}
+
 	public struct function getEntities() {
 		var cacheKey = "getEntities";
 
@@ -43,12 +63,18 @@ component {
 			var objects  = poService.listObjects();
 			var entities = {};
 
-			for( var object in objects ) {
-				var isEnabled = poService.getObjectAttribute( object, "dataApiEnabled" );
+			for( var objectName in objects ) {
+				var isEnabled = poService.getObjectAttribute( objectName, "dataApiEnabled" );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
-					var entityName     = poService.getObjectAttribute( object, "dataApiEntityName", object );
-					var supportedVerbs = poService.getObjectAttribute( object, "dataApiVerbs", "" );
-					entities[ entityName ] = { verbs = ListToArray( LCase( supportedVerbs ) ) };
+					var entityName     = poService.getObjectAttribute( objectName, "dataApiEntityName", objectName );
+					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
+					var selectFields   = poService.getObjectAttribute( objectName, "dataApiFields", "" );
+
+					entities[ entityName ] = {
+						  objectName   = objectName
+						, verbs        = ListToArray( LCase( supportedVerbs ) )
+						, selectFields = ListToArray( LCase( selectFields ) )
+					};
 				}
 			}
 

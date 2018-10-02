@@ -39,8 +39,46 @@ component {
 		}
 	}
 
-	public any function getPaginatedRecords() {
-		return { todo=true };
+	public any function getPaginatedRecords(
+		  required string  entity
+		, required numeric page
+		, required numeric pageSize
+	) {
+		var configService  = _getConfigService();
+		var dao            = $getPresideObject( configService.getEntityObject( arguments.entity ) );
+		var selectDataArgs = {
+			  maxRows            = pageSize
+			, startRow           = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
+			, selectFields       = configService.getSelectFields( arguments.entity )
+			, fromVersionTable   = false
+			, allowDraftVersions = false
+		};
+
+		if ( selectDataArgs.maxRows < 1 ) {
+			selectDataArgs.maxRows = 100;
+		}
+		if ( selectDataArgs.startRow < 1 ) {
+			selectDataArgs.startRow = 1;
+		}
+
+		var result  = { records=[] };
+		var records = dao.selectData( argumentCollection=selectDataArgs );
+
+		for( var r in records ) {
+			result.records.append( r );
+		}
+
+		selectDataArgs.delete( "maxRows" );
+		selectDataArgs.delete( "startRow" );
+		selectDataArgs.recordCountOnly = true;
+
+		result.totalCount = dao.selectData( argumentCollection=selectDataArgs );
+		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
+		result.prevPage   = arguments.page -1;
+		result.nextPage   = arguments.page >= result.totalPages ? 0 : arguments.page+1;
+
+
+		return result;
 	}
 
 	public any function batchCreateRecords() {

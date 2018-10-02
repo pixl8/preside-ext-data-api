@@ -11,14 +11,33 @@ component {
 		,          numeric page     = 1
 		,          numeric pageSize = 100
 	) {
-		var records = dataApiService.getPaginatedRecords(
+		var result = dataApiService.getPaginatedRecords(
 			  entity   = arguments.entity
 			, page     = arguments.page
 			, pageSize = arguments.pageSize
 			// TODO, extra dynamic args based on the object and available filters
 		);
 
-		restResponse.setData( records );
+		restResponse.setData( result.records );
+		restResponse.setHeader( "X-Total-Records", result.totalCount );
+		restResponse.setHeader( "X-Total-Pages", result.totalPages );
+
+		var linkHeader      = "";
+		var linkHeaderDelim = "";
+
+		if ( result.nextPage ) {
+			var nextLink = event.buildLink( linkto="api.data.v1.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
+			linkHeader &= "<#nextLink#>; rel=""next""";
+			linkHeaderDelim = ", ";
+		}
+		if ( result.prevPage ) {
+			var prevLink = event.buildLink( linkto="api.data.v1.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.prevPage#" );
+			linkHeader &= linkHeaderDelim & "<#prevLink#>; rel=""prev""";
+		}
+
+		if ( Len( linkHeader ) ) {
+			restResponse.setHeader( "Link", linkHeader );
+		}
 	}
 
 	private void function post( required string entity ) {
