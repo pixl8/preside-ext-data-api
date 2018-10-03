@@ -151,6 +151,46 @@ component {
 		return dao.deleteData( filter=filter );
 	}
 
+	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
+		var ruleset = _getConfigService().getValidationRulesetForEntity( arguments.entity );
+
+		if ( IsArray( arguments.data ) ) {
+			var result = { validated=true, validationResults=[] };
+			for( var record in arguments.data ) {
+				var validation = $getValidationEngine().validate(
+					  ruleset       = ruleset
+					, data          = record
+					, ignoreMissing = arguments.ignoreMissing
+				);
+
+				if ( validation.validated() ) {
+					result.validationResults.append({
+						  record        = record
+						, valid         = true
+						, errorMessages = {}
+					});
+
+				} else {
+					result.validationResults.append({
+						  record        = record
+						, valid         = false
+						, errorMessages = _translateValidationErrors( validation )
+					});
+
+					result.validated = false;
+				}
+			}
+
+			return result;
+		}
+
+		return _translateValidationErrors( $getValidationEngine().validate(
+			  ruleset       = ruleset
+			, data          = arguments.data
+			, ignoreMissing = arguments.ignoreMissing
+		) );
+	}
+
 
 // PRIVATE HELPERS
 	private any function _selectData( required string entity, required struct args, array fields=[] ) {
@@ -243,6 +283,20 @@ component {
 		}
 
 		return prepped;
+	}
+
+	private struct function _translateValidationErrors( required any validationResult ) {
+		var messages = validationResult.getMessages();
+
+		for( var fieldName in messages ) {
+			messages[ fieldName ] = $translateResource(
+				  uri          = messages[ fieldName ].message ?: ""
+				, defaultValue = messages[ fieldName ].message ?: ""
+				, data         = messages[ fieldName ].params  ?: []
+			);
+		}
+
+		return messages;
 	}
 
 // GETTERS AND SETTERS

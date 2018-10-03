@@ -42,7 +42,7 @@ component {
 	}
 
 	private void function post( required string entity ) {
-		var body = event.getHTTPContent();
+		var body = event.getHttpContent();
 
 		try {
 			body = DeserializeJson( body );
@@ -56,6 +56,31 @@ component {
 			return;
 		}
 
+		var validationResult = dataApiService.validateUpsertData(
+			  entity        = entity
+			, data          = body
+			, ignoreMissing = true
+		);
+		if ( IsArray( body ) ) {
+			if ( !validationResult.validated ) {
+				restResponse.setError(
+					  errorCode      = 400
+					, title          = "Bad request"
+					, message        = "One or more fields contained validation errors. See records key for detailed validation error messages."
+					, additionalInfo = { records=validationResult.validationResults }
+				);
+				return;
+			}
+		} else if ( validationResult.count() ) {
+			restResponse.setError(
+				  errorCode      = 400
+				, title          = "Bad request"
+				, message        = "One or more fields contained validation errors. See messages for detailed validation error messages."
+				, additionalInfo = { messages=validationResult }
+			);
+			return;
+		}
+
 		var created = dataApiService.createRecords(
 			  entity  = entity
 			, records = IsArray( body ) ? body : [ body ]
@@ -65,7 +90,7 @@ component {
 	}
 
 	private void function put( required string entity ) {
-		var body = event.getHTTPContent();
+		var body = event.getHttpContent();
 
 		try {
 			body = DeserializeJson( body );
@@ -75,6 +100,32 @@ component {
 				  errorCode = 400
 				, title     = "Bad request"
 				, message   = "Could not parse JSON body.."
+			);
+			return;
+		}
+
+		if ( !IsArray( body ) ) {
+			restResponse.setError(
+				  errorCode      = 400
+				, title          = "Bad request"
+				, message        = "Request body did not contain an array of objects."
+				, detail         = event.getHttpContent()
+			);
+			return;
+		}
+
+		var validationResult = dataApiService.validateUpsertData(
+			  entity        = entity
+			, data          = body
+			, ignoreMissing = true
+		);
+
+		if ( !validationResult.validated ) {
+			restResponse.setError(
+				  errorCode      = 400
+				, title          = "Bad request"
+				, message        = "One or more fields contained validation errors. See records key for detailed validation error messages."
+				, additionalInfo = { records=validationResult.validationResults }
 			);
 			return;
 		}
@@ -106,7 +157,8 @@ component {
 			restResponse.setError(
 				  errorCode = 400
 				, title     = "Bad request"
-				, message   = "Batch delete expects an array of string IDs in the JSON Body. Received: #event.getHttpContent()#."
+				, message   = "Batch delete expects an array of string IDs in the JSON Body."
+				, detail    = event.getHttpContent()
 			);
 			return;
 		}
@@ -116,7 +168,8 @@ component {
 				restResponse.setError(
 					  errorCode = 400
 					, title     = "Bad request"
-					, message   = "Batch delete expects an array of string IDs in the JSON Body. Received: #event.getHttpContent()#."
+					, message   = "Batch delete expects an array of string IDs in the JSON Body."
+					, detail    = event.getHttpContent()
 				);
 				return;
 			}

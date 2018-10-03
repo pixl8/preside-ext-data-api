@@ -5,8 +5,14 @@
 component {
 
 // CONSTRUCTOR
-	public any function init() {
+	/**
+	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
+	 *
+	 */
+	public any function init( required any presideFieldRuleGenerator ) {
 		_localCache = {};
+
+		_setPresideFieldRuleGenerator( arguments.presideFieldRuleGenerator );
 
 		return this;
 	}
@@ -136,10 +142,45 @@ component {
 					if ( !entities[ entityName ].upsertFields.len() ) {
 						entities[ entityName ].upsertFields = entities[ entityName ].selectFields;
 					}
+
+					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields );
 				}
 			}
 
 			return entities;
+		} );
+	}
+
+	public string function getValidationRulesetForEntity( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getValidationRulesetForEntity" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var validationEngine = $getValidationEngine();
+			var rulesetName      = "data-api-#args.entity#";
+
+			if ( !validationEngine.rulesetExists( rulesetName ) ) {
+				var objectName = getEntityObject( args.entity );
+				var props      = $getPresideObjectService().getObjectProperties( objectName );
+				var fields     = getUpsertFields( args.entity );
+				var rules      = [];
+				var generator  = _getPresideFieldRuleGenerator();
+
+				for( var fieldName in fields ) {
+					rules.append( generator.getRulesForField(
+						  objectName      = objectName
+						, fieldName       = fieldName
+						, fieldAttributes = props[ fieldName ] ?: {}
+					), true );
+				}
+
+				validationEngine.newRuleset(
+					  name  = rulesetName
+					, rules = rules
+				);
+			}
+
+			return rulesetName;
 		} );
 	}
 
@@ -191,5 +232,28 @@ component {
 		}
 
 		return defaultSelectFields;
+	}
+
+	private array function _cleanupUpsertFields( required string objectName, required array fields ) {
+		var dbFields = $getPresideObjectService().getObjectAttribute( objectName, "dbFieldlist" ).lCase().listToArray();
+		var props    = $getPresideObjectService().getObjectProperties( objectName );
+		var idField  = $getPresideObjectService().getIdField( objectName );
+		var cleaned  = [];
+
+		for( var field in arguments.fields ) {
+			if ( field != idField && field != "id" && dbFields.find( field.lCase() ) ) {
+				cleaned.append( field );
+			}
+		}
+
+		return cleaned;
+	}
+
+// GETTERS AND SETTERS
+	private any function _getPresideFieldRuleGenerator() {
+		return _presideFieldRuleGenerator;
+	}
+	private void function _setPresideFieldRuleGenerator( required any presideFieldRuleGenerator ) {
+		_presideFieldRuleGenerator = arguments.presideFieldRuleGenerator;
 	}
 }

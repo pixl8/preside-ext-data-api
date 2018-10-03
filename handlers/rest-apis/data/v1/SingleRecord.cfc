@@ -25,7 +25,7 @@ component {
 	}
 
 	private void function put( required string entity, required string recordId ) {
-		var body = event.getHTTPContent();
+		var body = event.getHttpContent();
 
 		try {
 			body = DeserializeJson( body );
@@ -38,6 +38,36 @@ component {
 			);
 			return;
 		}
+
+		if ( !IsStruct( body ) ) {
+			restResponse.setError(
+				  errorCode      = 400
+				, title          = "Bad request"
+				, message        = "Request body did not contain expected object."
+				, detail         = event.getHttpContent()
+			);
+			return;
+		}
+
+		var validationData = StructCopy( body );
+		    validationData.id = recordId;
+
+		var validationResult = dataApiService.validateUpsertData(
+			  entity        = entity
+			, data          = validationData
+			, ignoreMissing = true
+		);
+
+		if ( validationResult.count() ) {
+			restResponse.setError(
+				  errorCode      = 400
+				, title          = "Bad request"
+				, message        = "One or more fields contained validation errors. See messages for detailed validation error messages."
+				, additionalInfo = { messages=validationResult }
+			);
+			return;
+		}
+
 
 		var updated = dataApiService.updateSingleRecord(
 			  entity   = entity
