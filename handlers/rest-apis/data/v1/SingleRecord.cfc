@@ -60,8 +60,8 @@ component {
 
 		if ( validationResult.count() ) {
 			restResponse.setError(
-				  errorCode      = 400
-				, title          = "Bad request"
+				  errorCode      = 422
+				, title          = "Validation failure"
 				, message        = "One or more fields contained validation errors. See messages for detailed validation error messages."
 				, additionalInfo = { messages=validationResult }
 			);

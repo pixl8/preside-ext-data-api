@@ -64,8 +64,8 @@ component {
 		if ( IsArray( body ) ) {
 			if ( !validationResult.validated ) {
 				restResponse.setError(
-					  errorCode      = 400
-					, title          = "Bad request"
+					  errorCode      = 422
+					, title          = "Validation failure"
 					, message        = "One or more fields contained validation errors. See records key for detailed validation error messages."
 					, additionalInfo = { records=validationResult.validationResults }
 				);
@@ -73,8 +73,8 @@ component {
 			}
 		} else if ( validationResult.count() ) {
 			restResponse.setError(
-				  errorCode      = 400
-				, title          = "Bad request"
+				  errorCode      = 422
+				, title          = "Validation failure"
 				, message        = "One or more fields contained validation errors. See messages for detailed validation error messages."
 				, additionalInfo = { messages=validationResult }
 			);
@@ -122,8 +122,8 @@ component {
 
 		if ( !validationResult.validated ) {
 			restResponse.setError(
-				  errorCode      = 400
-				, title          = "Bad request"
+				  errorCode      = 422
+				, title          = "Validation failure"
 				, message        = "One or more fields contained validation errors. See records key for detailed validation error messages."
 				, additionalInfo = { records=validationResult.validationResults }
 			);
