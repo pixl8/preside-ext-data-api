@@ -78,8 +78,23 @@ component {
 		return records[ 1 ] ?: {};
 	}
 
-	public any function batchCreateRecords() {
-		return { todo=true };
+	public array function createRecords( required string entity, required array records ) {
+		var created = [];
+
+		for( var record in records ) {
+			created.append( createRecord( entity, record ) );
+		}
+
+		return created;
+	}
+
+	public struct function createRecord( required string entity, required any record ) {
+		// todo, check incoming fields, etc.
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+		var newId      = dao.insertData( arguments.record );
+
+		return getSingleRecord( arguments.entity, newId, [] );
 	}
 
 	public any function batchUpdateRecords() {

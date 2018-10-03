@@ -53,11 +53,12 @@ component {
 				, title     = "Bad request"
 				, message   = "Could not parse JSON body.."
 			);
+			return;
 		}
 
-		var created = dataApiService.batchCreateRecords(
-			  entity = entity
-			, data   = body
+		var created = dataApiService.createRecords(
+			  entity  = entity
+			, records = IsArray( body ) ? body : [ body ]
 		);
 
 		restResponse.setData( created );
@@ -75,6 +76,7 @@ component {
 				, title     = "Bad request"
 				, message   = "Could not parse JSON body.."
 			);
+			return;
 		}
 
 		var updated = dataApiService.batchUpdateRecords(
@@ -97,6 +99,7 @@ component {
 				, title     = "Bad request"
 				, message   = "Could not parse JSON body.."
 			);
+			return;
 		}
 
 		var deleted = dataApiService.batchDeleteRecords(
