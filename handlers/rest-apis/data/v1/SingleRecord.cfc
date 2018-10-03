@@ -6,10 +6,11 @@ component {
 
 	property name="dataApiService" inject="dataApiService";
 
-	private void function get( required string entity, required string recordId ) {
+	private void function get( required string entity, required string recordId, string fields="" ) {
 		var record = dataApiService.getSingleRecord(
 			  entity   = arguments.entity
 			, recordId = arguments.recordId
+			, fields   = ListToArray( arguments.fields )
 		);
 
 		restResponse.setData( record );

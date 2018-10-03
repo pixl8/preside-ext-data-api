@@ -45,6 +45,27 @@ component {
 		} );
 	}
 
+	public string function getSelectSortOrder( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getSelectSortOrder" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName = getEntityObject( args.entity );
+			var poService  = $getPresideObjectService();
+			var sortOrder  = poService.getObjectAttribute( objectName, "dataApiSortOrder" );
+
+			if ( !Len( Trim( sortOrder ) ) ) {
+				sortOrder = poService.getDateModifiedField( objectName );
+
+				if ( !Len( Trim( sortOrder ) ) ) {
+					sortOrder = poService.getDateCreatedField( objectName );
+				}
+			}
+
+			return sortOrder;
+		} );
+	}
+
 	public array function getSelectFields( required string entity ) {
 		var args     = arguments;
 		var cacheKey = "getSelectFields" & args.entity;
@@ -64,10 +85,6 @@ component {
 			var selectFields  = getSelectFields( args.entity );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
-
-			if ( !selectFields.len() ) {
-				selectFields = props.keyArray();
-			}
 
 			for( var field in selectFields ) {
 				fieldSettings[ field ] = {
@@ -100,6 +117,10 @@ component {
 						, verbs        = ListToArray( LCase( supportedVerbs ) )
 						, selectFields = ListToArray( LCase( selectFields ) )
 					};
+
+					if ( !entities[ entityName ].selectFields.len() ) {
+						entities[ entityName ].selectFields = _defaultSelectFields( objectName );
+					}
 				}
 			}
 
@@ -137,5 +158,23 @@ component {
 		}
 
 		return "none";
+	}
+
+	private array function _defaultSelectFields( required string objectName ) {
+		var dbFields            = $getPresideObjectService().getObjectAttribute( objectName, "dbFieldlist" );
+		var props               = $getPresideObjectService().getObjectProperties( objectName );
+		var defaultSelectFields = ListToArray( LCase( dbFields ) );
+
+		for( var fieldName in props ) {
+			if ( defaultSelectFields.find( LCase( fieldName ) ) ) {
+				continue;
+			}
+
+			if ( Len( Trim( props[ fieldName ].formula ?: "" ) ) ) {
+				defaultSelectFields.append( fieldName );
+			}
+		}
+
+		return defaultSelectFields;
 	}
 }

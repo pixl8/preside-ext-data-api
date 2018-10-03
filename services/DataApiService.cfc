@@ -45,10 +45,12 @@ component {
 		  required string  entity
 		, required numeric page
 		, required numeric pageSize
+		, required array   fields
 	) {
 		var args = {
 			  maxRows  = pageSize
 			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
+			, orderby  = "datemodified"
 		};
 		if ( args.maxRows < 1 ) {
 			args.maxRows = 100;
@@ -58,7 +60,7 @@ component {
 		}
 
 		var result = {
-			  records    = _selectData( arguments.entity, args )
+			  records    = _selectData( arguments.entity, args, arguments.fields )
 			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
 		};
 
@@ -70,8 +72,8 @@ component {
 		return result;
 	}
 
-	public any function getSingleRecord( required string entity, required string recordId ) {
-		var records  = _selectData( arguments.entity, { id=arguments.recordId } );
+	public any function getSingleRecord( required string entity, required string recordId, required array fields ) {
+		var records  = _selectData( arguments.entity, { id=arguments.recordId }, arguments.fields );
 
 		return records[ 1 ] ?: {};
 	}
@@ -99,17 +101,17 @@ component {
 
 
 // PRIVATE HELPERS
-	private any function _selectData( required string entity, required struct args ) {
+	private any function _selectData( required string entity, required struct args, array fields=[] ) {
 		var configService       = _getConfigService();
 		var dao                 = $getPresideObject( configService.getEntityObject( arguments.entity ) );
 		var selectFieldSettings = configService.getSelectFieldSettings( arguments.entity );
 
-		args.selectFields            = configService.getSelectFields( arguments.entity );
+		args.selectFields            = _filterFields( configService.getSelectFields( arguments.entity ), arguments.fields );
 		args.fromVersionTable        = false;
+		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
 		args.allowDraftVersions      = false;
 		args.autoGroupBy             = true;
 		args.distinct                = true;
-		args.includeAllFormulaFields = !ArrayLen( args.selectFields );
 		args.recordCountOnly         = args.recordCountOnly ?: false;
 
 		if ( args.recordCountOnly ) {
@@ -156,6 +158,22 @@ component {
 		}
 
 		return arguments.value;
+	}
+
+	private array function _filterFields( required array defaultFields, required array suppliedFields ) {
+		if ( !suppliedFields.len() ) {
+			return arguments.defaultFields;
+		}
+
+		var filteredFields = [];
+
+		for( var field in suppliedFields ) {
+			if ( defaultFields.find( LCase( field ) ) ) {
+				filteredFields.append( field );
+			}
+		}
+
+		return filteredFields;
 	}
 
 // GETTERS AND SETTERS

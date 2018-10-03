@@ -10,12 +10,13 @@ component {
 		  required string  entity
 		,          numeric page     = 1
 		,          numeric pageSize = 100
+		,          string  fields   = ""
 	) {
 		var result = dataApiService.getPaginatedRecords(
 			  entity   = arguments.entity
 			, page     = arguments.page
 			, pageSize = arguments.pageSize
-			// TODO, extra dynamic args based on the object and available filters
+			, fields   = ListToArray( arguments.fields )
 		);
 
 		restResponse.setData( result.records );
