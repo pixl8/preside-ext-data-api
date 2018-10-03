@@ -89,10 +89,13 @@ component {
 	}
 
 	public struct function createRecord( required string entity, required any record ) {
-		// todo, check incoming fields, etc.
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
-		var newId      = dao.insertData( arguments.record );
+		var newId      = dao.insertData(
+			  data                      = _prepRecordForInsertAndUpdate( arguments.entity, arguments.record )
+			, insertManyToManyRecords   = true
+			, bypassTrivialInterceptors = true
+		);
 
 		return getSingleRecord( arguments.entity, newId, [] );
 	}
@@ -189,6 +192,23 @@ component {
 		}
 
 		return filteredFields;
+	}
+
+	private struct function _prepRecordForInsertAndUpdate( required string entity, required struct record ) {
+		var prepped = {};
+		var allowedFields = _getConfigService().getUpsertFields( arguments.entity );
+
+		for( var field in arguments.record ) {
+			if ( allowedFields.find( LCase( field ) ) ) {
+				if ( IsSimpleValue( arguments.record[ field ] ) ) {
+					prepped[ field ] = arguments.record[ field ];
+				} else if ( IsArray( arguments.record[ field ] ) ) {
+					prepped[ field ] = arguments.record[ field ].toList();
+				}
+			}
+		}
+
+		return prepped;
 	}
 
 // GETTERS AND SETTERS

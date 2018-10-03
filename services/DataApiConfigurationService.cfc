@@ -76,6 +76,16 @@ component {
 		} );
 	}
 
+	public array function getUpsertFields( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getUpsertFields" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities();
+			return entities[ args.entity ].upsertFields ?: [];
+		} );
+	}
+
 	public struct function getSelectFieldSettings( required string entity ) {
 		var args     = arguments;
 		var cacheKey = "getSelectFieldSettings" & args.entity;
@@ -111,15 +121,20 @@ component {
 					var entityName     = poService.getObjectAttribute( objectName, "dataApiEntityName", objectName );
 					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
 					var selectFields   = poService.getObjectAttribute( objectName, "dataApiFields", "" );
+					var upsertFields   = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
 
 					entities[ entityName ] = {
 						  objectName   = objectName
 						, verbs        = ListToArray( LCase( supportedVerbs ) )
 						, selectFields = ListToArray( LCase( selectFields ) )
+						, upsertFields = ListToArray( LCase( upsertFields ) )
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
 						entities[ entityName ].selectFields = _defaultSelectFields( objectName );
+					}
+					if ( !entities[ entityName ].upsertFields.len() ) {
+						entities[ entityName ].upsertFields = entities[ entityName ].selectFields;
 					}
 				}
 			}
