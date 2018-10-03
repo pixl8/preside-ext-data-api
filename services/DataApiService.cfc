@@ -37,6 +37,8 @@ component {
 			);
 			restRequest.finish();
 		}
+
+		$getRequestContext().cachePage( false );
 	}
 
 	public any function getPaginatedRecords(
@@ -44,60 +46,34 @@ component {
 		, required numeric page
 		, required numeric pageSize
 	) {
-		var configService  = _getConfigService();
-		var dao            = $getPresideObject( configService.getEntityObject( arguments.entity ) );
-		var selectDataArgs = {
-			  maxRows            = pageSize
-			, startRow           = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
-			, selectFields       = configService.getSelectFields( arguments.entity )
-			, fromVersionTable   = false
-			, allowDraftVersions = false
+		var args = {
+			  maxRows  = pageSize
+			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
+		};
+		if ( args.maxRows < 1 ) {
+			args.maxRows = 100;
+		}
+		if ( args.startRow < 1 ) {
+			args.startRow = 1;
+		}
+
+		var result = {
+			  records    = _selectData( arguments.entity, args )
+			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
 		};
 
-		if ( selectDataArgs.maxRows < 1 ) {
-			selectDataArgs.maxRows = 100;
-		}
-		if ( selectDataArgs.startRow < 1 ) {
-			selectDataArgs.startRow = 1;
-		}
 
-		var result  = { records=[] };
-		var records = dao.selectData( argumentCollection=selectDataArgs );
-
-		for( var r in records ) {
-			result.records.append( r );
-		}
-
-		selectDataArgs.delete( "maxRows" );
-		selectDataArgs.delete( "startRow" );
-		selectDataArgs.recordCountOnly = true;
-
-		result.totalCount = dao.selectData( argumentCollection=selectDataArgs );
 		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
 		result.prevPage   = arguments.page -1;
 		result.nextPage   = arguments.page >= result.totalPages ? 0 : arguments.page+1;
-
 
 		return result;
 	}
 
 	public any function getSingleRecord( required string entity, required string recordId ) {
-		var configService  = _getConfigService();
-		var dao            = $getPresideObject( configService.getEntityObject( arguments.entity ) );
-		var selectDataArgs = {
-			  id                 = arguments.recordId
-			, selectFields       = configService.getSelectFields( arguments.entity )
-			, fromVersionTable   = false
-			, allowDraftVersions = false
-		};
+		var records  = _selectData( arguments.entity, { id=arguments.recordId } );
 
-		var records = dao.selectData( argumentCollection=selectDataArgs );
-
-		for( var r in records ) {
-			return r;
-		}
-
-		return {};
+		return records[ 1 ] ?: {};
 	}
 
 	public any function batchCreateRecords() {
@@ -123,6 +99,64 @@ component {
 
 
 // PRIVATE HELPERS
+	private any function _selectData( required string entity, required struct args ) {
+		var configService       = _getConfigService();
+		var dao                 = $getPresideObject( configService.getEntityObject( arguments.entity ) );
+		var selectFieldSettings = configService.getSelectFieldSettings( arguments.entity );
+
+		args.selectFields            = configService.getSelectFields( arguments.entity );
+		args.fromVersionTable        = false;
+		args.allowDraftVersions      = false;
+		args.autoGroupBy             = true;
+		args.distinct                = true;
+		args.includeAllFormulaFields = !ArrayLen( args.selectFields );
+		args.recordCountOnly         = args.recordCountOnly ?: false;
+
+		if ( args.recordCountOnly ) {
+			return dao.selectData( argumentCollection=args );
+		}
+
+		var records   = dao.selectData( argumentCollection=args );
+		var processed = [];
+
+		for( var record in records ) {
+			processed.append( _processFields( record, selectFieldSettings ) );
+		}
+
+		return processed;
+	}
+
+	private struct function _processFields( required struct record, required struct fieldSettings ) {
+		var processed = {};
+
+		for( var field in record ) {
+			var renderer = fieldSettings[ field ].renderer ?: "none";
+			var alias    = fieldSettings[ field ].alias ?: field;
+
+			processed[ alias ] = _renderField( record[ field ], renderer );
+		}
+
+		return processed;
+	}
+
+	private any function _renderField( required any value, required string renderer ) {
+		switch( renderer ) {
+			case "date"           : return IsDate( arguments.value ) ? DateFormat( arguments.value, "yyyy-mm-dd" ) : NullValue();
+			case "datetime"       : return IsDate( arguments.value ) ? DateTimeFormat( arguments.value, "yyyy-mm-dd HH:nn:ss" ) : NullValue();
+			case "strictboolean"  : return IsBoolean( arguments.value ) && arguments.value;
+			case "nullableboolean": return IsBoolean( arguments.value ) ? arguments.value : NullValue();
+			case "array"          : return ListToArray( arguments.value );
+			case "none":
+			case "":
+				return arguments.value;
+		}
+
+		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
+			return $renderContent( renderer, arguments.value, "dataapi" );
+		}
+
+		return arguments.value;
+	}
 
 // GETTERS AND SETTERS
 	private any function _getPresideRestService() {

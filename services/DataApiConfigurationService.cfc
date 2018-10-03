@@ -55,6 +55,31 @@ component {
 		} );
 	}
 
+	public struct function getSelectFieldSettings( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getSelectFieldSettings" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName    = getEntityObject( args.entity );
+			var selectFields  = getSelectFields( args.entity );
+			var props         = $getPresideObjectService().getObjectProperties( objectName );
+			var fieldSettings = {};
+
+			if ( !selectFields.len() ) {
+				selectFields = props.keyArray();
+			}
+
+			for( var field in selectFields ) {
+				fieldSettings[ field ] = {
+					  alias    = props[ field ].dataApiAlias    ?: field
+					, renderer = props[ field ].dataApiRenderer ?: _getDefaultRendererForField( props[ field ] ?: {} )
+				};
+			}
+
+			return fieldSettings;
+		} );
+	}
+
 	public struct function getEntities() {
 		var cacheKey = "getEntities";
 
@@ -89,5 +114,28 @@ component {
 		}
 
 		return _localCache[ cacheKey ];
+	}
+
+	private string function _getDefaultRendererForField( required struct field ) {
+		switch( field.type ?: "" ) {
+			case "date":
+				if ( ( field.dbtype ?: "" ) == "date" ) {
+					return "date";
+				}
+				return "datetime";
+			break;
+			case "boolean":
+				if ( IsBoolean( field.required ?: "" ) && field.required ) {
+					return "strictboolean";
+				}
+
+				return "nullableboolean";
+			break;
+			case "string":
+				return $getContentRendererService().getRendererForField( field );
+			break;
+		}
+
+		return "none";
 	}
 }
