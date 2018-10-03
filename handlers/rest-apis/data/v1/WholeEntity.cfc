@@ -87,8 +87,8 @@ component {
 		restResponse.setData( updated );
 	}
 
-	private void function delete( required string entity, required string recordId ) {
-		var body = event.getHTTPContent();
+	private void function delete( required string entity ) {
+		var body = event.getHttpContent();
 
 		try {
 			body = DeserializeJson( body );
@@ -102,11 +102,31 @@ component {
 			return;
 		}
 
-		var deleted = dataApiService.batchDeleteRecords(
-			  entity = entity
-			, data   = body
+		if ( !IsArray( body ) ) {
+			restResponse.setError(
+				  errorCode = 400
+				, title     = "Bad request"
+				, message   = "Batch delete expects an array of string IDs in the JSON Body. Received: #event.getHttpContent()#."
+			);
+			return;
+		}
+
+		for( var entry in body ) {
+			if ( !IsSimpleValue( entry ) ) {
+				restResponse.setError(
+					  errorCode = 400
+					, title     = "Bad request"
+					, message   = "Batch delete expects an array of string IDs in the JSON Body. Received: #event.getHttpContent()#."
+				);
+				return;
+			}
+		}
+
+		var deletedCount = dataApiService.batchDeleteRecords(
+			  entity    = entity
+			, recordIds = body
 		);
 
-		restResponse.setData( deleted );
+		restResponse.setData( { deleted=deletedCount } );
 	}
 }

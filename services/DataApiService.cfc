@@ -104,17 +104,29 @@ component {
 		return { todo=true };
 	}
 
-	public any function batchDeleteRecords() {
-		return { todo=true };
-	}
-
-
 	public any function updateSingleRecord() {
 		return { todo=true };
 	}
 
-	public any function deleteSingleRecord() {
-		return { todo=true };
+	public numeric function deleteSingleRecord( required string entity, required string recordId ) {
+		var dao = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
+
+		return dao.deleteData( id=arguments.recordId );
+	}
+
+	public numeric function batchDeleteRecords( required string entity, required array recordIds ) {
+		if ( !arguments.recordIds.len() ) {
+			return 0;
+		}
+
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var idField    = $getPresideObjectService().getIdField( objectName );
+		var dao        = $getPresideObject( objectName );
+		var filter     = {};
+
+		filter[ idField ] = arguments.recordIds;
+
+		return dao.deleteData( filter=filter );
 	}
 
 

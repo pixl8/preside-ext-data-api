@@ -36,6 +36,7 @@ component {
 				, title     = "Bad request"
 				, message   = "Could not parse JSON body.."
 			);
+			return;
 		}
 
 		var updated = dataApiService.updateSingleRecord(
@@ -56,11 +57,11 @@ component {
 	}
 
 	private void function delete( required string entity, required string recordId ) {
-		dataApiService.deleteSingleRecord(
+		var deletedCount = dataApiService.deleteSingleRecord(
 			  entity   = arguments.entity
 			, recordId = arguments.recordId
 		);
 
-		restResponse.setData( { success=true } );
+		restResponse.setData( { deleted=deletedCount } );
 	}
 }
