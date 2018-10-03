@@ -100,12 +100,34 @@ component {
 		return getSingleRecord( arguments.entity, newId, [] );
 	}
 
-	public any function batchUpdateRecords() {
-		return { todo=true };
+	public any function batchUpdateRecords( required string entity, required array records ) {
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+		var idField    = $getPresideObjectService().getIdField( objectName );
+		var updated    = [];
+		var recordId   = "";
+
+		for( var record in records ) {
+			recordId = record[ idField ] ?: "";
+			if ( Len( Trim( recordId ) ) ) {
+				if ( updateSingleRecord( arguments.entity, record, recordId ) ) {
+					updated.append( getSingleRecord( entity, recordId, [] ) );
+				}
+			}
+		}
+
+		return updated;
 	}
 
-	public any function updateSingleRecord() {
-		return { todo=true };
+	public any function updateSingleRecord( required string entity, required struct data, required string recordId ) {
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+
+		return dao.updateData(
+			  id                      = arguments.recordId
+			, data                    = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
+			, updateManyToManyRecords = true
+		);
 	}
 
 	public numeric function deleteSingleRecord( required string entity, required string recordId ) {

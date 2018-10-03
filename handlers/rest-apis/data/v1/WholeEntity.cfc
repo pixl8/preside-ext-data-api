@@ -80,8 +80,8 @@ component {
 		}
 
 		var updated = dataApiService.batchUpdateRecords(
-			  entity = entity
-			, data   = body
+			  entity  = entity
+			, records = body
 		);
 
 		restResponse.setData( updated );
