@@ -36,7 +36,7 @@ component {
 		, string id         = ""
 	) {
 		if ( objectName.len() && id.len() ) {
-			var subscribers = getSubscribers( arguments.objectName );
+			var subscribers = getSubscribers( arguments.objectName, "update" );
 
 			if ( subscribers.len() ) {
 				var dao = $getPresideObject( "data_api_queue" );
