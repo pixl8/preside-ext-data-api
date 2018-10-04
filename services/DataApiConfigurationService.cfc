@@ -92,17 +92,16 @@ component {
 		} );
 	}
 
-	public struct function getSelectFieldSettings( required string entity ) {
+	public struct function getFieldSettings( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getSelectFieldSettings" & args.entity;
+		var cacheKey = "getFieldSettings" & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var objectName    = getEntityObject( args.entity );
-			var selectFields  = getSelectFields( args.entity );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
 
-			for( var field in selectFields ) {
+			for( var field in props ) {
 				fieldSettings[ field ] = {
 					  alias    = props[ field ].dataApiAlias    ?: field
 					, renderer = props[ field ].dataApiRenderer ?: _getDefaultRendererForField( props[ field ] ?: {} )
@@ -194,6 +193,10 @@ component {
 	}
 
 	private string function _getDefaultRendererForField( required struct field ) {
+		switch( field.relationship ?: "" ) {
+			case "many-to-many": return "array";
+		}
+
 		switch( field.type ?: "" ) {
 			case "date":
 				if ( ( field.dbtype ?: "" ) == "date" ) {
@@ -235,15 +238,24 @@ component {
 	}
 
 	private array function _cleanupUpsertFields( required string objectName, required array fields ) {
-		var dbFields = $getPresideObjectService().getObjectAttribute( objectName, "dbFieldlist" ).lCase().listToArray();
 		var props    = $getPresideObjectService().getObjectProperties( objectName );
 		var idField  = $getPresideObjectService().getIdField( objectName );
 		var cleaned  = [];
 
 		for( var field in arguments.fields ) {
-			if ( field != idField && field != "id" && dbFields.find( field.lCase() ) ) {
-				cleaned.append( field );
+			if ( field == idField || field == "id" ) {
+				continue;
 			}
+
+			if ( ( props[ field ].relationship ?: "" ) == "one-to-many" ) {
+				continue;
+			}
+
+			if ( Len( Trim( props[ field ].formula ?: "" ) ) ) {
+				continue;
+			}
+
+			cleaned.append( field );
 		}
 
 		return cleaned;

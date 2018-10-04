@@ -159,7 +159,7 @@ component {
 			for( var record in arguments.data ) {
 				var validation = $getValidationEngine().validate(
 					  ruleset       = ruleset
-					, data          = record
+					, data          = _prepRecordForInsertAndUpdate( arguments.entity, record )
 					, ignoreMissing = arguments.ignoreMissing
 				);
 
@@ -186,7 +186,7 @@ component {
 
 		return _translateValidationErrors( $getValidationEngine().validate(
 			  ruleset       = ruleset
-			, data          = arguments.data
+			, data          = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
 			, ignoreMissing = arguments.ignoreMissing
 		) );
 	}
@@ -194,11 +194,12 @@ component {
 
 // PRIVATE HELPERS
 	private any function _selectData( required string entity, required struct args, array fields=[] ) {
-		var configService       = _getConfigService();
-		var dao                 = $getPresideObject( configService.getEntityObject( arguments.entity ) );
-		var selectFieldSettings = configService.getSelectFieldSettings( arguments.entity );
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var dao           = $getPresideObject( objectName );
+		var fieldSettings = configService.getFieldSettings( arguments.entity );
 
-		args.selectFields            = _filterFields( configService.getSelectFields( arguments.entity ), arguments.fields );
+		args.selectFields            = _prepareSelectFields( objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
 		args.fromVersionTable        = false;
 		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
 		args.allowDraftVersions      = false;
@@ -214,7 +215,7 @@ component {
 		var processed = [];
 
 		for( var record in records ) {
-			processed.append( _processFields( record, selectFieldSettings ) );
+			processed.append( _processFields( record, fieldSettings ) );
 		}
 
 		return processed;
@@ -252,32 +253,44 @@ component {
 		return arguments.value;
 	}
 
-	private array function _filterFields( required array defaultFields, required array suppliedFields ) {
+	private array function _prepareSelectFields( required string objectName, required array defaultFields, required array suppliedFields ) {
+		var filtered = [];
+		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
+
 		if ( !suppliedFields.len() ) {
-			return arguments.defaultFields;
-		}
-
-		var filteredFields = [];
-
-		for( var field in suppliedFields ) {
-			if ( defaultFields.find( LCase( field ) ) ) {
-				filteredFields.append( field );
+			filtered = arguments.defaultFields;
+		} else {
+			for( var field in suppliedFields ) {
+				if ( defaultFields.find( LCase( field ) ) ) {
+					filtered.append( field );
+				}
 			}
 		}
 
-		return filteredFields;
+		var prepared = [];
+		for( var field in filtered ) {
+			if ( ( props[ field ].relationship ?: "" ) == "many-to-many" ) {
+				prepared.append( "group_concat( distinct `#field#`.`id` ) as `#field#`" );
+			} else {
+				prepared.append( field );
+			}
+		}
+
+		return prepared;
 	}
 
 	private struct function _prepRecordForInsertAndUpdate( required string entity, required struct record ) {
-		var prepped = {};
+		var prepped       = {};
 		var allowedFields = _getConfigService().getUpsertFields( arguments.entity );
+		var fieldSettings = _getConfigService().getFieldSettings( arguments.entity );
 
-		for( var field in arguments.record ) {
-			if ( allowedFields.find( LCase( field ) ) ) {
-				if ( IsSimpleValue( arguments.record[ field ] ) ) {
-					prepped[ field ] = arguments.record[ field ];
-				} else if ( IsArray( arguments.record[ field ] ) ) {
-					prepped[ field ] = arguments.record[ field ].toList();
+		for( var field in allowedFields ) {
+			var alias = fieldSettings[ field ].alias ?: field;
+			if ( record.keyExists( alias ) ) {
+				if ( IsSimpleValue( arguments.record[ alias ] ) ) {
+					prepped[ field ] = arguments.record[ alias ];
+				} else if ( IsArray( arguments.record[ alias ] ) ) {
+					prepped[ field ] = arguments.record[ alias ].toList();
 				}
 			}
 		}
