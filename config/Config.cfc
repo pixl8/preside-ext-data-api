@@ -5,6 +5,7 @@ component {
 		var settings = conf.settings ?: {};
 
 		_setupRestApis( settings );
+		_setupEnums( settings );
 		_setupInterceptors( conf );
 	}
 
@@ -17,6 +18,10 @@ component {
 			  authProvider = "token"
 			, description  = "Generic Preside REST API for external systems to interact with Preside data"
 		};
+	}
+
+	private void function _setupEnums( required struct settings ) {
+		settings.enum.dataApiQueueOperation = [ "insert", "update", "delete" ];
 	}
 
 	private void function _setupInterceptors( required struct conf ) {
