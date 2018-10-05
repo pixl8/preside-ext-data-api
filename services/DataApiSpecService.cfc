@@ -204,11 +204,13 @@ component {
 			}
 
 			if ( configService.entityVerbIsSupported( entityName, "put" ) || configService.entityVerbIsSupported( entityName, "post" ) ) {
+				spec.components.schemas[ entityName & "upsert" ] = _getEntitySchema( entityName, false );
+
 				spec.components.schemas[ "validationFailureMultiple#entityName#" ] = {
 					  required = [ "record", "valid", "errorMessages" ]
 					, title    = $translateResource( uri="dataapi:schemas.validationFailureMultiple.title", data=[ entityTag ] )
 					, properties = {
-						  record         = { "$ref"="##/components/schemas/#entityName#" }
+						  record         = { "$ref"="##/components/schemas/#entityName#upsert" }
 						, valid          = { type="boolean", description=$translateResource( uri="dataapi:schemas.validationFailure.valid"         , data=[ entityTag ] ) }
 						, errorMessages  = { type="array"  , description=$translateResource( uri="dataapi:schemas.validationFailure.errorMessages" , data=[ entityTag ] ), items={ "$ref"="##/components/schemas/validationMessage" } }
 					}
