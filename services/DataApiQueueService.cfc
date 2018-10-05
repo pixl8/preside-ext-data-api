@@ -70,6 +70,12 @@ component {
 		);
 	}
 
+	public numeric function removeFromQueue( required string subscriber, required string queueId ) {
+		return $getPresideObject( "data_api_queue" ).deleteData( filter={
+			  id         = arguments.queueId
+			, subscriber = arguments.subscriber
+		} );
+	}
 
 	public void function queueInsert(
 		  string objectName = ""
