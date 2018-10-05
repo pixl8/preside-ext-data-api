@@ -316,8 +316,68 @@ component {
 		}
 	}
 
-	private struct function _getEntitySchema( required string entityName ) {
-		return { required=[ "test" ], properties={ test={ type="string", description="test description" } } };
+	private struct function _getEntitySchema( required string entityName, boolean forSelect=true ) {
+		var schema        = { required=[], properties=StructNew( "linked" ) };
+		var confService   = _getConfigService();
+		var fields        = arguments.forSelect ? confService.getSelectFields( arguments.entityName ) : confService.getUpsertFields( arguments.entityName );
+		var fieldSettings = confService.getFieldSettings( arguments.entityName );
+		var objectName    = confService.getEntityObject( arguments.entityName );
+		var props         = $getPresideObjectService().getObjectProperties( objectName );
+		var basei18n      = $getPresideObjectService().getResourceBundleUriRoot( objectName );
+
+		for( var field in fields ) {
+			if ( IsBoolean( props[ field ].required ?: "" ) && props[ field ].required ) {
+				schema.required.append( field );
+			}
+
+			schema.properties[ fieldSettings[ field ].alias ?: field ] = {
+				description = $translateResource( uri="dataapi:entity.#arguments.entityName#.field.#field#.description", defaultValue=$translateResource( uri="#basei18n#field.#field#.help", defaultValue="" ) )
+			};
+			schema.properties[ fieldSettings[ field ].alias ?: field ].append(
+				_mapFieldType( argumentCollection=props[ field ] ?: {} )
+			);
+		}
+
+		return schema;
+	}
+
+	private struct function _mapFieldType(
+		  string relationship = ""
+		, string type         = ""
+		, string dbtype       = ""
+	) {
+		if ( relationship=="many-to-many" ) {
+			return { type="array", items={ type="string" } };
+		}
+
+		switch ( arguments.type ) {
+			case "boolean":
+			case "string":
+				return { type=arguments.type };
+
+			case "numeric":
+				switch( arguments.dbtype ) {
+					case "int":
+					case "smallint":
+					case "bigint":
+					case "integer":
+						return { type="integer", format="int64" };
+					default:
+						return { type="number" };
+				}
+			break;
+
+			case "date":
+				switch( arguments.dbtype ) {
+					case "date":
+						return { type="string", format="date" }
+					default:
+						return { type="string", format="datetime" }
+				}
+			break;
+		}
+
+		return { type="string" };
 	}
 
 
