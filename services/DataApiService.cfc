@@ -23,7 +23,7 @@ component {
 		var entity        = tokens.entity ?: "";
 		var configService = _getConfigService();
 
-		if ( restRequest.getUri().reFindNoCase( "^/queue/" ) ) {
+		if ( restRequest.getUri().reFindNoCase( "^/(queue|spec|docs)/" ) ) {
 			return;
 		}
 
@@ -191,6 +191,74 @@ component {
 			, data          = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
 			, ignoreMissing = arguments.ignoreMissing
 		) );
+	}
+
+	public struct function getSpec() {
+		var event    = $getRequestContext();
+		var site     = event.getSite();
+		var domain   = site.domain ?: event.getServerName()
+		var protocol = site.protocol ?: event.getProtocol();
+		var spec = {
+			  openapi    = "3.0.1"
+			, info       = { title="Preside data API", version="1.0.0" }
+			, servers    = [ { url="#protocol#://#domain#/api/data/v1" } ]
+			, security   = [ { basic=[] } ]
+			, paths      = StructNew( "linked" )
+			, tags       = [ { name="Queue", description="Operations related to the data change queue that allows you to keep up to date with changes to the system's data." } ]
+			, components = {
+				  securitySchemes = { basic={ type="http", scheme="Basic", description="Authentication uses the Basic HTTP Authentication scheme over HTTPS. You will be given a secret API token and this must be used as the authentication PASSWORD. The username will be ignored." } }
+				, schemas         = {}
+				, headers         = {}
+			  }
+		};
+
+		spec.components.headers.XTotalRecords = {
+			  description = "Total number of records in paginated recordset or queue"
+			, schema      = { type="integer" }
+		};
+		spec.components.headers.Link = {
+			  description = "Contains pagination info in the form: '<{nexthref}>; rel=""next"", <{prevhref}>; rel=""prev""'. Either or both prev and next links may be omitted if there are no previous or next records."
+			, schema      = { type="string" }
+		};
+		spec.components.schemas.QueueItem = {
+			  required = [ "operation", "entity", "recordId", "queueId" ]
+			, properties = {
+				  operation = { type="string", description="Either `insert`, `update` or `delete`." }
+				, entity    = { type="string", description="The name of the entity whose record has been created, modified or deleted." }
+				, recordId  = { type="string", description="The ID of the entity record that has been created, modified or deleted." }
+				, queueId   = { type="string", description="The ID of the queue entry. Once you have finished processing the queue item, you are responsible for removing it from the queue using this ID." }
+				, record    = { type="object", description="For the `update` and `insert` operations, this object will represent the record as if you had fetched it with GET /entity/{entity}/{recordId}/" }
+			}
+		};
+
+
+		spec.paths[ "/queue/" ] = {
+			get = {
+				  summary = "Get the next entry in the data change queue. Returns empty object {} if no data in the queue."
+				, tags = [ "Queue" ]
+				, responses = { "200" = {
+					  description = "Response to a valid request"
+					, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/QueueItem" } } }
+					, headers     = {
+						  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
+						, "Link"            = { "$ref"="##/components/headers/Link" }
+					  }
+				  } }
+			}
+		};
+		spec.paths[ "/queue/{queueId}/" ] = {
+			delete = {
+				  summary = "Removes the given queue item from the queue."
+				, tags = [ "Queue" ]
+				, responses = { "200" = {
+					  description = "Response to a valid request"
+					, content     = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description="Number of items removed from the queue. i.e. 1 for success, 0 for no items removed. Either way, operation should be deemed as successful as the item is definitely no longer in the queue." } } } } }
+				  } }
+			},
+			parameters = [{name="queueId", in="path", required=true, description="ID of the queue item to remove.", schema={ type="string" } } ]
+		};
+
+		return spec;
 	}
 
 
