@@ -23,16 +23,28 @@
         color:##2679b5;
       }
 
+      .redoc-wrap .api-info > h1 + p {
+        margin-bottom: 20px;
+        color: ##999;
+        text-align: right;
+      }
+
+      .redoc-wrap .lmeAqe {
+        color:##777;
+        border-color:##777;
+
+      }
+
       .sc-bwzfXH.jMSjCT path {
         fill:##2679b5;
       }
 
-      .redoc-wrap .api-info > h1 + p,
       .redoc-wrap .gkBCoe {
         display: none;
       }
 
-      .redoc-wrap .bOgKnn {
+      .redoc-wrap .bOgKnn,
+      .redoc-wrap .fMRrIL {
         padding:10px 0;
       }
 
