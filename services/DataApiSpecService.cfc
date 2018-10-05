@@ -189,6 +189,50 @@ component {
 				};
 			}
 
+			if ( configService.entityVerbIsSupported( entityName, "put" ) ) {
+				spec.paths[ "/entity/#entityName#/" ].put = {
+					  tags = [ entityTag ]
+					, requestBody = {
+						  description = $translateResource( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entityTag ] ) )
+						, required    = true
+						, content     = { "application/json" = {
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+						  } }
+					  }
+					, responses = { "200" = {
+						  description = $translateResource( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entityTag ] ) )
+						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+					  } }
+				};
+
+				spec.paths[ "/entity/#entityName#/{recordId}/" ].put = {
+					  tags = [ entityTag ]
+					, requestBody = {
+						  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entityTag ] ) )
+						, required    = true
+						, content     = { "application/json" = {
+							schema = { "$ref"="##/components/schemas/#entityName#" }
+						  } }
+					  }
+					, responses = {
+						  "200" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.200.description", defaultValue="" ) )
+							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
+						  }
+						, "404" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.404.description", defaultValue="" ) )
+						  }
+					  }
+					, parameters = [ {
+							name        = "recordId"
+						  , in          = "path"
+						  , required    = true
+						  , description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.params.queueId", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entityTag ] ) )
+						  , schema      = { type="string" }
+					  } ]
+				};
+			}
+
 			if ( configService.entityVerbIsSupported( entityName, "delete" ) ) {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].delete = {
 					  tags = [ entityTag ]
