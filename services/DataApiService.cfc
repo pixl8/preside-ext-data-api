@@ -200,44 +200,44 @@ component {
 		var protocol = site.protocol ?: event.getProtocol();
 		var spec = {
 			  openapi    = "3.0.1"
-			, info       = { title="Preside data API", version="1.0.0" }
+			, info       = { title=$translateResource( "dataapi:api.title" ), description=$translateResource( "dataapi:api.description", "" ), version=$translateResource( "dataapi:api.version" ) }
 			, servers    = [ { url="#protocol#://#domain#/api/data/v1" } ]
 			, security   = [ { basic=[] } ]
 			, paths      = StructNew( "linked" )
-			, tags       = [ { name="Queue", description="Operations related to the data change queue that allows you to keep up to date with changes to the system's data." } ]
+			, tags       = [ { name=$translateResource( "dataapi:tags.queue.title" ), description=$translateResource( "dataapi:tags.queue.description" ) } ]
 			, components = {
-				  securitySchemes = { basic={ type="http", scheme="Basic", description="Authentication uses the Basic HTTP Authentication scheme over HTTPS. You will be given a secret API token and this must be used as the authentication PASSWORD. The username will be ignored." } }
+				  securitySchemes = { basic={ type="http", scheme="Basic", description=$translateResource( "dataapi:basic.auth.description" ) } }
 				, schemas         = {}
 				, headers         = {}
 			  }
 		};
 
 		spec.components.headers.XTotalRecords = {
-			  description = "Total number of records in paginated recordset or queue"
+			  description = $translateResource( "dataapi:headers.XTotalRecords.description" )
 			, schema      = { type="integer" }
 		};
 		spec.components.headers.Link = {
-			  description = "Contains pagination info in the form: '<{nexthref}>; rel=""next"", <{prevhref}>; rel=""prev""'. Either or both prev and next links may be omitted if there are no previous or next records."
+			  description = $translateResource( "dataapi:headers.Link.description" )
 			, schema      = { type="string" }
 		};
 		spec.components.schemas.QueueItem = {
 			  required = [ "operation", "entity", "recordId", "queueId" ]
 			, properties = {
-				  operation = { type="string", description="Either `insert`, `update` or `delete`." }
-				, entity    = { type="string", description="The name of the entity whose record has been created, modified or deleted." }
-				, recordId  = { type="string", description="The ID of the entity record that has been created, modified or deleted." }
-				, queueId   = { type="string", description="The ID of the queue entry. Once you have finished processing the queue item, you are responsible for removing it from the queue using this ID." }
-				, record    = { type="object", description="For the `update` and `insert` operations, this object will represent the record as if you had fetched it with GET /entity/{entity}/{recordId}/" }
+				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ) }
+				, entity    = { type="string", description=$translateResource( "dataapi:schemas.queueItem.entity"    ) }
+				, recordId  = { type="string", description=$translateResource( "dataapi:schemas.queueItem.recordId"  ) }
+				, queueId   = { type="string", description=$translateResource( "dataapi:schemas.queueItem.queueId"   ) }
+				, record    = { type="object", description=$translateResource( "dataapi:schemas.queueItem.record"    ) }
 			}
 		};
 
 
 		spec.paths[ "/queue/" ] = {
 			get = {
-				  summary = "Get the next entry in the data change queue. Returns empty object {} if no data in the queue."
-				, tags = [ "Queue" ]
+				  summary = $translateResource( "dataapi:operation.queue.get" )
+				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
 				, responses = { "200" = {
-					  description = "Response to a valid request"
+					  description = $translateResource( "dataapi:operation.queue.get.200.description" )
 					, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/QueueItem" } } }
 					, headers     = {
 						  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
@@ -248,14 +248,14 @@ component {
 		};
 		spec.paths[ "/queue/{queueId}/" ] = {
 			delete = {
-				  summary = "Removes the given queue item from the queue."
-				, tags = [ "Queue" ]
+				  summary = $translateResource( "dataapi:operation.queue.delete" )
+				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
 				, responses = { "200" = {
-					  description = "Response to a valid request"
+					  description = $translateResource( "dataapi:operation.queue.delete.200.description" )
 					, content     = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description="Number of items removed from the queue. i.e. 1 for success, 0 for no items removed. Either way, operation should be deemed as successful as the item is definitely no longer in the queue." } } } } }
 				  } }
 			},
-			parameters = [{name="queueId", in="path", required=true, description="ID of the queue item to remove.", schema={ type="string" } } ]
+			parameters = [{name="queueId", in="path", required=true, description=$translateResource( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
 		};
 
 		return spec;
