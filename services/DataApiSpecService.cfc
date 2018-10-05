@@ -124,7 +124,7 @@ component {
 		for( var entityName in entityNames ) {
 			var objectName = entities[ entityName ].objectName;
 			var basei18n   = $getPresideObjectService().getResourceBundleUriRoot( objectName );
-			var entityTag  = $translateResource( uri="dataapi:entity.#entityName#.name", defaultValue=$translateResource( uri=basei18n & "title", defaultValue=entityName ) )
+			var entityTag  = $translateResource( uri="dataapi:entity.#entityName#.name", defaultValue=$translateResource( uri=basei18n & "title.singular", defaultValue=entityName ) )
 
 			spec.tags.append( {
 				  name        = entityTag
@@ -230,6 +230,23 @@ component {
 						  , description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.params.queueId", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entityTag ] ) )
 						  , schema      = { type="string" }
 					  } ]
+				};
+			}
+
+			if ( configService.entityVerbIsSupported( entityName, "post" ) ) {
+				spec.paths[ "/entity/#entityName#/" ].post = {
+					  tags = [ entityTag ]
+					, requestBody = {
+						  description = $translateResource( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=$translateResource( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entityTag ] ) )
+						, required    = true
+						, content     = { "application/json" = {
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+						  } }
+					  }
+					, responses = { "200" = {
+						  description = $translateResource( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=$translateResource( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entityTag ] ) )
+						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+					  } }
 				};
 			}
 
