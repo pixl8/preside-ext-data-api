@@ -138,6 +138,7 @@ component {
 				var selectFieldList = configService.getSelectFields( entityName ).toList( ", " );
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.get.description", defaultValue=$translateResource( uri="dataapi:operation.get.description", defaultValue="", data=[ entityTag ] ) )
 					, parameters = [ {
 							name        = "page"
 						  , in          = "query"
@@ -170,6 +171,7 @@ component {
 
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].get = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.get.by.id.description", defaultValue=$translateResource( uri="dataapi:operation.get.by.id.description", defaultValue="", data=[ entityTag ] ) )
 					, responses = {
 						  "200" = {
 							  description = $translateResource( uri="dataapi:operation.#entityName#.get.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.get.by.id.200.description", defaultValue="" ) )
@@ -192,6 +194,7 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "put" ) ) {
 				spec.paths[ "/entity/#entityName#/" ].put = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.put.description", defaultValue=$translateResource( uri="dataapi:operation.put.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
@@ -207,6 +210,7 @@ component {
 
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].put = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
@@ -236,6 +240,7 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "post" ) ) {
 				spec.paths[ "/entity/#entityName#/" ].post = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.post.description", defaultValue=$translateResource( uri="dataapi:operation.post.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=$translateResource( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
@@ -253,6 +258,7 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "delete" ) ) {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].delete = {
 					  tags = [ entityTag ]
+					, description = $translateResource( uri="dataapi:operation.#entityName#.delete.description", defaultValue=$translateResource( uri="dataapi:operation.delete.description", defaultValue="", data=[ entityTag ] ) )
 					, responses = { "200" = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.delete.200.description", defaultValue=$translateResource( uri="dataapi:operation.delete.200.description", defaultValue="" ) )
 						, content     = { "application/json" = { schema={ required=[ "deleted" ], properties={ deleted={ type="integer", description=$translateResource( uri="dataapi:operation.delete.schema.removed" ) } } } } }
