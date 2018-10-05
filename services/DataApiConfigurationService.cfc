@@ -51,6 +51,15 @@ component {
 		} );
 	}
 
+	public string function getObjectEntity( required string objectName ) {
+		var args     = arguments;
+		var cacheKey = "getObjectEntity" & args.objectName;
+
+		return _simpleLocalCache( cacheKey, function(){
+			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName", args.objectName );
+		} );
+	}
+
 	public string function getSelectSortOrder( required string entity ) {
 		var args     = arguments;
 		var cacheKey = "getSelectSortOrder" & args.entity;
@@ -123,7 +132,7 @@ component {
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
-					var entityName     = poService.getObjectAttribute( objectName, "dataApiEntityName", objectName );
+					var entityName     = getObjectEntity( objectName );
 					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
 					var selectFields   = poService.getObjectAttribute( objectName, "dataApiFields", "" );
 					var upsertFields   = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );

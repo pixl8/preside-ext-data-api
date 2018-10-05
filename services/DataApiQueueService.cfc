@@ -6,16 +6,71 @@ component {
 
 // CONSTRUCTOR
 	/**
-	 * @configService.inject dataApiConfigurationService
+	 * @configService.inject  dataApiConfigurationService
+	 * @dataApiService.inject dataApiService
 	 *
 	 */
-	public any function init( required any configService ) {
+	public any function init( required any configService, required any dataApiService ) {
 		_setConfigService( arguments.configService );
+		_setDataApiService( arguments.dataApiService );
 
 		return this;
 	}
 
 // PUBLIC API METHODS
+	public struct function getNextQueuedItem( required string subscriber ) {
+		var dao    = $getPresideObject( "data_api_queue" );
+		var record = dao.selectData(
+			  selectFields = [ "id", "object_name", "record_id", "operation" ]
+			, filter       = { is_checked_out=false, subscriber=arguments.subscriber }
+			, maxRows      = 1
+			, orderBy      = "order_number"
+		);
+
+		if ( record.recordCount ) {
+			var checkedOut = dao.updateData(
+				  filter = { is_checked_out=false, id=record.id }
+				, data   = { is_checked_out=true, check_out_date=Now() }
+			);
+
+			if ( !checkedOut ) {
+				return getNextQueuedItem( argumentCollection=arguments );
+			}
+
+			var entity = _getConfigService().getObjectEntity( record.object_name );
+
+			switch( record.operation ) {
+				case "delete":
+					return {
+						  operation = "delete"
+						, entity    = entity
+						, recordId  = record.record_id
+						, queueId   = record.id
+					};
+				break;
+				case "update":
+				case "insert":
+					return {
+						  operation = record.operation
+						, entity    = entity
+						, recordId  = record.record_id
+						, record    = _getDataApiService().getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
+						, queueId   = record.id
+					};
+			}
+		}
+
+		return {};
+	}
+
+	public numeric function getQueueCount( required string subscriber ) {
+		return $getPresideObject( "data_api_queue" ).selectData(
+			  filter  = { is_checked_out=false, subscriber=arguments.subscriber }
+			, recordCountOnly = true
+		);
+	}
+
+
 	public void function queueInsert(
 		  string objectName = ""
 		, string newId         = ""
@@ -47,12 +102,22 @@ component {
 			if ( subscribers.len() ) {
 				var dao = $getPresideObject( "data_api_queue" );
 				for( var subscriber in subscribers ) {
-					dao.insertData( {
-						  object_name = arguments.objectName
-						, record_id   = arguments.id
-						, subscriber  = subscriber
-						, operation   = "update"
+					var insertStillQueued = dao.dataExists( filter={
+						  object_name    = arguments.objectName
+						, record_id      = arguments.id
+						, subscriber     = subscriber
+						, operation      = "insert"
+						, is_checked_out = true
 					} );
+
+					if ( insertStillQueued ) {
+						dao.insertData( {
+							  object_name = arguments.objectName
+							, record_id   = arguments.id
+							, subscriber  = subscriber
+							, operation   = "update"
+						} );
+					}
 				}
 			}
 		}
@@ -80,12 +145,30 @@ component {
 			if ( subscribers.len() ) {
 				var dao = $getPresideObject( "data_api_queue" );
 				for( var subscriber in subscribers ) {
-					dao.insertData( {
-						  object_name = arguments.objectName
-						, record_id   = arguments.id
-						, subscriber  = subscriber
-						, operation   = "delete"
+					var deletedInserts = dao.deleteData( filter = {
+						  is_checked_out = false
+						, subscriber     = subscriber
+						, operation      = "insert"
+						, object_name    = arguments.objectName
+						, record_id      = arguments.id
 					} );
+
+					if ( !deletedInserts ) {
+						dao.insertData( {
+							  object_name = arguments.objectName
+							, record_id   = arguments.id
+							, subscriber  = subscriber
+							, operation   = "delete"
+						} );
+
+						dao.deleteData( filter = {
+							  is_checked_out = false
+							, subscriber     = subscriber
+							, operation      = "update"
+							, object_name    = arguments.objectName
+							, record_id      = arguments.id
+						} );
+					}
 				}
 			}
 		}
@@ -146,5 +229,12 @@ component {
 	}
 	private void function _setConfigService( required any configService ) {
 		_configService = arguments.configService;
+	}
+
+	private any function _getDataApiService() {
+		return _dataApiService;
+	}
+	private void function _setDataApiService( required any dataApiService ) {
+		_dataApiService = arguments.dataApiService;
 	}
 }

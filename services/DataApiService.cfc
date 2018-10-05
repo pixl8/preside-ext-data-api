@@ -23,6 +23,10 @@ component {
 		var entity        = tokens.entity ?: "";
 		var configService = _getConfigService();
 
+		if ( restRequest.getUri().reFindNoCase( "^/queue/" ) ) {
+			return;
+		}
+
 		if ( !configService.entityIsEnabled( entity ) ) {
 			restResponse.setStatus( 404, "not found" );
 			restRequest.finish();
