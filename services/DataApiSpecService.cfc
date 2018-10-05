@@ -24,8 +24,8 @@ component {
 		_addGeneralSpec( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
-		_addQueueSpec( spec );
 		_addEntitySpecs( spec );
+		_addQueueSpec( spec );
 
 
 		return spec;
@@ -45,9 +45,9 @@ component {
 			  , version     = $translateResource( "dataapi:api.version" )
 		};
 		spec.servers    = [ { url="#protocol#://#domain#/api/data/v1" } ]
-		spec.security   = [ { basic=[] } ]
+		spec.security   = [ { "#$translateResource( "dataapi:basic.auth.name" )#"=[] } ]
 		spec.components = {
-			  securitySchemes = { basic={ type="http", scheme="Basic", description=$translateResource( "dataapi:basic.auth.description" ) } }
+			  securitySchemes = { "#$translateResource( "dataapi:basic.auth.name" )#"={ type="http", scheme="Basic", description=$translateResource( "dataapi:basic.auth.description" ) } }
 			, schemas         = {}
 			, headers         = {}
 		};
@@ -101,7 +101,8 @@ component {
 
 		spec.paths[ "/queue/" ] = {
 			get = {
-				  summary = $translateResource( "dataapi:operation.queue.get" )
+				  summary = "GET /queue/"
+				, description = $translateResource( "dataapi:operation.queue.get" )
 				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
 				, responses = { "200" = {
 					  description = $translateResource( "dataapi:operation.queue.get.200.description" )
@@ -115,11 +116,12 @@ component {
 		};
 		spec.paths[ "/queue/{queueId}/" ] = {
 			delete = {
-				  summary = $translateResource( "dataapi:operation.queue.delete" )
+				  summary = "DELETE /queue/{queueId}/"
+				, description = $translateResource( "dataapi:operation.queue.delete" )
 				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
 				, responses = { "200" = {
 					  description = $translateResource( "dataapi:operation.queue.delete.200.description" )
-					, content     = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description=$translateResource( "dataapi:operation.queue.delete.schema.removed") } } } } }
+					, content = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description=$translateResource( "dataapi:operation.queue.delete.schema.removed") } } } } }
 				  } }
 			},
 			parameters = [{name="queueId", in="path", required=true, description=$translateResource( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
@@ -150,6 +152,7 @@ component {
 				var selectFieldList = configService.getSelectFields( entityName ).toList( ", " );
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
+					, summary = "GET /entity/#entityName#/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.get.description", defaultValue=$translateResource( uri="dataapi:operation.get.description", defaultValue="", data=[ entityTag ] ) )
 					, parameters = [ {
 							name        = "page"
@@ -183,10 +186,11 @@ component {
 
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].get = {
 					  tags = [ entityTag ]
+					, summary = "GET /entity/#entityName#/{recordId}/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.get.by.id.description", defaultValue=$translateResource( uri="dataapi:operation.get.by.id.description", defaultValue="", data=[ entityTag ] ) )
 					, responses = {
 						  "200" = {
-							  description = $translateResource( uri="dataapi:operation.#entityName#.get.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.get.by.id.200.description", defaultValue="" ) )
+							  description = $translateResource( uri="dataapi:operation.#entityName#.get.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.get.by.id.200.description", defaultValue="", data=[ entityTag ] ) )
 							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
 						  }
 						, "404" = {
@@ -205,6 +209,7 @@ component {
 
 			if ( configService.entityVerbIsSupported( entityName, "put" ) || configService.entityVerbIsSupported( entityName, "post" ) ) {
 				spec.components.schemas[ entityName & "upsert" ] = _getEntitySchema( entityName, false );
+				spec.components.schemas[ entityName & "upsertWithId" ] = _getEntitySchema( entityName, false, true );
 
 				spec.components.schemas[ "validationFailureMultiple#entityName#" ] = {
 					  required = [ "record", "valid", "errorMessages" ]
@@ -220,12 +225,13 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "put" ) ) {
 				spec.paths[ "/entity/#entityName#/" ].put = {
 					  tags = [ entityTag ]
+					, summary = "PUT /entity/#entityName#/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.put.description", defaultValue=$translateResource( uri="dataapi:operation.put.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsertWithId" } }
 						  } }
 					  }
 					, responses = {
@@ -242,21 +248,22 @@ component {
 
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].put = {
 					  tags = [ entityTag ]
+					, summary = "PUT /entity/#entityName#/{recordId}/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema = { "$ref"="##/components/schemas/#entityName#" }
+							schema = { "$ref"="##/components/schemas/#entityName#upsert" }
 						  } }
 					  }
 					, responses = {
 						  "200" = {
-							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.200.description", defaultValue="" ) )
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.200.description", defaultValue="", data=[ entityTag ] ) )
 							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
 						  }
 						, "404" = {
-							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.404.description", defaultValue="" ) )
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.404.description", defaultValue="", data=[ entityTag ] ) )
 						  }
 						, "422" = {
 							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.422.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.422.description", defaultValue="", data=[ entityTag ] ) )
@@ -276,12 +283,13 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "post" ) ) {
 				spec.paths[ "/entity/#entityName#/" ].post = {
 					  tags = [ entityTag ]
+					, summary = "POST /entity/#entityName#/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.post.description", defaultValue=$translateResource( uri="dataapi:operation.post.description", defaultValue="", data=[ entityTag ] ) )
 					, requestBody = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=$translateResource( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsert" } }
 						  } }
 					  }
 					, responses = {
@@ -300,6 +308,7 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "delete" ) ) {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].delete = {
 					  tags = [ entityTag ]
+					, summary = "DELETE /entity/#entityName#/{recordId}/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.delete.description", defaultValue=$translateResource( uri="dataapi:operation.delete.description", defaultValue="", data=[ entityTag ] ) )
 					, responses = { "200" = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.delete.200.description", defaultValue=$translateResource( uri="dataapi:operation.delete.200.description", defaultValue="" ) )
@@ -318,7 +327,7 @@ component {
 		}
 	}
 
-	private struct function _getEntitySchema( required string entityName, boolean forSelect=true ) {
+	private struct function _getEntitySchema( required string entityName, boolean forSelect=true, boolean forceIdField=false ) {
 		var schema        = { required=[], properties=StructNew( "linked" ) };
 		var confService   = _getConfigService();
 		var fields        = arguments.forSelect ? confService.getSelectFields( arguments.entityName ) : confService.getUpsertFields( arguments.entityName );
@@ -326,6 +335,14 @@ component {
 		var objectName    = confService.getEntityObject( arguments.entityName );
 		var props         = $getPresideObjectService().getObjectProperties( objectName );
 		var basei18n      = $getPresideObjectService().getResourceBundleUriRoot( objectName );
+
+		if ( arguments.forceIdField ) {
+			var idField = $getPresideObjectService().getIdField( objectName );
+
+			if ( !fields.find( idField ) ) {
+				fields.prepend( idField );
+			}
+		}
 
 		for( var field in fields ) {
 			if ( IsBoolean( props[ field ].required ?: "" ) && props[ field ].required ) {
