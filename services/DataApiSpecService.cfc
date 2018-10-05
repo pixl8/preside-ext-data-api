@@ -209,6 +209,7 @@ component {
 
 			if ( configService.entityVerbIsSupported( entityName, "put" ) || configService.entityVerbIsSupported( entityName, "post" ) ) {
 				spec.components.schemas[ entityName & "upsert" ] = _getEntitySchema( entityName, false );
+				spec.components.schemas[ entityName & "upsertWithId" ] = _getEntitySchema( entityName, false, true );
 
 				spec.components.schemas[ "validationFailureMultiple#entityName#" ] = {
 					  required = [ "record", "valid", "errorMessages" ]
@@ -230,7 +231,7 @@ component {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsertWithId" } }
 						  } }
 					  }
 					, responses = {
@@ -253,7 +254,7 @@ component {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema = { "$ref"="##/components/schemas/#entityName#" }
+							schema = { "$ref"="##/components/schemas/#entityName#upsert" }
 						  } }
 					  }
 					, responses = {
@@ -288,7 +289,7 @@ component {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=$translateResource( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entityTag ] ) )
 						, required    = true
 						, content     = { "application/json" = {
-							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
+							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsert" } }
 						  } }
 					  }
 					, responses = {
@@ -326,7 +327,7 @@ component {
 		}
 	}
 
-	private struct function _getEntitySchema( required string entityName, boolean forSelect=true ) {
+	private struct function _getEntitySchema( required string entityName, boolean forSelect=true, boolean forceIdField=false ) {
 		var schema        = { required=[], properties=StructNew( "linked" ) };
 		var confService   = _getConfigService();
 		var fields        = arguments.forSelect ? confService.getSelectFields( arguments.entityName ) : confService.getUpsertFields( arguments.entityName );
@@ -334,6 +335,14 @@ component {
 		var objectName    = confService.getEntityObject( arguments.entityName );
 		var props         = $getPresideObjectService().getObjectProperties( objectName );
 		var basei18n      = $getPresideObjectService().getResourceBundleUriRoot( objectName );
+
+		if ( arguments.forceIdField ) {
+			var idField = $getPresideObjectService().getIdField( objectName );
+
+			if ( !fields.find( idField ) ) {
+				fields.prepend( idField );
+			}
+		}
 
 		for( var field in fields ) {
 			if ( IsBoolean( props[ field ].required ?: "" ) && props[ field ].required ) {
