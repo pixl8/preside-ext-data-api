@@ -23,6 +23,10 @@ component {
 		var entity        = tokens.entity ?: "";
 		var configService = _getConfigService();
 
+		if ( restRequest.getUri().reFindNoCase( "^/(queue|spec|docs)/" ) ) {
+			return;
+		}
+
 		if ( !configService.entityIsEnabled( entity ) ) {
 			restResponse.setStatus( 404, "not found" );
 			restRequest.finish();
@@ -37,8 +41,6 @@ component {
 			);
 			restRequest.finish();
 		}
-
-		$getRequestContext().cachePage( false );
 	}
 
 	public any function getPaginatedRecords(
@@ -134,21 +136,6 @@ component {
 		var dao = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
 
 		return dao.deleteData( id=arguments.recordId );
-	}
-
-	public numeric function batchDeleteRecords( required string entity, required array recordIds ) {
-		if ( !arguments.recordIds.len() ) {
-			return 0;
-		}
-
-		var objectName = _getConfigService().getEntityObject( arguments.entity );
-		var idField    = $getPresideObjectService().getIdField( objectName );
-		var dao        = $getPresideObject( objectName );
-		var filter     = {};
-
-		filter[ idField ] = arguments.recordIds;
-
-		return dao.deleteData( filter=filter );
 	}
 
 	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
@@ -298,15 +285,16 @@ component {
 		return prepped;
 	}
 
-	private struct function _translateValidationErrors( required any validationResult ) {
+	private array function _translateValidationErrors( required any validationResult ) {
 		var messages = validationResult.getMessages();
+		var translated = [];
 
 		for( var fieldName in messages ) {
-			messages[ fieldName ] = $translateResource(
+			translated.append( { field=fieldName, message=$translateResource(
 				  uri          = messages[ fieldName ].message ?: ""
 				, defaultValue = messages[ fieldName ].message ?: ""
 				, data         = messages[ fieldName ].params  ?: []
-			);
+			) } );
 		}
 
 		return messages;
