@@ -138,21 +138,6 @@ component {
 		return dao.deleteData( id=arguments.recordId );
 	}
 
-	public numeric function batchDeleteRecords( required string entity, required array recordIds ) {
-		if ( !arguments.recordIds.len() ) {
-			return 0;
-		}
-
-		var objectName = _getConfigService().getEntityObject( arguments.entity );
-		var idField    = $getPresideObjectService().getIdField( objectName );
-		var dao        = $getPresideObject( objectName );
-		var filter     = {};
-
-		filter[ idField ] = arguments.recordIds;
-
-		return dao.deleteData( filter=filter );
-	}
-
 	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
 		var ruleset = _getConfigService().getValidationRulesetForEntity( arguments.entity );
 
@@ -191,74 +176,6 @@ component {
 			, data          = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
 			, ignoreMissing = arguments.ignoreMissing
 		) );
-	}
-
-	public struct function getSpec() {
-		var event    = $getRequestContext();
-		var site     = event.getSite();
-		var domain   = site.domain ?: event.getServerName()
-		var protocol = site.protocol ?: event.getProtocol();
-		var spec = {
-			  openapi    = "3.0.1"
-			, info       = { title=$translateResource( "dataapi:api.title" ), description=$translateResource( "dataapi:api.description", "" ), version=$translateResource( "dataapi:api.version" ) }
-			, servers    = [ { url="#protocol#://#domain#/api/data/v1" } ]
-			, security   = [ { basic=[] } ]
-			, paths      = StructNew( "linked" )
-			, tags       = [ { name=$translateResource( "dataapi:tags.queue.title" ), description=$translateResource( "dataapi:tags.queue.description" ) } ]
-			, components = {
-				  securitySchemes = { basic={ type="http", scheme="Basic", description=$translateResource( "dataapi:basic.auth.description" ) } }
-				, schemas         = {}
-				, headers         = {}
-			  }
-		};
-
-		spec.components.headers.XTotalRecords = {
-			  description = $translateResource( "dataapi:headers.XTotalRecords.description" )
-			, schema      = { type="integer" }
-		};
-		spec.components.headers.Link = {
-			  description = $translateResource( "dataapi:headers.Link.description" )
-			, schema      = { type="string" }
-		};
-		spec.components.schemas.QueueItem = {
-			  required = [ "operation", "entity", "recordId", "queueId" ]
-			, properties = {
-				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ) }
-				, entity    = { type="string", description=$translateResource( "dataapi:schemas.queueItem.entity"    ) }
-				, recordId  = { type="string", description=$translateResource( "dataapi:schemas.queueItem.recordId"  ) }
-				, queueId   = { type="string", description=$translateResource( "dataapi:schemas.queueItem.queueId"   ) }
-				, record    = { type="object", description=$translateResource( "dataapi:schemas.queueItem.record"    ) }
-			}
-		};
-
-
-		spec.paths[ "/queue/" ] = {
-			get = {
-				  summary = $translateResource( "dataapi:operation.queue.get" )
-				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
-				, responses = { "200" = {
-					  description = $translateResource( "dataapi:operation.queue.get.200.description" )
-					, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/QueueItem" } } }
-					, headers     = {
-						  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
-						, "Link"            = { "$ref"="##/components/headers/Link" }
-					  }
-				  } }
-			}
-		};
-		spec.paths[ "/queue/{queueId}/" ] = {
-			delete = {
-				  summary = $translateResource( "dataapi:operation.queue.delete" )
-				, tags = [ $translateResource( "dataapi:tags.queue.title" ) ]
-				, responses = { "200" = {
-					  description = $translateResource( "dataapi:operation.queue.delete.200.description" )
-					, content     = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description="Number of items removed from the queue. i.e. 1 for success, 0 for no items removed. Either way, operation should be deemed as successful as the item is definitely no longer in the queue." } } } } }
-				  } }
-			},
-			parameters = [{name="queueId", in="path", required=true, description=$translateResource( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
-		};
-
-		return spec;
 	}
 
 

@@ -4,10 +4,10 @@
  */
 component {
 
-	property name="dataApiService" inject="dataApiService";
+	property name="dataApiSpecService" inject="dataApiSpecService";
 
 	public void function get() {
-		restResponse.setData( dataApiService.getSpec() );
+		restResponse.setData( dataApiSpecService.getSpec() );
 	}
 
 }
