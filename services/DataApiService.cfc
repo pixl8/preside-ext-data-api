@@ -285,15 +285,16 @@ component {
 		return prepped;
 	}
 
-	private struct function _translateValidationErrors( required any validationResult ) {
+	private array function _translateValidationErrors( required any validationResult ) {
 		var messages = validationResult.getMessages();
+		var translated = [];
 
 		for( var fieldName in messages ) {
-			messages[ fieldName ] = $translateResource(
+			translated.append( { field=fieldName, message=$translateResource(
 				  uri          = messages[ fieldName ].message ?: ""
 				, defaultValue = messages[ fieldName ].message ?: ""
 				, data         = messages[ fieldName ].params  ?: []
-			);
+			) } );
 		}
 
 		return messages;

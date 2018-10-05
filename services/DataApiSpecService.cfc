@@ -23,6 +23,7 @@ component {
 
 		_addGeneralSpec( spec );
 		_addCommonHeaderSpecs( spec );
+		_addCommonSchemas( spec );
 		_addQueueSpec( spec );
 		_addEntitySpecs( spec );
 
@@ -67,6 +68,17 @@ component {
 			  description = $translateResource( "dataapi:headers.Link.description" )
 			, schema      = { type="string" }
 		};
+	}
+
+	private void function _addCommonSchemas( required struct spec ) {
+		spec.components.schemas.validationMessage = {
+			  required = [ "field", "message" ]
+			, properties = {
+				  field   = { type="string", description=$translateResource( "dataapi:schemas.validationMessage.field" ) }
+				, message = { type="string", description=$translateResource( "dataapi:schemas.validationMessage.message" ) }
+			  }
+		};
+
 	}
 
 	private void function _addQueueSpec( required struct spec ) {
@@ -191,6 +203,18 @@ component {
 				};
 			}
 
+			if ( configService.entityVerbIsSupported( entityName, "put" ) || configService.entityVerbIsSupported( entityName, "post" ) ) {
+				spec.components.schemas[ "validationFailureMultiple#entityName#" ] = {
+					  required = [ "record", "valid", "errorMessages" ]
+					, title    = $translateResource( uri="dataapi:schemas.validationFailureMultiple.title", data=[ entityTag ] )
+					, properties = {
+						  record         = { "$ref"="##/components/schemas/#entityName#" }
+						, valid          = { type="boolean", description=$translateResource( uri="dataapi:schemas.validationFailure.valid"         , data=[ entityTag ] ) }
+						, errorMessages  = { type="array"  , description=$translateResource( uri="dataapi:schemas.validationFailure.errorMessages" , data=[ entityTag ] ), items={ "$ref"="##/components/schemas/validationMessage" } }
+					}
+				};
+			}
+
 			if ( configService.entityVerbIsSupported( entityName, "put" ) ) {
 				spec.paths[ "/entity/#entityName#/" ].put = {
 					  tags = [ entityTag ]
@@ -202,10 +226,16 @@ component {
 							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
 						  } }
 					  }
-					, responses = { "200" = {
-						  description = $translateResource( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entityTag ] ) )
-						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
-					  } }
+					, responses = {
+						  "200" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=$translateResource( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entityTag ] ) )
+							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+						  }
+						, "422" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.422.description", defaultValue=$translateResource( uri="dataapi:operation.put.422.description", defaultValue="", data=[ entityTag ] ) )
+							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationFailureMultiple#entityName#" } } } }
+						  }
+					  }
 				};
 
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].put = {
@@ -225,6 +255,10 @@ component {
 						  }
 						, "404" = {
 							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.404.description", defaultValue="" ) )
+						  }
+						, "422" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.put.by.id.422.description", defaultValue=$translateResource( uri="dataapi:operation.put.by.id.422.description", defaultValue="", data=[ entityTag ] ) )
+							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationMessage" } } } }
 						  }
 					  }
 					, parameters = [ {
@@ -248,10 +282,16 @@ component {
 							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } }
 						  } }
 					  }
-					, responses = { "200" = {
-						  description = $translateResource( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=$translateResource( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entityTag ] ) )
-						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
-					  } }
+					, responses = {
+						  "200" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=$translateResource( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entityTag ] ) )
+							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+						  }
+						, "422" = {
+							  description = $translateResource( uri="dataapi:operation.#entityName#.post.422.description", defaultValue=$translateResource( uri="dataapi:operation.post.422.description", defaultValue="", data=[ entityTag ] ) )
+							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationFailureMultiple#entityName#" } } } }
+						  }
+					  }
 				};
 			}
 
