@@ -16,7 +16,6 @@ component extends="coldbox.system.Interceptor" {
 
 
 			if ( api == "/data/v1" && resource.count() ) {
-				event.setValue( "restUserId", restRequest.getUser() );
 				dataApiService.onRestRequest( restRequest, restResponse );
 			}
 		}

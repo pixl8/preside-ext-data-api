@@ -37,8 +37,6 @@ component {
 			);
 			restRequest.finish();
 		}
-
-		$getRequestContext().cachePage( false );
 	}
 
 	public any function getPaginatedRecords(

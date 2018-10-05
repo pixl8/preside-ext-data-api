@@ -121,7 +121,7 @@ component {
 			var entities = {};
 
 			for( var objectName in objects ) {
-				var isEnabled = poService.getObjectAttribute( objectName, "dataApiEnabled" );
+				var isEnabled = objectIsApiEnabled( objectName );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
 					var entityName     = poService.getObjectAttribute( objectName, "dataApiEntityName", objectName );
 					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
@@ -147,6 +147,17 @@ component {
 			}
 
 			return entities;
+		} );
+	}
+
+	public boolean function objectIsApiEnabled( required string objectName ) {
+		var args     = arguments;
+		var cacheKey = "objectIsApiEnabled" & args.objectName;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled" )
+
+			return IsBoolean( isEnabled ) && isEnabled && !ReFindNoCase( "^vrsn_", args.objectName );
 		} );
 	}
 
