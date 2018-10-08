@@ -41,6 +41,8 @@ component {
 			, "postDataApiUpdateData"
 			, "preDataApiDeleteData"
 			, "postDataApiDeleteData"
+			, "preDataApiSelectData"
+			, "postDataApiSelectData"
 		], true );
 	}
 }
