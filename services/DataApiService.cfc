@@ -48,11 +48,13 @@ component {
 		, required numeric page
 		, required numeric pageSize
 		, required array   fields
+		,          struct  filters = {}
 	) {
 		var args = {
 			  maxRows  = pageSize
 			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
 			, orderby  = "datemodified"
+			, filter   = {}
 		};
 		if ( args.maxRows < 1 ) {
 			args.maxRows = 100;
@@ -61,10 +63,22 @@ component {
 			args.startRow = 1;
 		}
 
+		if ( arguments.filters.count() ) {
+			var configService = _getConfigService();
+			var filterFields = configService.getFilterFields( arguments.entity );
+
+			for( var field in filterFields ) {
+				if ( arguments.filters.keyExists( field ) ) {
+					args.filter[ configService.getPropertyNameFromFieldAlias( arguments.entity, field ) ] = arguments.filters[ field ];
+				}
+			}
+		}
+
 		var result = {
 			  records    = _selectData( arguments.entity, args, arguments.fields )
 			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
 		};
+
 
 
 		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
@@ -93,11 +107,15 @@ component {
 	public struct function createRecord( required string entity, required any record ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
-		var newId      = dao.insertData(
+		var args       = {
 			  data                      = _prepRecordForInsertAndUpdate( arguments.entity, arguments.record )
 			, insertManyToManyRecords   = true
 			, bypassTrivialInterceptors = true
-		);
+		};
+
+		$announceInterception( "preDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record } );
+		var newId = dao.insertData( argumentCollection=args );
+		$announceInterception( "postDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record, newId=newId } );
 
 		return getSingleRecord( arguments.entity, newId, [] );
 	}
@@ -124,18 +142,29 @@ component {
 	public any function updateSingleRecord( required string entity, required struct data, required string recordId ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
-
-		return dao.updateData(
+		var args       = {
 			  id                      = arguments.recordId
 			, data                    = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
 			, updateManyToManyRecords = true
-		);
+		};
+
+		$announceInterception( "preDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		var recordsUpdated = dao.updateData( argumentCollection=args );
+		$announceInterception( "postDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+
+
+		return recordsUpdated;
 	}
 
 	public numeric function deleteSingleRecord( required string entity, required string recordId ) {
 		var dao = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
+		var args = { id=arguments.recordId };
 
-		return dao.deleteData( id=arguments.recordId );
+		$announceInterception( "preDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+		var recordsDeleted = dao.deleteData( argumentCollection=args );
+		$announceInterception( "postDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+
+		return recordsDeleted;
 	}
 
 	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
@@ -193,6 +222,8 @@ component {
 		args.autoGroupBy             = true;
 		args.distinct                = true;
 		args.recordCountOnly         = args.recordCountOnly ?: false;
+
+		$announceInterception( "preDataApiSelectData", { selectDataArgs=args, entity=arguments.entity } );
 
 		if ( args.recordCountOnly ) {
 			return dao.selectData( argumentCollection=args );
@@ -297,7 +328,7 @@ component {
 			) } );
 		}
 
-		return messages;
+		return translated;
 	}
 
 // GETTERS AND SETTERS

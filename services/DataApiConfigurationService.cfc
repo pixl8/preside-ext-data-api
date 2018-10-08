@@ -91,6 +91,18 @@ component {
 		} );
 	}
 
+	public array function getFilterFields( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getFilterFields" & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName   = getEntityObject( args.entity );
+			var filterFields = $getPresideObjectService().getObjectAttribute( objectName, "dataApiFilterFields", _getDefaultFilterFields( args.entity ) );
+
+			return ListToArray( filterFields );
+		} );
+	}
+
 	public array function getUpsertFields( required string entity ) {
 		var args     = arguments;
 		var cacheKey = "getUpsertFields" & args.entity;
@@ -132,10 +144,12 @@ component {
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
-					var entityName     = getObjectEntity( objectName );
-					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
-					var selectFields   = poService.getObjectAttribute( objectName, "dataApiFields", "" );
-					var upsertFields   = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
+					var entityName          = getObjectEntity( objectName );
+					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
+					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields", "" );
+					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
+					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields", "" );
+					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields", "" );
 
 					entities[ entityName ] = {
 						  objectName   = objectName
@@ -152,6 +166,18 @@ component {
 					}
 
 					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields );
+
+					if ( excludeFields.len() ) {
+						for( var field in ListToArray( excludeFields ) ) {
+							entities[ entityName ].selectFields.delete( field );
+						}
+					}
+					if ( !upsertExcludeFields.len() ) { upsertExcludeFields = excludeFields; }
+					if ( upsertExcludeFields.len() ) {
+						for( var field in ListToArray( upsertExcludeFields ) ) {
+							entities[ entityName ].upsertFields.delete( field );
+						}
+					}
 				}
 			}
 
@@ -201,6 +227,18 @@ component {
 
 			return rulesetName;
 		} );
+	}
+
+	public string function getPropertyNameFromFieldAlias( required string entity, required string field ) {
+		var fieldSettings = getFieldSettings( arguments.entity );
+
+		for( var fieldName in fieldSettings ) {
+			if ( fieldSettings[ fieldName ].alias == arguments.field ) {
+				return fieldName;
+			}
+		}
+
+		return arguments.field;
 	}
 
 // PRIVATE HELPERS
@@ -279,6 +317,34 @@ component {
 		}
 
 		return cleaned;
+	}
+
+	private string function _getDefaultFilterFields( required string entity ) {
+		var fields        = [];
+		var objectName    = getEntityObject( arguments.entity );
+		var selectFields  = getSelectFields( arguments.entity );
+		var props         = $getPresideObjectService().getObjectProperties( objectName );
+		var acceptedTypes = [ "boolean" ];
+
+		for( var propName in props ) {
+			if ( !selectFields.find( propName ) ) {
+				continue;
+			}
+
+			var relationship  = props[ propName ].relationship ?: "";
+			var fieldType     = LCase( props[ propName ].type ?: "" );
+			var enum          = props[ propName ].enum ?: "";
+			var isFilterField = relationship == "many-to-one" || Len( Trim( enum ) ) || acceptedTypes.find( fieldType );
+
+			if ( isFilterField ) {
+				var fieldName = LCase( props[ propName ].dataApiAlias ?: propName );
+				if ( !fields.find( fieldName ) ) {
+					fields.append( fieldName );
+				}
+			}
+		}
+
+		return fields.toList();
 	}
 
 // GETTERS AND SETTERS

@@ -58,7 +58,7 @@ component {
 			, ignoreMissing = true
 		);
 
-		if ( validationResult.count() ) {
+		if ( validationResult.len() ) {
 			restResponse.setError(
 				  errorCode      = 422
 				, title          = "Validation failure"

@@ -32,5 +32,15 @@ component {
 			  class      = "app.extensions.preside-ext-data-api.interceptors.DataApiInterceptors"
 			, properties = {}
 		});
+
+		conf.interceptorSettings.customInterceptionPoints.append( [
+			  "onOpenApiSpecGeneration"
+			, "preDataApiInsertData"
+			, "postDataApiInsertData"
+			, "preDataApiUpdateData"
+			, "postDataApiUpdateData"
+			, "preDataApiDeleteData"
+			, "postDataApiDeleteData"
+		], true );
 	}
 }
