@@ -415,7 +415,7 @@ component {
 		if ( Len( Trim( arguments.enum ) ) ) {
 			var enumIds = $getColdbox().getSetting( name="enum.#arguments.enum#", defaultValue=[] );
 			if ( IsArray( enumIds ) && enumIds.len() ) {
-				return { type="string", format="#enumIds.toList( ', ' )#" };
+				return { type="string", enum=enumIds };
 			}
 		}
 
