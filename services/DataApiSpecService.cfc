@@ -27,6 +27,8 @@ component {
 		_addEntitySpecs( spec );
 		_addQueueSpec( spec );
 
+		$announceInterception( "onOpenApiSpecGeneration", { spec=spec } );
+
 
 		return spec;
 	}
