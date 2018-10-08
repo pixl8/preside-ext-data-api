@@ -62,7 +62,7 @@
     </style>
   </head>
   <body>
-    <redoc spec-url='#args.specsEndpoint#'></redoc>
+    <redoc spec-url='#args.specsEndpoint#' required-props-first="true" suppress-warnings="true"></redoc>
     <script src="#args.docsJs#"> </script>
   </body>
 </html></cfoutput>
