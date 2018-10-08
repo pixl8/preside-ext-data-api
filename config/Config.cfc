@@ -33,6 +33,14 @@ component {
 			, properties = {}
 		});
 
-		conf.interceptorSettings.customInterceptionPoints.append( "onOpenApiSpecGeneration" );
+		conf.interceptorSettings.customInterceptionPoints.append( [
+			  "onOpenApiSpecGeneration"
+			, "preDataApiInsertData"
+			, "postDataApiInsertData"
+			, "preDataApiUpdateData"
+			, "postDataApiUpdateData"
+			, "preDataApiDeleteData"
+			, "postDataApiDeleteData"
+		], true );
 	}
 }

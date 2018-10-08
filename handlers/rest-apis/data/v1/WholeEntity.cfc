@@ -79,7 +79,7 @@ component {
 				);
 				return;
 			}
-		} else if ( validationResult.count() ) {
+		} else if ( validationResult.len() ) {
 			restResponse.setError(
 				  errorCode      = 422
 				, title          = "Validation failure"
