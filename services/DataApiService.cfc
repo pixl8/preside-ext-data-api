@@ -235,6 +235,7 @@ component {
 		for( var record in records ) {
 			processed.append( _processFields( record, fieldSettings ) );
 		}
+		$announceInterception( "postDataApiSelectData", { selectDataArgs=args, entity=arguments.entity, data=processed } );
 
 		return processed;
 	}
