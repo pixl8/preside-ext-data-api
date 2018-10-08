@@ -132,10 +132,12 @@ component {
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
-					var entityName     = getObjectEntity( objectName );
-					var supportedVerbs = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
-					var selectFields   = poService.getObjectAttribute( objectName, "dataApiFields", "" );
-					var upsertFields   = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
+					var entityName          = getObjectEntity( objectName );
+					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
+					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields", "" );
+					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
+					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields", "" );
+					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields", "" );
 
 					entities[ entityName ] = {
 						  objectName   = objectName
@@ -152,6 +154,18 @@ component {
 					}
 
 					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields );
+
+					if ( excludeFields.len() ) {
+						for( var field in ListToArray( excludeFields ) ) {
+							entities[ entityName ].selectFields.delete( field );
+						}
+					}
+					if ( !upsertExcludeFields.len() ) { upsertExcludeFields = excludeFields; }
+					if ( upsertExcludeFields.len() ) {
+						for( var field in ListToArray( upsertExcludeFields ) ) {
+							entities[ entityName ].upsertFields.delete( field );
+						}
+					}
 				}
 			}
 
