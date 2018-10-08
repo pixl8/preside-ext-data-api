@@ -22,6 +22,7 @@ component {
 		var spec = StructNew( "linked" );
 
 		_addGeneralSpec( spec );
+		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
 		_addEntitySpecs( spec );
@@ -55,6 +56,14 @@ component {
 		};
 		spec.tags  = [];
 		spec.paths = StructNew( "linked" );
+	}
+
+	private void function _addTraits( required struct spec ) {
+		spec.tags.append({
+			  name         = $translateResource( "dataapi:trait.pagination.title" )
+			, description  = $translateResource( "dataapi:trait.pagination.description" )
+			, "x-traitTag" = true
+		});
 	}
 
 	private void function _addCommonHeaderSpecs( required struct spec ) {
