@@ -1,0 +1,350 @@
+/**
+ * @presideService true
+ * @singleton      true
+ */
+component {
+
+// CONSTRUCTOR
+	/**
+	 * @presideRestService.inject presideRestService
+	 * @configService.inject      dataApiConfigurationService
+	 *
+	 */
+	public any function init( required any presideRestService, required any configService ) {
+		_setPresideRestService( arguments.presideRestService );
+		_setConfigService( arguments.configService );
+
+		return this;
+	}
+
+// PUBLIC API METHODS
+	public void function onRestRequest( required any restRequest, required any restResponse ) {
+		var tokens        = _getPresideRestService().extractTokensFromUri( restRequest );
+		var entity        = tokens.entity ?: "";
+		var configService = _getConfigService();
+
+		if ( restRequest.getUri().reFindNoCase( "^/(queue|spec|docs)/" ) ) {
+			return;
+		}
+
+		if ( !configService.entityIsEnabled( entity ) ) {
+			restResponse.setStatus( 404, "not found" );
+			restRequest.finish();
+		}
+
+		if ( !configService.entityVerbIsSupported( entity, restRequest.getVerb() ) ) {
+			restResponse.setError(
+				  errorCode = 405
+				, title     = "REST API Method not supported"
+				, type      = "rest.method.unsupported"
+				, message   = "The requested resource, [#restRequest.getUri()#], does not support the [#UCase( restRequest.getVerb() )#] method"
+			);
+			restRequest.finish();
+		}
+	}
+
+	public any function getPaginatedRecords(
+		  required string  entity
+		, required numeric page
+		, required numeric pageSize
+		, required array   fields
+		,          struct  filters = {}
+	) {
+		var args = {
+			  maxRows  = pageSize
+			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
+			, orderby  = "datemodified"
+			, filter   = {}
+		};
+		if ( args.maxRows < 1 ) {
+			args.maxRows = 100;
+		}
+		if ( args.startRow < 1 ) {
+			args.startRow = 1;
+		}
+
+		if ( arguments.filters.count() ) {
+			var configService = _getConfigService();
+			var filterFields = configService.getFilterFields( arguments.entity );
+
+			for( var field in filterFields ) {
+				if ( arguments.filters.keyExists( field ) ) {
+					args.filter[ configService.getPropertyNameFromFieldAlias( arguments.entity, field ) ] = arguments.filters[ field ];
+				}
+			}
+		}
+
+		var result = {
+			  records    = _selectData( arguments.entity, args, arguments.fields )
+			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
+		};
+
+
+
+		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
+		result.prevPage   = arguments.page -1;
+		result.nextPage   = arguments.page >= result.totalPages ? 0 : arguments.page+1;
+
+		return result;
+	}
+
+	public any function getSingleRecord( required string entity, required string recordId, required array fields ) {
+		var records  = _selectData( arguments.entity, { id=arguments.recordId }, arguments.fields );
+
+		return records[ 1 ] ?: {};
+	}
+
+	public array function createRecords( required string entity, required array records ) {
+		var created = [];
+
+		for( var record in records ) {
+			created.append( createRecord( entity, record ) );
+		}
+
+		return created;
+	}
+
+	public struct function createRecord( required string entity, required any record ) {
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+		var args       = {
+			  data                      = _prepRecordForInsertAndUpdate( arguments.entity, arguments.record )
+			, insertManyToManyRecords   = true
+			, bypassTrivialInterceptors = true
+		};
+
+		$announceInterception( "preDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record } );
+		var newId = dao.insertData( argumentCollection=args );
+		$announceInterception( "postDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record, newId=newId } );
+
+		return getSingleRecord( arguments.entity, newId, [] );
+	}
+
+	public any function batchUpdateRecords( required string entity, required array records ) {
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+		var idField    = $getPresideObjectService().getIdField( objectName );
+		var updated    = [];
+		var recordId   = "";
+
+		for( var record in records ) {
+			recordId = record[ idField ] ?: "";
+			if ( Len( Trim( recordId ) ) ) {
+				if ( updateSingleRecord( arguments.entity, record, recordId ) ) {
+					updated.append( getSingleRecord( entity, recordId, [] ) );
+				}
+			}
+		}
+
+		return updated;
+	}
+
+	public any function updateSingleRecord( required string entity, required struct data, required string recordId ) {
+		var objectName = _getConfigService().getEntityObject( arguments.entity );
+		var dao        = $getPresideObject( objectName );
+		var args       = {
+			  id                      = arguments.recordId
+			, data                    = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
+			, updateManyToManyRecords = true
+		};
+
+		$announceInterception( "preDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		var recordsUpdated = dao.updateData( argumentCollection=args );
+		$announceInterception( "postDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+
+
+		return recordsUpdated;
+	}
+
+	public numeric function deleteSingleRecord( required string entity, required string recordId ) {
+		var dao = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
+		var args = { id=arguments.recordId };
+
+		$announceInterception( "preDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+		var recordsDeleted = dao.deleteData( argumentCollection=args );
+		$announceInterception( "postDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+
+		return recordsDeleted;
+	}
+
+	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
+		var ruleset = _getConfigService().getValidationRulesetForEntity( arguments.entity );
+
+		if ( IsArray( arguments.data ) ) {
+			var result = { validated=true, validationResults=[] };
+			for( var record in arguments.data ) {
+				var validation = $getValidationEngine().validate(
+					  ruleset       = ruleset
+					, data          = _prepRecordForInsertAndUpdate( arguments.entity, record )
+					, ignoreMissing = arguments.ignoreMissing
+				);
+
+				if ( validation.validated() ) {
+					result.validationResults.append({
+						  record        = record
+						, valid         = true
+						, errorMessages = {}
+					});
+
+				} else {
+					result.validationResults.append({
+						  record        = record
+						, valid         = false
+						, errorMessages = _translateValidationErrors( validation )
+					});
+
+					result.validated = false;
+				}
+			}
+
+			return result;
+		}
+
+		return _translateValidationErrors( $getValidationEngine().validate(
+			  ruleset       = ruleset
+			, data          = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
+			, ignoreMissing = arguments.ignoreMissing
+		) );
+	}
+
+
+// PRIVATE HELPERS
+	private any function _selectData( required string entity, required struct args, array fields=[] ) {
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var dao           = $getPresideObject( objectName );
+		var fieldSettings = configService.getFieldSettings( arguments.entity );
+
+		args.selectFields            = _prepareSelectFields( objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
+		args.fromVersionTable        = false;
+		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
+		args.allowDraftVersions      = false;
+		args.autoGroupBy             = true;
+		args.distinct                = true;
+		args.recordCountOnly         = args.recordCountOnly ?: false;
+
+		$announceInterception( "preDataApiSelectData", { selectDataArgs=args, entity=arguments.entity } );
+
+		if ( args.recordCountOnly ) {
+			return dao.selectData( argumentCollection=args );
+		}
+
+		var records   = dao.selectData( argumentCollection=args );
+		var processed = [];
+
+		for( var record in records ) {
+			processed.append( _processFields( record, fieldSettings ) );
+		}
+		$announceInterception( "postDataApiSelectData", { selectDataArgs=args, entity=arguments.entity, data=processed } );
+
+		return processed;
+	}
+
+	private struct function _processFields( required struct record, required struct fieldSettings ) {
+		var processed = {};
+
+		for( var field in record ) {
+			var renderer = fieldSettings[ field ].renderer ?: "none";
+			var alias    = fieldSettings[ field ].alias ?: field;
+
+			processed[ alias ] = _renderField( record[ field ], renderer );
+		}
+
+		return processed;
+	}
+
+	private any function _renderField( required any value, required string renderer ) {
+		switch( renderer ) {
+			case "date"           : return IsDate( arguments.value ) ? DateFormat( arguments.value, "yyyy-mm-dd" ) : NullValue();
+			case "datetime"       : return IsDate( arguments.value ) ? DateTimeFormat( arguments.value, "yyyy-mm-dd HH:nn:ss" ) : NullValue();
+			case "strictboolean"  : return IsBoolean( arguments.value ) && arguments.value;
+			case "nullableboolean": return IsBoolean( arguments.value ) ? arguments.value : NullValue();
+			case "array"          : return ListToArray( arguments.value );
+			case "none":
+			case "":
+				return arguments.value;
+		}
+
+		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
+			return $renderContent( renderer, arguments.value, "dataapi" );
+		}
+
+		return arguments.value;
+	}
+
+	private array function _prepareSelectFields( required string objectName, required array defaultFields, required array suppliedFields ) {
+		var filtered = [];
+		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
+
+		if ( !suppliedFields.len() ) {
+			filtered = arguments.defaultFields;
+		} else {
+			for( var field in suppliedFields ) {
+				if ( defaultFields.find( LCase( field ) ) ) {
+					filtered.append( field );
+				}
+			}
+		}
+
+		var prepared = [];
+		for( var field in filtered ) {
+			if ( ( props[ field ].relationship ?: "" ) == "many-to-many" ) {
+				prepared.append( "group_concat( distinct `#field#`.`id` ) as `#field#`" );
+			} else {
+				prepared.append( field );
+			}
+		}
+
+		return prepared;
+	}
+
+	private struct function _prepRecordForInsertAndUpdate( required string entity, required struct record ) {
+		var prepped       = {};
+		var allowedFields = _getConfigService().getUpsertFields( arguments.entity );
+		var fieldSettings = _getConfigService().getFieldSettings( arguments.entity );
+
+		for( var field in allowedFields ) {
+			var alias = fieldSettings[ field ].alias ?: field;
+			if ( record.keyExists( alias ) ) {
+				if ( IsSimpleValue( arguments.record[ alias ] ) ) {
+					prepped[ field ] = arguments.record[ alias ];
+				} else if ( IsArray( arguments.record[ alias ] ) ) {
+					prepped[ field ] = arguments.record[ alias ].toList();
+				}
+			}
+		}
+
+		return prepped;
+	}
+
+	private array function _translateValidationErrors( required any validationResult ) {
+		var messages = validationResult.getMessages();
+		var translated = [];
+
+		for( var fieldName in messages ) {
+			translated.append( { field=fieldName, message=$translateResource(
+				  uri          = messages[ fieldName ].message ?: ""
+				, defaultValue = messages[ fieldName ].message ?: ""
+				, data         = messages[ fieldName ].params  ?: []
+			) } );
+		}
+
+		return translated;
+	}
+
+// GETTERS AND SETTERS
+	private any function _getPresideRestService() {
+		return _presideRestService;
+	}
+	private void function _setPresideRestService( required any presideRestService ) {
+		_presideRestService = arguments.presideRestService;
+	}
+
+	private any function _getConfigService() {
+		return _configService;
+	}
+	private void function _setConfigService( required any configService ) {
+		_configService = arguments.configService;
+	}
+
+}
