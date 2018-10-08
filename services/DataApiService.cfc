@@ -48,11 +48,13 @@ component {
 		, required numeric page
 		, required numeric pageSize
 		, required array   fields
+		,          struct  filters = {}
 	) {
 		var args = {
 			  maxRows  = pageSize
 			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
 			, orderby  = "datemodified"
+			, filter   = {}
 		};
 		if ( args.maxRows < 1 ) {
 			args.maxRows = 100;
@@ -61,10 +63,22 @@ component {
 			args.startRow = 1;
 		}
 
+		if ( arguments.filters.count() ) {
+			var configService = _getConfigService();
+			var filterFields = configService.getFilterFields( arguments.entity );
+
+			for( var field in filterFields ) {
+				if ( arguments.filters.keyExists( field ) ) {
+					args.filter[ configService.getPropertyNameFromFieldAlias( arguments.entity, field ) ] = arguments.filters[ field ];
+				}
+			}
+		}
+
 		var result = {
 			  records    = _selectData( arguments.entity, args, arguments.fields )
 			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
 		};
+
 
 
 		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );

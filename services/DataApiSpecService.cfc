@@ -150,29 +150,41 @@ component {
 
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
 				var selectFieldList = configService.getSelectFields( entityName ).toList( ", " );
+				var params = [ {
+					name        = "page"
+				  , in          = "query"
+				  , required    = false
+				  , description = $translateResource( uri="dataapi:operation.get.params.page", defaultValue="", data=[ entityTag ] )
+				  , schema      = { type="integer" }
+				},{
+					name        = "pageSize"
+				  , in          = "query"
+				  , required    = false
+				  , description = $translateResource( uri="dataapi:operation.get.params.pageSize", defaultValue="", data=[ entityTag ] )
+				  , schema      = { type="integer" }
+				},{
+					name        = "fields"
+				  , in          = "query"
+				  , required    = false
+				  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, selectFieldList ] )
+				  , schema      = { type="string" }
+				} ];
+
+				for( var field in configService.getFilterFields( entityName ) ) {
+					params.append( {
+						  name        = "filter.#field#"
+						, in          = "query"
+						, required    = false
+						, description = $translateResource( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=$translateResource( uri=basei18n & "field.#field#.help", defaultValue="" ) )
+						, schema      = _getFieldSchema( entityName, field )
+					} );
+				}
+
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
 					, summary = "GET /entity/#entityName#/"
 					, description = $translateResource( uri="dataapi:operation.#entityName#.get.description", defaultValue=$translateResource( uri="dataapi:operation.get.description", defaultValue="", data=[ entityTag ] ) )
-					, parameters = [ {
-							name        = "page"
-						  , in          = "query"
-						  , required    = false
-						  , description = $translateResource( uri="dataapi:operation.get.params.page", defaultValue="", data=[ entityTag ] )
-						  , schema      = { type="integer" }
-					  },{
-							name        = "pageSize"
-						  , in          = "query"
-						  , required    = false
-						  , description = $translateResource( uri="dataapi:operation.get.params.pageSize", defaultValue="", data=[ entityTag ] )
-						  , schema      = { type="integer" }
-					  },{
-							name        = "fields"
-						  , in          = "query"
-						  , required    = false
-						  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, selectFieldList ] )
-						  , schema      = { type="string" }
-					  } ]
+					, parameters = params
 					, responses = { "200" = {
 						  description = $translateResource( uri="dataapi:operation.#entityName#.get.200.description", defaultValue=$translateResource( uri="dataapi:operation.get.200.description", defaultValue="", data=[ entityTag ] ) )
 						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
@@ -364,14 +376,16 @@ component {
 		  string relationship = ""
 		, string type         = ""
 		, string dbtype       = ""
+		, string enum         = ""
 	) {
 		if ( relationship=="many-to-many" ) {
-			return { type="array", items={ type="string" } };
+			return { type="array", items={ type="string", format="Foreign Key (UUID)" } };
+		} else if ( relationship=="many-to-one" ) {
+			return { type="string", format="Foreign Key (UUID)" };
 		}
 
 		switch ( arguments.type ) {
 			case "boolean":
-			case "string":
 				return { type=arguments.type };
 
 			case "numeric":
@@ -396,7 +410,24 @@ component {
 			break;
 		}
 
+		if ( Len( Trim( arguments.enum ) ) ) {
+			var enumIds = $getColdbox().getSetting( name="enum.#arguments.enum#", defaultValue=[] );
+			if ( IsArray( enumIds ) && enumIds.len() ) {
+				return { type="string", format="#enumIds.toList( ', ' )#" };
+			}
+		}
+
+
 		return { type="string" };
+	}
+
+	private struct function _getFieldSchema( required string entity, required string field ) {
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var props         = $getPresideObjectService().getObjectProperties( objectName );
+		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
+
+		return _mapFieldType( argumentCollection=props[ propName ] ?: {} );
 	}
 
 

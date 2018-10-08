@@ -12,11 +12,19 @@ component {
 		,          numeric pageSize = 100
 		,          string  fields   = ""
 	) {
+		var filters = {};
+
+		for( var paramName in rc ) {
+			if ( paramName.reFindNoCase( "^filter\." ) ) {
+				filters[ paramName.reReplaceNoCase( "^filter\.", "" ) ] = rc[ paramName ];
+			}
+		}
 		var result = dataApiService.getPaginatedRecords(
 			  entity   = arguments.entity
 			, page     = arguments.page
 			, pageSize = arguments.pageSize
 			, fields   = ListToArray( arguments.fields )
+			, filters  = filters
 		);
 
 		restResponse.setData( result.records );
