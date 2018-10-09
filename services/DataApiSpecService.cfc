@@ -186,7 +186,7 @@ component {
 						  name        = "filter.#field#"
 						, in          = "query"
 						, required    = false
-						, description = $translateResource( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=$translateResource( uri=basei18n & "field.#field#.help", defaultValue="" ) )
+						, description = $translateResource( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=$translateResource( uri=basei18n & "field.#field#.help", defaultValue=$translateResource( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
 						, schema      = _getFieldSchema( entityName, field )
 					} );
 				}
