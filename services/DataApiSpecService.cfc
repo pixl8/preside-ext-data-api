@@ -160,7 +160,7 @@ component {
 			spec.components.schemas[ entityName ] = _getEntitySchema( entityName );
 
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
-				var selectFieldList = configService.getSelectFields( entityName ).toList( ", " );
+				var fieldsFilterList = configService.getSelectFields( entityName, true ).toList( ", " );
 				var params = [ {
 					name        = "page"
 				  , in          = "query"
@@ -177,7 +177,7 @@ component {
 					name        = "fields"
 				  , in          = "query"
 				  , required    = false
-				  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, selectFieldList ] )
+				  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, fieldsFilterList ] )
 				  , schema      = { type="string" }
 				} ];
 

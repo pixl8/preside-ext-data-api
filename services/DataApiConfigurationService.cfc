@@ -81,13 +81,24 @@ component {
 		} );
 	}
 
-	public array function getSelectFields( required string entity ) {
+	public array function getSelectFields( required string entity, boolean aliases=false ) {
 		var args     = arguments;
-		var cacheKey = "getSelectFields" & args.entity;
+		var cacheKey = "getSelectFields" & args.entity & args.aliases;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
-			return entities[ args.entity ].selectFields ?: [];
+			var fields = entities[ args.entity ].selectFields ?: [];
+
+			if ( !args.aliases ) {
+				return fields;
+			}
+
+			var aliases = [];
+			var fieldSettings = getFieldSettings( args.entity );
+			for( var field in fields ) {
+				aliases.append( fieldSettings[ field ].alias ?: field );
+			}
+			return aliases;
 		} );
 	}
 
