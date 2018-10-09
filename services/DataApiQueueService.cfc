@@ -135,7 +135,7 @@ component {
 		, any    filter     = {}
 	) {
 		if ( IsStruct( filter ) && filter.count() == 1 ) {
-			var value = filter.id ?: filter[ "#objectName#.id" ];
+			var value = filter.id ?: ( filter[ "#objectName#.id" ] ?: "" );
 			if ( !IsArray( value ) ) {
 				value = ListToArray( value );
 			}
@@ -146,6 +146,7 @@ component {
 		}
 
 		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabled( objectName ) ) {
+
 			var subscribers = getSubscribers( arguments.objectName, "delete" );
 
 			if ( subscribers.len() ) {
