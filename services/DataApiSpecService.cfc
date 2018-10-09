@@ -25,8 +25,8 @@ component {
 		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
-		_addEntitySpecs( spec );
 		_addQueueSpec( spec );
+		_addEntitySpecs( spec );
 
 		$announceInterception( "onOpenApiSpecGeneration", { spec=spec } );
 
@@ -101,7 +101,7 @@ component {
 		spec.components.schemas.QueueItem = {
 			  required = [ "operation", "entity", "recordId", "queueId" ]
 			, properties = {
-				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ) }
+				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ), enum=[ "insert", "update", "delete" ] }
 				, entity    = { type="string", description=$translateResource( "dataapi:schemas.queueItem.entity"    ) }
 				, recordId  = { type="string", description=$translateResource( "dataapi:schemas.queueItem.recordId"  ) }
 				, queueId   = { type="string", description=$translateResource( "dataapi:schemas.queueItem.queueId"   ) }
