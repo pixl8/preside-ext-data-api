@@ -372,8 +372,9 @@ component {
 				schema.required.append( field );
 			}
 
-			schema.properties[ fieldSettings[ field ].alias ?: field ] = {
-				description = $translateResource( uri="dataapi:entity.#arguments.entityName#.field.#field#.description", defaultValue=$translateResource( uri="#basei18n#field.#field#.help", defaultValue="" ) )
+			var fieldAlias = fieldSettings[ field ].alias ?: field;
+			schema.properties[ fieldAlias ] = {
+				description = $translateResource( uri="dataapi:entity.#arguments.entityName#.field.#fieldAlias#.description", defaultValue=$translateResource( uri="#basei18n#field.#field#.help", defaultValue=$translateResource( uri="dataapi:field.#fieldAlias#.description", defaultValue="" ) ) )
 			};
 			schema.properties[ fieldSettings[ field ].alias ?: field ].append(
 				_mapFieldType( argumentCollection=props[ field ] ?: {} )
