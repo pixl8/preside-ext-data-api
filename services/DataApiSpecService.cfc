@@ -25,8 +25,8 @@ component {
 		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
-		_addEntitySpecs( spec );
 		_addQueueSpec( spec );
+		_addEntitySpecs( spec );
 
 		$announceInterception( "onOpenApiSpecGeneration", { spec=spec } );
 
@@ -101,7 +101,7 @@ component {
 		spec.components.schemas.QueueItem = {
 			  required = [ "operation", "entity", "recordId", "queueId" ]
 			, properties = {
-				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ) }
+				  operation = { type="string", description=$translateResource( "dataapi:schemas.queueItem.operation" ), enum=[ "insert", "update", "delete" ] }
 				, entity    = { type="string", description=$translateResource( "dataapi:schemas.queueItem.entity"    ) }
 				, recordId  = { type="string", description=$translateResource( "dataapi:schemas.queueItem.recordId"  ) }
 				, queueId   = { type="string", description=$translateResource( "dataapi:schemas.queueItem.queueId"   ) }
@@ -160,7 +160,7 @@ component {
 			spec.components.schemas[ entityName ] = _getEntitySchema( entityName );
 
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
-				var selectFieldList = configService.getSelectFields( entityName ).toList( ", " );
+				var fieldsFilterList = configService.getSelectFields( entityName, true ).toList( ", " );
 				var params = [ {
 					name        = "page"
 				  , in          = "query"
@@ -177,7 +177,7 @@ component {
 					name        = "fields"
 				  , in          = "query"
 				  , required    = false
-				  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, selectFieldList ] )
+				  , description = $translateResource( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, fieldsFilterList ] )
 				  , schema      = { type="string" }
 				} ];
 
@@ -186,7 +186,7 @@ component {
 						  name        = "filter.#field#"
 						, in          = "query"
 						, required    = false
-						, description = $translateResource( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=$translateResource( uri=basei18n & "field.#field#.help", defaultValue="" ) )
+						, description = $translateResource( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=$translateResource( uri=basei18n & "field.#field#.help", defaultValue=$translateResource( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
 						, schema      = _getFieldSchema( entityName, field )
 					} );
 				}
@@ -372,8 +372,9 @@ component {
 				schema.required.append( field );
 			}
 
-			schema.properties[ fieldSettings[ field ].alias ?: field ] = {
-				description = $translateResource( uri="dataapi:entity.#arguments.entityName#.field.#field#.description", defaultValue=$translateResource( uri="#basei18n#field.#field#.help", defaultValue="" ) )
+			var fieldAlias = fieldSettings[ field ].alias ?: field;
+			schema.properties[ fieldAlias ] = {
+				description = $translateResource( uri="dataapi:entity.#arguments.entityName#.field.#fieldAlias#.description", defaultValue=$translateResource( uri="#basei18n#field.#field#.help", defaultValue=$translateResource( uri="dataapi:field.#fieldAlias#.description", defaultValue="" ) ) )
 			};
 			schema.properties[ fieldSettings[ field ].alias ?: field ].append(
 				_mapFieldType( argumentCollection=props[ field ] ?: {} )
