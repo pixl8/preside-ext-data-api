@@ -22,20 +22,16 @@ component {
 		var dao    = $getPresideObject( "data_api_queue" );
 		var record = dao.selectData(
 			  selectFields = [ "id", "object_name", "record_id", "operation" ]
-			, filter       = { is_checked_out=false, subscriber=arguments.subscriber }
+			, filter       = { subscriber=arguments.subscriber }
 			, maxRows      = 1
 			, orderBy      = "order_number"
 		);
 
 		if ( record.recordCount ) {
-			var checkedOut = dao.updateData(
-				  filter = { is_checked_out=false, id=record.id }
-				, data   = { is_checked_out=true, check_out_date=Now() }
+			dao.updateData(
+				  id   = record.id
+				, data = { is_checked_out=true, check_out_date=Now() }
 			);
-
-			if ( !checkedOut ) {
-				return getNextQueuedItem( argumentCollection=arguments );
-			}
 
 			var entity = _getConfigService().getObjectEntity( record.object_name );
 
@@ -65,7 +61,7 @@ component {
 
 	public numeric function getQueueCount( required string subscriber ) {
 		return $getPresideObject( "data_api_queue" ).selectData(
-			  filter  = { is_checked_out=false, subscriber=arguments.subscriber }
+			  filter  = { subscriber=arguments.subscriber }
 			, recordCountOnly = true
 		);
 	}
@@ -113,10 +109,10 @@ component {
 						, record_id      = arguments.id
 						, subscriber     = subscriber
 						, operation      = "insert"
-						, is_checked_out = true
+						, is_checked_out = false
 					} );
 
-					if ( insertStillQueued ) {
+					if ( !insertStillQueued ) {
 						dao.insertData( {
 							  object_name = arguments.objectName
 							, record_id   = arguments.id
