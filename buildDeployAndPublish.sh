@@ -23,22 +23,8 @@ echo
 rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 
-if [[ -d "assets" && -f "assets/Gruntfile.js" ]]; then
-	echo "Compiling static files..."
-	cd assets
-	npm install || exit 1
-	grunt || exit 1
-	echo "Done."
-	cd ..
-fi
-
 echo "Copying files to $BUILD_DIR..."
 rsync -a ./ --exclude=".*" --exclude="$BUILD_DIR" --exclude="*.sh" --exclude="**/node_modules" --exclude="*.log" --exclude="tests" "$BUILD_DIR" || exit 1
-echo "Done."
-
-cd "$BUILD_DIR"
-echo "Installing dependencies..."
-box install --production save=false || exit 1
 echo "Done."
 
 echo "Inserting version number..."
@@ -56,6 +42,20 @@ if [[ $GIT_BRANCH == v* ]] ; then
 else
 	cp $ZIP_FILE bleeding-edge.zip
 fi
+
+find ./*.zip -exec aws s3 cp {} s3://pixl8-public-packages/data-api/ \;
+
+if [[ $TRAVIS_TAG == v* ]] ; then
+        cd $BRANCH_FOLDER;
+        CWD="`pwd`";
+
+        box forgebox login username="$FORGEBOXUSER" password="$FORGEBOXPASS";
+        box publish directory="$CWD";
+else
+	echo "Not publishing. This is not a tagged release.";
+fi
+
+cd ../
 
 rm -rf $BRANCH_FOLDER || exit 1
 echo done

@@ -2,28 +2,20 @@
     "name":"PresideCMS Extension: Preside Data API",
     "type":"preside-extensions",
     "version":"VERSION_NUMBER",
-    "location":"s3://pixl8-packages:eu-west-2/data-api/DOWNLOAD_LOCATION",
-    "private":true,
+    "location":"https://s3.eu-west-2.amazonaws.com/pixl8-public-packages/data-api/DOWNLOAD_LOCATION",
+    "private":false,
     "author":"Pixl8 Interactive",
     "directory":"application/extensions",
     "repository":{
         "type":"git",
-        "URL":"https://gitlab.pixl8.london/pixl8/extensions/preside-ext-data-api"
+        "URL":"https://github.com/pixl8/preside-ext-data-api"
     },
     "slug":"preside-ext-data-api",
-    "projectURL":"https://gitlab.pixl8.london/pixl8/extensions/preside-ext-data-api",
+    "projectURL":"https://github.com/pixl8/preside-ext-data-api",
     "ignore":[
         ".git/*",
         ".gitignore",
-        ".gitlab-ci.yml",
+        ".travis.yml",
         ".twgit_features_subject",
-        "tests/*",
-        "test.sh"
-    ],
-    "devDependencies":{
-        "testbox":"2.2.0"
-    },
-    "installPaths":{
-        "testbox":"tests/testbox"
-    }
+    ]
 }
