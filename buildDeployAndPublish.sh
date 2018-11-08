@@ -39,7 +39,7 @@ if [[ $TRAVIS_TAG == v* ]] ; then
 	cd ../
 	find ./*.zip -exec aws s3 cp {} s3://pixl8-public-packages/data-api/ \;
 
-    cd $BRANCH_FOLDER;
+    cd $BUILD_DIR;
     CWD="`pwd`";
 
     box forgebox login username="$FORGEBOXUSER" password="$FORGEBOXPASS";
