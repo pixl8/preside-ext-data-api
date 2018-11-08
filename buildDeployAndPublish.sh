@@ -23,10 +23,12 @@ if [[ $TRAVIS_TAG == v* ]] ; then
 	rm -rf $BUILD_DIR
 	mkdir -p $BUILD_DIR
 
+
 	echo "Copying files to $BUILD_DIR..."
 	rsync -a ./ --exclude=".*" --exclude="$BUILD_DIR" --exclude="*.sh" --exclude="**/node_modules" --exclude="*.log" --exclude="tests" "$BUILD_DIR" || exit 1
 	echo "Done."
 
+	cd $BUILD_DIR
 	echo "Inserting version number..."
 	sed -i "s/VERSION_NUMBER/$VERSION_NUMBER/" manifest.json
 	sed -i "s/VERSION_NUMBER/$VERSION_NUMBER/" box.json
@@ -37,7 +39,7 @@ if [[ $TRAVIS_TAG == v* ]] ; then
 	zip -rq $ZIP_FILE * -x jmimemagic.log || exit 1
 	mv $ZIP_FILE ../
 	cd ../
-	find ./*.zip -exec aws s3 cp {} s3://pixl8-public-packages/data-api/ \;
+	find ./*.zip -exec aws s3 cp {} s3://pixl8-public-packages/data-api/ --acl public-read \;
 
     cd $BUILD_DIR;
     CWD="`pwd`";
