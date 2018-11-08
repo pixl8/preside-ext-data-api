@@ -31,7 +31,7 @@ if [[ $TRAVIS_TAG == v* ]] ; then
 	echo "Inserting version number..."
 	sed -i "s/VERSION_NUMBER/$VERSION_NUMBER/" manifest.json
 	sed -i "s/VERSION_NUMBER/$VERSION_NUMBER/" box.json
-	sed -i "s/DOWNLOAD_LOCATION/$BRANCH_FOLDER/" box.json
+	sed -i "s/DOWNLOAD_LOCATION/$ZIP_FILE/" box.json
 	echo "Done."
 
 	echo "Zipping up..."
