@@ -5,7 +5,7 @@ if [[ $TRAVIS_TAG == v* ]] ; then
 	BRANCH_FOLDER=${GIT_BRANCH//origin\//}
 	BRANCH_FOLDER="${BRANCH_FOLDER##*/}"
 	ZIP_FILE=$BRANCH_FOLDER.zip
-	BUILD_DIR=build/$BRANCH_FOLDER/
+	BUILD_DIR=build/
 	PADDED_BUILD_NUMBER=`printf %05d $TRAVIS_BUILD_NUMBER`
 
 	if [[ $GIT_BRANCH == v* ]] ; then
