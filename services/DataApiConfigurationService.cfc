@@ -161,12 +161,14 @@ component {
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
 					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields", "" );
 					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields", "" );
+					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert", "" );
 
 					entities[ entityName ] = {
-						  objectName   = objectName
-						, verbs        = ListToArray( LCase( supportedVerbs ) )
-						, selectFields = ListToArray( LCase( selectFields ) )
-						, upsertFields = ListToArray( LCase( upsertFields ) )
+						  objectName    = objectName
+						, verbs         = ListToArray( LCase( supportedVerbs ) )
+						, selectFields  = ListToArray( LCase( selectFields ) )
+						, upsertFields  = ListToArray( LCase( upsertFields ) )
+						, allowIdInsert = IsBoolean( allowIdInsert ) && allowIdInsert
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -176,7 +178,7 @@ component {
 						entities[ entityName ].upsertFields = entities[ entityName ].selectFields;
 					}
 
-					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields );
+					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields, entities[ entityName ].allowIdInsert );
 
 					if ( excludeFields.len() ) {
 						for( var field in ListToArray( excludeFields ) ) {
@@ -306,13 +308,13 @@ component {
 		return defaultSelectFields;
 	}
 
-	private array function _cleanupUpsertFields( required string objectName, required array fields ) {
+	private array function _cleanupUpsertFields( required string objectName, required array fields, required boolean allowIdInsert ) {
 		var props    = $getPresideObjectService().getObjectProperties( objectName );
 		var idField  = $getPresideObjectService().getIdField( objectName );
 		var cleaned  = [];
 
 		for( var field in arguments.fields ) {
-			if ( field == idField || field == "id" ) {
+			if ( !arguments.allowIdInsert && ( field == idField || field == "id" ) ) {
 				continue;
 			}
 

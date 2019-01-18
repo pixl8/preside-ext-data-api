@@ -32,6 +32,7 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiExcludeFields`: Fields to exclude from GET API calls
 * `dataApiUpsertExcludeFields`: Fields **not** to accept in POST/PUT requests (defaults to `dataApiExcludeFields`)
 * `dataApiFilterFields`: Fields to allow as simple filters for paginated GET requests (defaults to foreign keys, boolean and enum fields)
+* `dataApiAllowIdInsert`: Whether or not to allow the ID field to be set during a POST operation to create a new record
 
 ### Property annotations
 
