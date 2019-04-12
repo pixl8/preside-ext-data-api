@@ -67,7 +67,7 @@ component {
 		var validationResult = dataApiService.validateUpsertData(
 			  entity        = entity
 			, data          = body
-			, ignoreMissing = true
+			, ignoreMissing = false
 		);
 		if ( IsArray( body ) ) {
 			if ( !validationResult.validated ) {
