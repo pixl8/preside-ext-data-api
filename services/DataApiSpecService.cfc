@@ -64,6 +64,11 @@ component {
 			, description  = $translateResource( "dataapi:trait.pagination.description" )
 			, "x-traitTag" = true
 		});
+		spec.tags.append({
+			  name         = $translateResource( "dataapi:trait.errorhandling.title" )
+			, description  = $translateResource( "dataapi:trait.errorhandling.description" )
+			, "x-traitTag" = true
+		});
 	}
 
 	private void function _addCommonHeaderSpecs( required struct spec ) {
