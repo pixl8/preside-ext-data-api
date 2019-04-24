@@ -257,8 +257,8 @@ component {
 		switch( renderer ) {
 			case "date"           : return IsDate( arguments.value ) ? DateFormat( arguments.value, "yyyy-mm-dd" ) : NullValue();
 			case "datetime"       : return IsDate( arguments.value ) ? DateTimeFormat( arguments.value, "yyyy-mm-dd HH:nn:ss" ) : NullValue();
-			case "strictboolean"  : return IsBoolean( arguments.value ) && arguments.value;
-			case "nullableboolean": return IsBoolean( arguments.value ) ? arguments.value : NullValue();
+			case "strictboolean"  : return IsBoolean( arguments.value ) && arguments.value ? true : false; // looks odd, but aimed at ensuring that we definitely get boolean values back
+			case "nullableboolean": return IsBoolean( arguments.value ) ? ( arguments.value ? true : false ) : NullValue();
 			case "array"          : return ListToArray( arguments.value );
 			case "none":
 			case "":
