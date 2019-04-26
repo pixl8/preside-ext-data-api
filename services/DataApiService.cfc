@@ -173,9 +173,13 @@ component {
 		if ( IsArray( arguments.data ) ) {
 			var result = { validated=true, validationResults=[] };
 			for( var record in arguments.data ) {
+
+				var prepped = _prepRecordForInsertAndUpdate( arguments.entity, record );
+				$announceInterception( "preValidateUpsertData", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=record } );
+
 				var validation = $getValidationEngine().validate(
 					  ruleset       = ruleset
-					, data          = _prepRecordForInsertAndUpdate( arguments.entity, record )
+					, data          = prepped
 					, ignoreMissing = arguments.ignoreMissing
 				);
 
@@ -200,9 +204,12 @@ component {
 			return result;
 		}
 
+		var prepped = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data );
+		$announceInterception( "preValidateUpsertData", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data } );
+
 		return _translateValidationErrors( $getValidationEngine().validate(
 			  ruleset       = ruleset
-			, data          = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
+			, data          = prepped
 			, ignoreMissing = arguments.ignoreMissing
 		) );
 	}
