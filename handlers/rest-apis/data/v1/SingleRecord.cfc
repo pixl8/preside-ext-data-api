@@ -49,8 +49,9 @@ component {
 			return;
 		}
 
-		var validationData = StructCopy( body );
-		    validationData.id = recordId;
+		var validationData          = StructCopy( body );
+		    validationData.id       = recordId;
+		    validationData.isUpdate = true;
 
 		var validationResult = dataApiService.validateUpsertData(
 			  entity        = entity

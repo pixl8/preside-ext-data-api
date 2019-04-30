@@ -43,6 +43,7 @@ component {
 			, "postDataApiDeleteData"
 			, "preDataApiSelectData"
 			, "postDataApiSelectData"
+			, "preValidateUpsertData"
 		], true );
 	}
 }
