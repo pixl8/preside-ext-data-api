@@ -218,6 +218,26 @@ component {
 		) );
 	}
 
+	public string function i18nNamespaced(
+		  required string uri
+		,          string defaultValue = $getColdbox().getSetting( "UnknownTranslation" )
+		,          array  data         = []
+	) {
+		var dataApiNamespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+
+		if ( len( dataApiNamespace ) ) {
+			var nsArgs              = duplicate( arguments );
+			    nsArgs.uri          = replaceNoCase( nsArgs.uri, ":", ":#dataApiNamespace#." );
+			    nsArgs.defaultValue = "";
+			var nsText              = $translateResource( argumentCollection=nsArgs );
+
+			if ( len( nsText ) ) {
+				return nsText;
+			}
+		}
+		return $translateResource( argumentCollection=arguments );
+	}
+
 
 // PRIVATE HELPERS
 	private string function _getInterceptorNamespace() {
@@ -342,7 +362,7 @@ component {
 		var translated = [];
 
 		for( var fieldName in messages ) {
-			translated.append( { field=fieldName, message=$translateResource(
+			translated.append( { field=fieldName, message=i18nNamespaced(
 				  uri          = messages[ fieldName ].message ?: ""
 				, defaultValue = messages[ fieldName ].message ?: ""
 				, data         = messages[ fieldName ].params  ?: []
