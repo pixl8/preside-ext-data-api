@@ -3,6 +3,7 @@ component extends="coldbox.system.Interceptor" {
 	property name="dataApiService"              inject="delayedInjector:dataApiService";
 	property name="dataApiQueueService"         inject="delayedInjector:dataApiQueueService";
 	property name="dataApiConfigurationService" inject="delayedInjector:dataApiConfigurationService";
+	property name="interceptorService"          inject="coldbox:InterceptorService";
 
 	variables._applicationLoaded = false;
 
@@ -14,11 +15,11 @@ component extends="coldbox.system.Interceptor" {
 	}
 
 	public void function postReadRestResourceDirectories( event, interceptData ) {
-		var apis             = interceptData.apis ?: {};
-		var apiSettings      = getSetting( name="rest.apis", defaultValue={} );
-		var dataApiNamespace = "";
-		var dataApiDocs      = false;
-		var base             = [];
+		var apis               = interceptData.apis ?: {};
+		var apiSettings        = getSetting( name="rest.apis", defaultValue={} );
+		var dataApiNamespace   = "";
+		var dataApiDocs        = false;
+		var base               = [];
 
 		for( var apiRoute in apiSettings ) {
 			dataApiNamespace = apiSettings[ apiRoute ].dataApiNamespace ?: "";
@@ -32,6 +33,25 @@ component extends="coldbox.system.Interceptor" {
 				apis[ apiRoute ].append( base, true );
 			}
 		}
+	}
+
+	public void function afterConfigurationLoad( event, interceptData ) {
+		var dataApiInterceptionPoints    = getSetting( name="dataApiInterceptionPoints", defaultValue={} );
+		var apiSettings                  = getSetting( name="rest.apis", defaultValue={} );
+		var dataApiNamespace             = "";
+		var namespacedInterceptionPoints = [];
+
+		for( var api in apiSettings ) {
+			dataApiNamespace = apiSettings[ api ].dataApiNamespace ?: "";
+
+			if ( len( dataApiNamespace ) ) {
+				for( var dataApiInterceptionPoint in dataApiInterceptionPoints ) {
+					namespacedInterceptionPoints.append( dataApiInterceptionPoint & "_" & dataApiNamespace );
+				}
+			}
+		}
+		interceptorService.appendInterceptionPoints( namespacedInterceptionPoints );
+		interceptorService.registerInterceptors();
 	}
 
 	public void function onRestRequest( event, interceptData ) {

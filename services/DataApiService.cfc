@@ -107,15 +107,16 @@ component {
 	public struct function createRecord( required string entity, required any record ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
+		var namespace  = _getInterceptorNamespace();
 		var args       = {
 			  data                      = _prepRecordForInsertAndUpdate( arguments.entity, arguments.record )
 			, insertManyToManyRecords   = true
 			, bypassTrivialInterceptors = true
 		};
 
-		$announceInterception( "preDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record } );
+		$announceInterception( "preDataApiInsertData#namespace#", { insertDataArgs=args, entity=arguments.entity, record=arguments.record } );
 		var newId = dao.insertData( argumentCollection=args );
-		$announceInterception( "postDataApiInsertData", { insertDataArgs=args, entity=arguments.entity, record=arguments.record, newId=newId } );
+		$announceInterception( "postDataApiInsertData#namespace#", { insertDataArgs=args, entity=arguments.entity, record=arguments.record, newId=newId } );
 
 		return getSingleRecord( arguments.entity, newId, [] );
 	}
@@ -142,40 +143,43 @@ component {
 	public any function updateSingleRecord( required string entity, required struct data, required string recordId ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
+		var namespace  = _getInterceptorNamespace();
 		var args       = {
 			  id                      = arguments.recordId
 			, data                    = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data )
 			, updateManyToManyRecords = true
 		};
 
-		$announceInterception( "preDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		$announceInterception( "preDataApiUpdateData#namespace#", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
 		var recordsUpdated = dao.updateData( argumentCollection=args );
-		$announceInterception( "postDataApiUpdateData", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		$announceInterception( "postDataApiUpdateData#namespace#", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
 
 
 		return recordsUpdated;
 	}
 
 	public numeric function deleteSingleRecord( required string entity, required string recordId ) {
-		var dao = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
-		var args = { id=arguments.recordId };
+		var dao       = $getPresideObject( _getConfigService().getEntityObject( arguments.entity ) );
+		var namespace = _getInterceptorNamespace();
+		var args      = { id=arguments.recordId };
 
-		$announceInterception( "preDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+		$announceInterception( "preDataApiDeleteData#namespace#", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
 		var recordsDeleted = dao.deleteData( argumentCollection=args );
-		$announceInterception( "postDataApiDeleteData", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
+		$announceInterception( "postDataApiDeleteData#namespace#", { deleteDataArgs=args, entity=arguments.entity, recordId=arguments.recordId } );
 
 		return recordsDeleted;
 	}
 
 	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
-		var ruleset = _getConfigService().getValidationRulesetForEntity( arguments.entity );
+		var ruleset   = _getConfigService().getValidationRulesetForEntity( arguments.entity );
+		var namespace = _getInterceptorNamespace();
 
 		if ( IsArray( arguments.data ) ) {
 			var result = { validated=true, validationResults=[] };
 			for( var record in arguments.data ) {
 
 				var prepped = _prepRecordForInsertAndUpdate( arguments.entity, record );
-				$announceInterception( "preValidateUpsertData", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=record } );
+				$announceInterception( "preValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=record } );
 
 				var validation = $getValidationEngine().validate(
 					  ruleset       = ruleset
@@ -205,7 +209,7 @@ component {
 		}
 
 		var prepped = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data );
-		$announceInterception( "preValidateUpsertData", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data } );
+		$announceInterception( "preValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data } );
 
 		return _translateValidationErrors( $getValidationEngine().validate(
 			  ruleset       = ruleset
@@ -216,10 +220,19 @@ component {
 
 
 // PRIVATE HELPERS
+	private string function _getInterceptorNamespace() {
+		var dataApiNamespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		if ( len( dataApiNamespace ) ) {
+			return "_" & dataApiNamespace;
+		}
+		return "";
+	}
+
 	private any function _selectData( required string entity, required struct args, array fields=[] ) {
 		var configService = _getConfigService();
 		var objectName    = configService.getEntityObject( arguments.entity );
 		var dao           = $getPresideObject( objectName );
+		var namespace     = _getInterceptorNamespace();
 		var fieldSettings = configService.getFieldSettings( arguments.entity );
 
 		args.selectFields            = _prepareSelectFields( objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
@@ -230,7 +243,7 @@ component {
 		args.distinct                = true;
 		args.recordCountOnly         = args.recordCountOnly ?: false;
 
-		$announceInterception( "preDataApiSelectData", { selectDataArgs=args, entity=arguments.entity } );
+		$announceInterception( "preDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity } );
 
 		if ( args.recordCountOnly ) {
 			return dao.selectData( argumentCollection=args );
@@ -242,7 +255,7 @@ component {
 		for( var record in records ) {
 			processed.append( _processFields( record, fieldSettings ) );
 		}
-		$announceInterception( "postDataApiSelectData", { selectDataArgs=args, entity=arguments.entity, data=processed } );
+		$announceInterception( "postDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity, data=processed } );
 
 		return processed;
 	}

@@ -19,7 +19,8 @@ component {
 
 // PUBLIC API METHODS
 	public struct function getSpec() {
-		var spec = StructNew( "linked" );
+		var spec      = StructNew( "linked" );
+		var namespace = _getInterceptorNamespace();
 
 		_addGeneralSpec( spec );
 		_addTraits( spec );
@@ -28,13 +29,20 @@ component {
 		_addQueueSpec( spec );
 		_addEntitySpecs( spec );
 
-		$announceInterception( "onOpenApiSpecGeneration", { spec=spec } );
-
+		$announceInterception( "onOpenApiSpecGeneration#namespace#", { spec=spec } );
 
 		return spec;
 	}
 
 // PRIVATE HELPERS
+	private string function _getInterceptorNamespace() {
+		var dataApiNamespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		if ( len( dataApiNamespace ) ) {
+			return "_" & dataApiNamespace;
+		}
+		return "";
+	}
+
 	private void function _addGeneralSpec( required struct spec ) {
 		var event    = $getRequestContext();
 		var site     = event.getSite();
