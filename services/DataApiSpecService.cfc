@@ -40,6 +40,7 @@ component {
 		var site     = event.getSite();
 		var domain   = site.domain ?: event.getServerName()
 		var protocol = site.protocol ?: event.getProtocol();
+		var api      = event.getValue( name="dataApiNamespace", defaultValue="data" );
 
 		spec.openapi = "3.0.1";
 		spec.info    = {
@@ -47,8 +48,8 @@ component {
 			  , description = $translateResource( "dataapi:api.description", "" )
 			  , version     = $translateResource( "dataapi:api.version" )
 		};
-		spec.servers    = [ { url="#protocol#://#domain#/api/data/v1" } ]
-		spec.security   = [ { "#$translateResource( "dataapi:basic.auth.name" )#"=[] } ]
+		spec.servers    = [ { url="#protocol#://#domain#/api/#api#/v1" } ];
+		spec.security   = [ { "#$translateResource( "dataapi:basic.auth.name" )#"=[] } ];
 		spec.components = {
 			  securitySchemes = { "#$translateResource( "dataapi:basic.auth.name" )#"={ type="http", scheme="Basic", description=$translateResource( "dataapi:basic.auth.description" ) } }
 			, schemas         = {}
