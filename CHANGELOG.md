@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.0
+
+* Add support for multiple configured APIs via namespacing
+
 ## v1.0.18
 
 * Prevent stack overflow with recursive loading of services on application startup
