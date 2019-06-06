@@ -26,6 +26,7 @@ Additional _optional_ annotation options at the _object_ level are:
 
 * `dataApiEntityName`: Alternative entity name to use in API urls, e.g. instead of `crm_contact`, you may wish to use `contact`.
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
+* `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
 * `dataApiVerbs`: Supported REST HTTP Verbs. If not supplied, all verbs and operations are supported (i.e. GET, POST, PUT and DELETE)
 * `dataApiFields`: Fields to return in GET requests (defaults to all non-excluded fields)
 * `dataApiUpsertFields`: Fields to accept in POST/PUT request (defaults to `dataApiFields`)

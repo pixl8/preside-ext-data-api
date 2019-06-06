@@ -258,6 +258,7 @@ component {
 		args.selectFields            = _prepareSelectFields( objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
 		args.fromVersionTable        = false;
 		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
+		args.savedFilters            = configService.getSavedFilters( arguments.entity );
 		args.allowDraftVersions      = false;
 		args.autoGroupBy             = true;
 		args.distinct                = true;

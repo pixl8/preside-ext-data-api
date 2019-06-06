@@ -81,6 +81,19 @@ component {
 		} );
 	}
 
+	public array function getSavedFilters( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getSavedFilters" & _getDataApiNamespace() & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName   = getEntityObject( args.entity );
+			var poService    = $getPresideObjectService();
+			var savedFilters = poService.getObjectAttribute( objectName, "dataApiSavedFilters#_getNamespaceWithSeparator()#" );
+
+			return listToArray( trim( savedFilters ) );
+		} );
+	}
+
 	public array function getSelectFields( required string entity, boolean aliases=false ) {
 		var args     = arguments;
 		var cacheKey = "getSelectFields" & _getDataApiNamespace() & args.entity & args.aliases;
