@@ -197,7 +197,40 @@ Fires after deleting data through the API. Receives the following keys in the `i
 * `entity`: Name of the entity being operated on
 * `recordId`: ID of the record to be deleted
 
+## The Data Queue and per user/object permissioning
+
+In addition to simple CRUD operations for entities, the system also provides a data change queue for API users to subscribe to. **There is currently no user interface for this!**. To enable the queue for an API user (API users can be found and managed in Preside admin -> System -> API Manager), you will need to run the following SQL:
+
+```
+insert into pobj_data_api_user_settings (
+	  user
+	, object_name
+	, subscribe_to_deletes
+	, subscribe_to_updates
+	, subscribe_to_inserts
+	, access_allowed
+	, get_allowed
+	, put_allowed
+	, delete_allowed
+	, post_allowed
+) values (
+	   '{id of user}' /* user                 */
+	,  null           /* object_name          */
+	,  1              /* subscribe_to_deletes */
+	,  1              /* subscribe_to_updates */
+	,  1              /* subscribe_to_inserts */
+	,  1              /* access_allowed       */
+	,  1              /* get_allowed          */
+	,  1              /* put_allowed          */
+	,  1              /* delete_allowed       */
+	,  1              /* post_allowed         */
+)
+```
+
+
 ## Namespaces and multiple APIs
+
+*As of v2.0.0*
 
 By default, the API is exposed at `/api/data/v1/`. However, there will be occasions when you want to expose your data in different ways for different purposes. Or, if you are writing an extension, you may want to namespace your API so it doesn't clash with any existing default API implementation.
 
@@ -269,35 +302,4 @@ public void function preDataApiSelectData( event, interceptData ) {
 public void function preDataApiSelectData_myGroovyApi( event, interceptData ) {
 	// action to take for preDataApiSelectData on the myGroovyApi API
 }
-```
-
-
-## The Data Queue and per user/object permissioning
-
-In addition to simple CRUD operations for entities, the system also provides a data change queue for API users to subscribe to. **There is currently no user interface for this!**. To enable the queue for an API user (API users can be found and managed in Preside admin -> System -> API Manager), you will need to run the following SQL:
-
-```
-insert into pobj_data_api_user_settings (
-	  user
-	, object_name
-	, subscribe_to_deletes
-	, subscribe_to_updates
-	, subscribe_to_inserts
-	, access_allowed
-	, get_allowed
-	, put_allowed
-	, delete_allowed
-	, post_allowed
-) values (
-	   '{id of user}' /* user                 */
-	,  null           /* object_name          */
-	,  1              /* subscribe_to_deletes */
-	,  1              /* subscribe_to_updates */
-	,  1              /* subscribe_to_inserts */
-	,  1              /* access_allowed       */
-	,  1              /* get_allowed          */
-	,  1              /* put_allowed          */
-	,  1              /* delete_allowed       */
-	,  1              /* post_allowed         */
-)
 ```
