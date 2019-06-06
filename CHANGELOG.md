@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.19
+
+* Total record count should return filtered count if filter is applied
+
 ## v1.0.18
 
 * Prevent stack overflow with recursive loading of services on application startup

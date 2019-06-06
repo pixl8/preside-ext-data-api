@@ -76,7 +76,7 @@ component {
 
 		var result = {
 			  records    = _selectData( arguments.entity, args, arguments.fields )
-			, totalCount = _selectData( arguments.entity, { recordCountOnly=true } )
+			, totalCount = _selectData( arguments.entity, { recordCountOnly=true, filter=args.filter } )
 		};
 
 
