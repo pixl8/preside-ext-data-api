@@ -230,7 +230,7 @@ insert into pobj_data_api_user_settings (
 
 ## Namespaces and multiple APIs
 
-*As of v2.0.0*
+*Introduced in v2.0.0*
 
 By default, the API is exposed at `/api/data/v1/`. However, there will be occasions when you want to expose your data in different ways for different purposes. Or, if you are writing an extension, you may want to namespace your API so it doesn't clash with any existing default API implementation.
 
@@ -258,7 +258,7 @@ A few things to note here:
 
 ### Annotations
 
-You can annotate your objects using exactly the same annotations as described above, but with `:namespace` appended. For example:
+You can annotate your objects using exactly the same annotations as described above, but with `:{namespace}` appended. For example:
 
 ```
 /**
@@ -272,15 +272,15 @@ component {
 }
 ```
 
-This would enable this object for both the default `/data/v1` API, and for your custom `/myGroovyApi/v1` API. However, for `myGroovyApi` the object would only allow `GET` access, and the label field would be called `some_other_label` instead of `label`.
+This would enable this object both for the default `/data/v1` API, and for your custom `/myGroovyApi/v1` API. However, for `myGroovyApi` the object would only allow `GET` access, and the label field would be called `some_other_label` instead of `label`.
 
 You could also use this to specify an alternate renderer for a property, e.g. `dataApiRenderer:myGroovyApi="alternateRenderer"`.
 
-Note that namespaces do not inherit any annotations from the default API. Any annotations must be made explicitly with the `:namespace` suffix.
+Note that namespaces do not inherit any annotations from the default API. Any annotations must be made explicitly with the `:{namespace}` suffix.
 
 ### Labelling and text
 
-You can use all the same label and description customisations in your `/i18n/dataapi.properties` file as above; simply prefix the key name with `namespace.`. For example:
+You can use all the same label and description customisations in your `/i18n/dataapi.properties` file as above; simply prefix the key name with `{namespace}.`. For example:
 
 ```
 myGroovyApi.api.title=My Second API
@@ -289,11 +289,11 @@ myGroovyApi.api.description=This is an alternate API to my application
 myGroovyApi.entity.my_entity.name=My alternate entity
 ```
 
-Unlike annotations, i18n properties _will_ cascade up to the defaults. So if you don not make any customisations, you will see all the default text.
+Unlike annotations, i18n properties _will_ cascade up to the defaults. So if you do not make any customisations, you will see all the default text.
 
 ### Interceptors
 
-All the same interceptors will run when actions are taken in a namespaced API. However, the interception point name will have `_namespace` as a suffix. Again, there is no fallback to the default interceptor, so any interceptors will need to be explicitly defined for your namespace. For example:
+All the same interceptors will run when actions are taken in a namespaced API. However, the interception point name will have `_{namespace}` as a suffix. Again, there is no fallback to the default interceptor, so any interceptors will need to be explicitly defined for your namespace. For example:
 
 ```
 public void function preDataApiSelectData( event, interceptData ) {
