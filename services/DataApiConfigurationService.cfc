@@ -20,7 +20,7 @@ component {
 // PUBLIC API METHODS
 	public boolean function entityIsEnabled( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "entityIsEnabled" & args.entity;
+		var cacheKey = "entityIsEnabled" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
@@ -31,7 +31,7 @@ component {
 
 	public boolean function entityVerbIsSupported( required string entity, required string verb ) {
 		var args     = arguments;
-		var cacheKey = "entityVerbIsSupported" & args.entity & args.verb;
+		var cacheKey = "entityVerbIsSupported" & _getDataApiNamespace() & args.entity & args.verb;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
@@ -43,7 +43,7 @@ component {
 
 	public string function getEntityObject( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getEntityObject" & args.entity;
+		var cacheKey = "getEntityObject" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
@@ -53,21 +53,21 @@ component {
 
 	public string function getObjectEntity( required string objectName ) {
 		var args     = arguments;
-		var cacheKey = "getObjectEntity" & args.objectName;
+		var cacheKey = "getObjectEntity" & _getDataApiNamespace() & args.objectName;
 
 		return _simpleLocalCache( cacheKey, function(){
-			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName", args.objectName );
+			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName#_getNamespaceWithSeparator()#", args.objectName );
 		} );
 	}
 
 	public string function getSelectSortOrder( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getSelectSortOrder" & args.entity;
+		var cacheKey = "getSelectSortOrder" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var objectName = getEntityObject( args.entity );
 			var poService  = $getPresideObjectService();
-			var sortOrder  = poService.getObjectAttribute( objectName, "dataApiSortOrder" );
+			var sortOrder  = poService.getObjectAttribute( objectName, "dataApiSortOrder#_getNamespaceWithSeparator()#" );
 
 			if ( !Len( Trim( sortOrder ) ) ) {
 				sortOrder = poService.getDateModifiedField( objectName );
@@ -81,19 +81,32 @@ component {
 		} );
 	}
 
+	public array function getSavedFilters( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getSavedFilters" & _getDataApiNamespace() & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName   = getEntityObject( args.entity );
+			var poService    = $getPresideObjectService();
+			var savedFilters = poService.getObjectAttribute( objectName, "dataApiSavedFilters#_getNamespaceWithSeparator()#" );
+
+			return listToArray( trim( savedFilters ) );
+		} );
+	}
+
 	public array function getSelectFields( required string entity, boolean aliases=false ) {
 		var args     = arguments;
-		var cacheKey = "getSelectFields" & args.entity & args.aliases;
+		var cacheKey = "getSelectFields" & _getDataApiNamespace() & args.entity & args.aliases;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
-			var fields = entities[ args.entity ].selectFields ?: [];
+			var fields   = entities[ args.entity ].selectFields ?: [];
 
 			if ( !args.aliases ) {
 				return fields;
 			}
 
-			var aliases = [];
+			var aliases       = [];
 			var fieldSettings = getFieldSettings( args.entity );
 			for( var field in fields ) {
 				aliases.append( fieldSettings[ field ].alias ?: field );
@@ -104,11 +117,11 @@ component {
 
 	public array function getFilterFields( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getFilterFields" & args.entity;
+		var cacheKey = "getFilterFields" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var objectName   = getEntityObject( args.entity );
-			var filterFields = $getPresideObjectService().getObjectAttribute( objectName, "dataApiFilterFields", _getDefaultFilterFields( args.entity ) );
+			var filterFields = $getPresideObjectService().getObjectAttribute( objectName, "dataApiFilterFields#_getNamespaceWithSeparator()#", _getDefaultFilterFields( args.entity ) );
 
 			return ListToArray( filterFields );
 		} );
@@ -116,7 +129,7 @@ component {
 
 	public array function getUpsertFields( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getUpsertFields" & args.entity;
+		var cacheKey = "getUpsertFields" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
@@ -126,17 +139,18 @@ component {
 
 	public struct function getFieldSettings( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getFieldSettings" & args.entity;
+		var cacheKey = "getFieldSettings" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var objectName    = getEntityObject( args.entity );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
+			var namespace     = _getNamespaceWithSeparator();
 
 			for( var field in props ) {
 				fieldSettings[ field ] = {
-					  alias    = props[ field ].dataApiAlias    ?: field
-					, renderer = props[ field ].dataApiRenderer ?: _getDefaultRendererForField( props[ field ] ?: {} )
+					  alias    = props[ field ][ "dataApiAlias#namespace#"    ] ?: field
+					, renderer = props[ field ][ "dataApiRenderer#namespace#" ] ?: _getDefaultRendererForField( props[ field ] ?: {} )
 				};
 			}
 
@@ -145,23 +159,24 @@ component {
 	}
 
 	public struct function getEntities() {
-		var cacheKey = "getEntities";
+		var cacheKey = "getEntities" & _getDataApiNamespace();
 
 		return _simpleLocalCache( cacheKey, function(){
 			var poService = $getPresideObjectService();
-			var objects  = poService.listObjects();
-			var entities = {};
+			var objects   = poService.listObjects();
+			var entities  = {};
 
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName );
 				if ( IsBoolean( isEnabled ) && isEnabled ) {
+					var namespace           = _getNamespaceWithSeparator();
 					var entityName          = getObjectEntity( objectName );
-					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs", "" );
-					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields", "" );
-					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields", "" );
-					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields", "" );
-					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields", "" );
-					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert", "" );
+					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
+					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
+					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
+					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields#namespace#", "" );
+					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
+					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
@@ -200,10 +215,10 @@ component {
 
 	public boolean function objectIsApiEnabled( required string objectName ) {
 		var args     = arguments;
-		var cacheKey = "objectIsApiEnabled" & args.objectName;
+		var cacheKey = "objectIsApiEnabled" & _getDataApiNamespace() & args.objectName;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled" )
+			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled#_getNamespaceWithSeparator()#" )
 
 			return IsBoolean( isEnabled ) && isEnabled && !ReFindNoCase( "^vrsn_", args.objectName );
 		} );
@@ -211,11 +226,12 @@ component {
 
 	public string function getValidationRulesetForEntity( required string entity ) {
 		var args     = arguments;
-		var cacheKey = "getValidationRulesetForEntity" & args.entity;
+		var cacheKey = "getValidationRulesetForEntity" & _getDataApiNamespace() & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var validationEngine = $getValidationEngine();
-			var rulesetName      = "data-api-#args.entity#";
+			var dataApiNamespace = _getDataApiNamespace();
+			var rulesetName      = ( len( dataApiNamespace ) ? dataApiNamespace : "data" ) & "-api-#args.entity#";
 
 			if ( !validationEngine.rulesetExists( rulesetName ) ) {
 				var objectName = getEntityObject( args.entity );
@@ -254,6 +270,18 @@ component {
 		return arguments.field;
 	}
 
+	public void function addDataApiRoute( required string dataApiRoute, required string dataApiNamespace, required boolean dataApiDocs ) {
+		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
+		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
+			  dataApiNamespace = arguments.dataApiNamespace
+			, dataApiDocs      = arguments.dataApiDocs
+		};
+	}
+
+	public struct function getDataApiRoutes() {
+		return variables._dataApiRoutes ?: {};
+	}
+
 // PRIVATE HELPERS
 	private any function _simpleLocalCache( required string cacheKey, required any generator ) {
 		if ( !_localCache.keyExists( arguments.cacheKey ) ) {
@@ -261,6 +289,19 @@ component {
 		}
 
 		return _localCache[ cacheKey ];
+	}
+
+	private string function _getDataApiNamespace() {
+		return $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+	}
+
+	private string function _getNamespaceWithSeparator() {
+		var dataApiNamespace = _getDataApiNamespace();
+
+		if ( len( dataApiNamespace ) ) {
+			return ":" & dataApiNamespace;
+		}
+		return "";
 	}
 
 	private string function _getDefaultRendererForField( required struct field ) {
@@ -350,7 +391,7 @@ component {
 			var isFilterField = relationship == "many-to-one" || Len( Trim( enum ) ) || acceptedTypes.find( fieldType );
 
 			if ( isFilterField ) {
-				var fieldName = LCase( props[ propName ].dataApiAlias ?: propName );
+				var fieldName = LCase( props[ propName ][ "dataApiAlias#_getNamespaceWithSeparator()#" ] ?: propName );
 				if ( !fields.find( fieldName ) ) {
 					fields.append( fieldName );
 				}

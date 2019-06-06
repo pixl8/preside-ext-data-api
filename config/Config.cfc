@@ -33,7 +33,7 @@ component {
 			, properties = {}
 		});
 
-		conf.interceptorSettings.customInterceptionPoints.append( [
+		conf.settings.dataApiInterceptionPoints = [
 			  "onOpenApiSpecGeneration"
 			, "preDataApiInsertData"
 			, "postDataApiInsertData"
@@ -44,6 +44,7 @@ component {
 			, "preDataApiSelectData"
 			, "postDataApiSelectData"
 			, "preValidateUpsertData"
-		], true );
+		];
+		conf.interceptorSettings.customInterceptionPoints.append( conf.settings.dataApiInterceptionPoints, true );
 	}
 }

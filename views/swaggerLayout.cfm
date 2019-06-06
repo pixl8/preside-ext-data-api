@@ -1,7 +1,7 @@
 <cfoutput><!DOCTYPE html>
 <html>
   <head>
-    <title>#translateResource( "dataapi:api.title" )# #translateResource( "dataapi:api.version" )#</title>
+    <title>#args.pageTitle ?: ""#</title>
     <!-- needed for adaptive design -->
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
