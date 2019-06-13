@@ -6,14 +6,13 @@ component {
 
 	property name="dataApiSpecService" inject="dataApiSpecService";
 
-
-
 	public void function get() {
-		if ( !variables.keyExists( "_spec" ) ) {
-			variables._spec = dataApiSpecService.getSpec();
+		var api = event.getValue( name="dataApiNamespace", defaultValue="" );
+		if ( !variables.keyExists( "_spec#api#" ) ) {
+			variables[ "_spec#api#" ] = dataApiSpecService.getSpec();
 		}
 
-		restResponse.setData( variables._spec );
+		restResponse.setData( variables[ "_spec#api#" ] );
 	}
 
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.0
+
+* Add support for multiple configured APIs via namespacing
+* Add `dataApiSavedFilters` annotation
+
 ## v1.0.19
 
 * Total record count should return filtered count if filter is applied

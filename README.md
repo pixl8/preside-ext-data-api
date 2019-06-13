@@ -26,6 +26,7 @@ Additional _optional_ annotation options at the _object_ level are:
 
 * `dataApiEntityName`: Alternative entity name to use in API urls, e.g. instead of `crm_contact`, you may wish to use `contact`.
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
+* `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
 * `dataApiVerbs`: Supported REST HTTP Verbs. If not supplied, all verbs and operations are supported (i.e. GET, POST, PUT and DELETE)
 * `dataApiFields`: Fields to return in GET requests (defaults to all non-excluded fields)
 * `dataApiUpsertFields`: Fields to accept in POST/PUT request (defaults to `dataApiFields`)
@@ -49,7 +50,7 @@ If you specify a non-default renderer for an object property, it will be rendere
 property name="my_prop" dataApiAlias="myProp" dataApiRenderer="myCustomRenderer";
 ```
 
-To implement this, you will need a corresponding _viewlet_ at `renderers.content.myCustomRenderer.dataapi` **or** `renderers.content.myCustomRenderer.default` (a renderer _context_ of `dataapi` will be used and the system will fallback to the default renderer if that context is not implemented). 
+To implement this, you will need a corresponding _viewlet_ at `renderers.content.myCustomRenderer.dataapi` **or** `renderers.content.myCustomRenderer.default` (a renderer _context_ of `dataapi` will be used and the system will fallback to the default renderer if that context is not implemented).
 
 For example:
 
@@ -225,4 +226,81 @@ insert into pobj_data_api_user_settings (
 	,  1              /* delete_allowed       */
 	,  1              /* post_allowed         */
 )
+```
+
+
+## Namespaces and multiple APIs
+
+*Introduced in v2.0.0*
+
+By default, the API is exposed at `/api/data/v1/`. However, there will be occasions when you want to expose your data in different ways for different purposes. Or, if you are writing an extension, you may want to namespace your API so it doesn't clash with any existing default API implementation.
+
+With just a small amount of configuration, you can use all of the Data API's functionality in a separate, namespaced instance. First, configure the endpoints in your `Config.cfc`:
+
+```
+settings.rest.apis[ "/myGroovyApi/v1" ] = {
+	  authProvider     = "token"
+	, description      = "REST API to expose data with an alternate structure"
+	, dataApiNamespace = "myGroovyApi"
+};
+settings.rest.apis[ "/myGroovyApi/v1/docs" ] = {
+	  description      = "Documentation for myGroovyApi REST API (no authentication required)"
+	, dataApiNamespace = "myGroovyApi"
+	, dataApiDocs      = true
+};
+```
+
+A few things to note here:
+
+* The key within `settings.rest.apis` (e.g. `/myGroovyApi/v1`) is the base URI for the API. This will have `/api` prepended to it in the full URL.
+* `dataApiNamespace` is the namespace for the alternate API, and will be used when configuring objects. This will usually be the first part of the URI, but does not need to be.
+* `dataApiDocs` marks that this is the endpoint for the Swagger documentation. This whole endpoint could be omitted if you do not require the automatic document generation.
+* Use `authProvider` to mark an endpoint as needing authentication. If you omit this, the resource will not require authentication. In the API Manager in Preside, you can allow users to have access to individual APIs - so a user could have access to `/api/myGroovyApi/v1` but not to the default `/api/data/v1`, if you wish.
+
+### Annotations
+
+You can annotate your objects using exactly the same annotations as described above, but with `:{namespace}` appended. For example:
+
+```
+/**
+ * @dataApiEnabled             true
+ * @dataApiEnabled:myGroovyApi true
+ * @dataApiVerbs:myGroovyApi   GET
+ *
+ */
+component {
+	property name="label" dataApiAlias:myGroovyApi="some_other_label";
+}
+```
+
+This would enable this object both for the default `/data/v1` API, and for your custom `/myGroovyApi/v1` API. However, for `myGroovyApi` the object would only allow `GET` access, and the label field would be called `some_other_label` instead of `label`.
+
+You could also use this to specify an alternate renderer for a property, e.g. `dataApiRenderer:myGroovyApi="alternateRenderer"`.
+
+Note that namespaces do not inherit any annotations from the default API. Any annotations must be made explicitly with the `:{namespace}` suffix.
+
+### Labelling and text
+
+You can use all the same label and description customisations in your `/i18n/dataapi.properties` file as above; simply prefix the key name with `{namespace}.`. For example:
+
+```
+myGroovyApi.api.title=My Second API
+myGroovyApi.api.description=This is an alternate API to my application
+
+myGroovyApi.entity.my_entity.name=My alternate entity
+```
+
+Unlike annotations, i18n properties _will_ cascade up to the defaults. So if you do not make any customisations, you will see all the default text.
+
+### Interceptors
+
+All the same interceptors will run when actions are taken in a namespaced API. However, the interception point name will have `_{namespace}` as a suffix. Again, there is no fallback to the default interceptor, so any interceptors will need to be explicitly defined for your namespace. For example:
+
+```
+public void function preDataApiSelectData( event, interceptData ) {
+	// action to take for preDataApiSelectData on the default API
+}
+public void function preDataApiSelectData_myGroovyApi( event, interceptData ) {
+	// action to take for preDataApiSelectData on the myGroovyApi API
+}
 ```
