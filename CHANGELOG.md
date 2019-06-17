@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.2
+
+* Fix path to docs
+
 ## v2.0.1
 
 * Better handling of namespaced routes and handler paths
