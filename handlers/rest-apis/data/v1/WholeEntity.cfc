@@ -33,14 +33,15 @@ component {
 
 		var linkHeader      = "";
 		var linkHeaderDelim = "";
+		var handler         = event.getValue( name="dataApiHandler"  , defaultValue="data.v1" );
 
 		if ( result.nextPage ) {
-			var nextLink = event.buildLink( linkto="api.data.v1.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
+			var nextLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
 			linkHeader &= "<#nextLink#>; rel=""next""";
 			linkHeaderDelim = ", ";
 		}
 		if ( result.prevPage ) {
-			var prevLink = event.buildLink( linkto="api.data.v1.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.prevPage#" );
+			var prevLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.prevPage#" );
 			linkHeader &= linkHeaderDelim & "<#prevLink#>; rel=""prev""";
 		}
 

@@ -15,7 +15,8 @@ component {
 			restResponse.setHeader( "X-Total-Records", queueSize+1 );
 
 			if ( queueSize ) {
-				var nextLink = event.buildLink( linkto="api.data.v1.queue" );
+				var handler  = event.getValue( name="dataApiHandler", defaultValue="data.v1" );
+				var nextLink = event.buildLink( linkto="api.#handler#.queue" );
 				restResponse.setHeader( "Link", "<#nextLink#>; rel=""next""" );
 			}
 		} else {
