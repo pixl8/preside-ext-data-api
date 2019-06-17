@@ -72,6 +72,8 @@ component extends="coldbox.system.Interceptor" {
 			var dataApiRoutes = dataApiConfigurationService.getDataApiRoutes();
 			for( var apiRoute in dataApiRoutes ) {
 				if ( api == apiRoute && reFindNoCase( "^data\.v1", resource.handler ?: "" ) ) {
+					event.setValue( "dataApiRoute"    , apiRoute );
+					event.setValue( "dataApiHandler"  , apiRoute.changeDelims( ".", "/" ) );
 					event.setValue( "dataApiNamespace", dataApiRoutes[ apiRoute ].dataApiNamespace );
 					if ( resource.count() ) {
 						dataApiService.onRestRequest( restRequest, restResponse );

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.1
+
+* Better handling of namespaced routes and handler paths
+* Update queues to allow namespacing
+
 ## v2.0.0
 
 * Add support for multiple configured APIs via namespacing

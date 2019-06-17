@@ -53,6 +53,7 @@ component {
 		var domain   = site.domain ?: event.getServerName()
 		var protocol = site.protocol ?: event.getProtocol();
 		var api      = event.getValue( name="dataApiNamespace", defaultValue="data" );
+		var route    = event.getValue( name="dataApiRoute"    , defaultValue="/data/v1" );
 
 		spec.openapi = "3.0.1";
 		spec.info    = {
@@ -60,7 +61,7 @@ component {
 			  , description = _i18nNamespaced( "dataapi:api.description", "" )
 			  , version     = _i18nNamespaced( "dataapi:api.version" )
 		};
-		spec.servers    = [ { url="#protocol#://#domain#/api/#api#/v1" } ];
+		spec.servers    = [ { url="#protocol#://#domain#/api#route#" } ];
 		spec.security   = [ { "#_i18nNamespaced( "dataapi:basic.auth.name" )#"=[] } ];
 		spec.components = {
 			  securitySchemes = { "#_i18nNamespaced( "dataapi:basic.auth.name" )#"={ type="http", scheme="Basic", description=_i18nNamespaced( "dataapi:basic.auth.description" ) } }

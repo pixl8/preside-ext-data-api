@@ -19,10 +19,11 @@ component {
 
 // PUBLIC API METHODS
 	public struct function getNextQueuedItem( required string subscriber ) {
-		var dao    = $getPresideObject( "data_api_queue" );
-		var record = dao.selectData(
+		var dao       = $getPresideObject( "data_api_queue" );
+		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		var record    = dao.selectData(
 			  selectFields = [ "id", "object_name", "record_id", "operation" ]
-			, filter       = { subscriber=arguments.subscriber }
+			, filter       = { subscriber=arguments.subscriber, namespace=namespace }
 			, maxRows      = 1
 			, orderBy      = "order_number"
 		);
@@ -60,16 +61,19 @@ component {
 	}
 
 	public numeric function getQueueCount( required string subscriber ) {
+		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		return $getPresideObject( "data_api_queue" ).selectData(
-			  filter  = { subscriber=arguments.subscriber }
+			  filter  = { subscriber=arguments.subscriber, namespace=namespace }
 			, recordCountOnly = true
 		);
 	}
 
 	public numeric function removeFromQueue( required string subscriber, required string queueId ) {
+		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		return $getPresideObject( "data_api_queue" ).deleteData( filter={
 			  id         = arguments.queueId
 			, subscriber = arguments.subscriber
+			, namespace  = namespace
 		} );
 	}
 
@@ -77,18 +81,25 @@ component {
 		  string objectName = ""
 		, string newId         = ""
 	) {
-		if ( objectName.len() && newId.len() && _getConfigService().objectIsApiEnabled( objectName ) ) {
-			var subscribers = getSubscribers( arguments.objectName, "insert" );
+		if ( objectName.len() && newId.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+			var namespaces = _getConfigService().getNamespaces( true );
+			for( var namespace in namespaces ) {
+				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+					continue;
+				}
+				var subscribers = getSubscribers( arguments.objectName, "insert", namespace );
 
-			if ( subscribers.len() ) {
-				var dao = $getPresideObject( "data_api_queue" );
-				for( var subscriber in subscribers ) {
-					dao.insertData( {
-						  object_name = arguments.objectName
-						, record_id   = arguments.newId
-						, subscriber  = subscriber
-						, operation   = "insert"
-					} );
+				if ( subscribers.len() ) {
+					var dao = $getPresideObject( "data_api_queue" );
+					for( var subscriber in subscribers ) {
+						dao.insertData( {
+							  object_name = arguments.objectName
+							, record_id   = arguments.newId
+							, subscriber  = subscriber
+							, namespace   = namespace
+							, operation   = "insert"
+						} );
+					}
 				}
 			}
 		}
@@ -98,27 +109,36 @@ component {
 		  string objectName = ""
 		, string id         = ""
 	) {
-		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabled( objectName ) ) {
-			var subscribers = getSubscribers( arguments.objectName, "update" );
+		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+			var namespaces = _getConfigService().getNamespaces( true );
 
-			if ( subscribers.len() ) {
-				var dao = $getPresideObject( "data_api_queue" );
-				for( var subscriber in subscribers ) {
-					var insertStillQueued = dao.dataExists( filter={
-						  object_name    = arguments.objectName
-						, record_id      = arguments.id
-						, subscriber     = subscriber
-						, operation      = "insert"
-						, is_checked_out = false
-					} );
+			for( var namespace in namespaces ) {
+				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+					continue;
+				}
+				var subscribers = getSubscribers( arguments.objectName, "update", namespace );
 
-					if ( !insertStillQueued ) {
-						dao.insertData( {
-							  object_name = arguments.objectName
-							, record_id   = arguments.id
-							, subscriber  = subscriber
-							, operation   = "update"
+				if ( subscribers.len() ) {
+					var dao = $getPresideObject( "data_api_queue" );
+					for( var subscriber in subscribers ) {
+						var alreadyQueued = dao.dataExists( filter={
+							  object_name    = arguments.objectName
+							, record_id      = arguments.id
+							, subscriber     = subscriber
+							, namespace      = namespace
+							, operation      = [ "insert", "update" ]
+							, is_checked_out = false
 						} );
+
+						if ( !alreadyQueued ) {
+							dao.insertData( {
+								  object_name = arguments.objectName
+								, record_id   = arguments.id
+								, subscriber  = subscriber
+								, namespace   = namespace
+								, operation   = "update"
+							} );
+						}
 					}
 				}
 			}
@@ -141,43 +161,52 @@ component {
 			return;
 		}
 
-		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabled( objectName ) ) {
+		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+			var namespaces = _getConfigService().getNamespaces( true );
 
-			var subscribers = getSubscribers( arguments.objectName, "delete" );
+			for( var namespace in namespaces ) {
+				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+					continue;
+				}
+				var subscribers = getSubscribers( arguments.objectName, "delete", namespace );
 
-			if ( subscribers.len() ) {
-				var dao = $getPresideObject( "data_api_queue" );
-				for( var subscriber in subscribers ) {
-					var deletedInserts = dao.deleteData( filter = {
-						  is_checked_out = false
-						, subscriber     = subscriber
-						, operation      = "insert"
-						, object_name    = arguments.objectName
-						, record_id      = arguments.id
-					} );
-
-					if ( !deletedInserts ) {
-						dao.insertData( {
-							  object_name = arguments.objectName
-							, record_id   = arguments.id
-							, subscriber  = subscriber
-							, operation   = "delete"
-						} );
-
-						dao.deleteData( filter = {
+				if ( subscribers.len() ) {
+					var dao = $getPresideObject( "data_api_queue" );
+					for( var subscriber in subscribers ) {
+						var deletedInserts = dao.deleteData( filter = {
 							  is_checked_out = false
 							, subscriber     = subscriber
-							, operation      = "update"
+							, namespace      = namespace
+							, operation      = "insert"
 							, object_name    = arguments.objectName
 							, record_id      = arguments.id
 						} );
+
+						if ( !deletedInserts ) {
+							dao.insertData( {
+								  object_name = arguments.objectName
+								, record_id   = arguments.id
+								, subscriber  = subscriber
+								, namespace   = namespace
+								, operation   = "delete"
+							} );
+
+							dao.deleteData( filter = {
+								  is_checked_out = false
+								, subscriber     = subscriber
+								, namespace      = namespace
+								, operation      = "update"
+								, object_name    = arguments.objectName
+								, record_id      = arguments.id
+							} );
+						}
 					}
 				}
 			}
 		}
 	}
 
-	public array function getSubscribers( required string objectName, required string operation ) {
+	public array function getSubscribers( required string objectName, required string operation, string namespace="" ) {
 
 		var currentApiUser = $getRequestContext().getRestRequestUser();
 		var operationField = "";
@@ -201,10 +230,11 @@ component {
 
 		var defaultSubscribers = $getPresideObject( "data_api_user_settings" ).selectData(
 			  selectFields = [ "user" ]
-			, filter       = { "#operationField#"=true, object_name="" }
+			, filter       = { "#operationField#"=true, object_name="", namespace=arguments.namespace }
 		);
 		var specificSubscribers = $getPresideObject( "data_api_user_settings" ).selectData(
 			  selectFields = [ "user", operationField ]
+			, filter       = { object_name=arguments.objectName, namespace=arguments.namespace }
 		);
 
 		subscribers = ValueArray( defaultSubscribers.user );

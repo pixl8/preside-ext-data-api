@@ -168,7 +168,7 @@ component {
 
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName );
-				if ( IsBoolean( isEnabled ) && isEnabled ) {
+				if ( _isTrue( isEnabled ) ) {
 					var namespace           = _getNamespaceWithSeparator();
 					var entityName          = getObjectEntity( objectName );
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
@@ -183,7 +183,7 @@ component {
 						, verbs         = ListToArray( LCase( supportedVerbs ) )
 						, selectFields  = ListToArray( LCase( selectFields ) )
 						, upsertFields  = ListToArray( LCase( upsertFields ) )
-						, allowIdInsert = IsBoolean( allowIdInsert ) && allowIdInsert
+						, allowIdInsert = _isTrue( allowIdInsert )
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -213,14 +213,34 @@ component {
 		} );
 	}
 
-	public boolean function objectIsApiEnabled( required string objectName ) {
-		var args     = arguments;
-		var cacheKey = "objectIsApiEnabled" & _getDataApiNamespace() & args.objectName;
+	public boolean function objectIsApiEnabled( required string objectName, string namespace ) {
+		var args      = arguments;
+		var namespace = arguments.namespace ?: _getDataApiNamespace();
+		var cacheKey  = "objectIsApiEnabled" & namespace & args.objectName;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled#_getNamespaceWithSeparator()#" )
+			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled#_getNamespaceWithSeparator( namespace )#" );
 
-			return IsBoolean( isEnabled ) && isEnabled && !ReFindNoCase( "^vrsn_", args.objectName );
+			return _isTrue( isEnabled ) && !ReFindNoCase( "^vrsn_", args.objectName );
+		} );
+	}
+
+	public boolean function objectIsApiEnabledInAnyNamespace( required string objectName ) {
+		var args     = arguments;
+		var cacheKey = "objectIsApiEnabledInAnyNamespace" & args.objectName;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled" );
+			if ( !_isTrue( isEnabled ) ) {
+				for( var namespace in getNamespaces() ) {
+					isEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEnabled:#namespace#" );
+					if ( _isTrue( isEnabled ) ) {
+						break;
+					}
+				}
+			}
+
+			return _isTrue( isEnabled ) && !ReFindNoCase( "^vrsn_", args.objectName );
 		} );
 	}
 
@@ -276,10 +296,16 @@ component {
 			  dataApiNamespace = arguments.dataApiNamespace
 			, dataApiDocs      = arguments.dataApiDocs
 		};
+		_addNamespace( arguments.dataApiNamespace );
 	}
 
 	public struct function getDataApiRoutes() {
 		return variables._dataApiRoutes ?: {};
+	}
+
+	public array function getNamespaces( boolean includeDefault=false) {
+		var namespaces = variables._dataApiNamespaces ?: [];
+		return arguments.includeDefault ? duplicate( namespaces ).prepend( "" ) : namespaces;
 	}
 
 // PRIVATE HELPERS
@@ -295,8 +321,15 @@ component {
 		return $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 	}
 
-	private string function _getNamespaceWithSeparator() {
-		var dataApiNamespace = _getDataApiNamespace();
+	private void function _addNamespace( required string namespace ) {
+		variables._dataApiNamespaces = variables._dataApiNamespaces ?: [];
+		if ( len( arguments.namespace ) && !variables._dataApiNamespaces.find( arguments.namespace ) ) {
+			variables._dataApiNamespaces.append( arguments.namespace );
+		}
+	}
+
+	private string function _getNamespaceWithSeparator( string namespace) {
+		var dataApiNamespace = arguments.namespace ?: _getDataApiNamespace();
 
 		if ( len( dataApiNamespace ) ) {
 			return ":" & dataApiNamespace;
@@ -317,7 +350,7 @@ component {
 				return "datetime";
 			break;
 			case "boolean":
-				if ( IsBoolean( field.required ?: "" ) && field.required ) {
+				if ( _isTrue( field.required ?: "" ) ) {
 					return "strictboolean";
 				}
 
@@ -399,6 +432,10 @@ component {
 		}
 
 		return fields.toList();
+	}
+
+	private boolean function _isTrue( required any value ) {
+		return IsBoolean( arguments.value ) && arguments.value;
 	}
 
 // GETTERS AND SETTERS
