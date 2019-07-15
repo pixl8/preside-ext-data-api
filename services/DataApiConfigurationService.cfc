@@ -308,6 +308,12 @@ component {
 		return arguments.includeDefault ? duplicate( namespaces ).prepend( "" ) : namespaces;
 	}
 
+	public string function getNamespaceForRoute( required string route ) {
+		var routes = getDataApiRoutes();
+
+		return routes[ arguments.route ].dataApiNamespace ?: "";
+	}
+
 // PRIVATE HELPERS
 	private any function _simpleLocalCache( required string cacheKey, required any generator ) {
 		if ( !_localCache.keyExists( arguments.cacheKey ) ) {
