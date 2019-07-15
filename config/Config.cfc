@@ -17,6 +17,7 @@ component {
 		settings.rest.apis[ "/data/v1" ] = {
 			  authProvider = "token"
 			, description  = "Generic Preside REST API for external systems to interact with Preside data"
+			, configHandler = "dataApiManager"
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
 			description  = "Documentation for REST APIs (no authentication required)"

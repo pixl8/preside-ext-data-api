@@ -31,6 +31,8 @@ component extends="coldbox.system.Interceptor" {
 
 				apis[ apiRoute ] = apis[ apiRoute ] ?: [];
 				apis[ apiRoute ].append( base, true );
+
+				apiSettings[ apiRoute ].append( ( dataApiDocs ? apiSettings[ "/data/v1/docs" ] : apiSettings[ "/data/v1" ] ), false )
 			}
 		}
 	}
