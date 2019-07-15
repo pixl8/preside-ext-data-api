@@ -1,7 +1,7 @@
 <cfscript>
 	api         = args.api         ?: "";
 	apiUsers    = args.apiUsers    ?: [];
-	addUserLink = event.buildAdminLink( linkto="dataApi.addUser", querystring="api=#api#" );
+	addUserLink = event.buildAdminLink( linkto="dataApiManager.addUser", querystring="api=#api#" );
 </cfscript>
 
 <cfoutput>
@@ -41,10 +41,10 @@
 									<td>#renderContent( "boolean", IsTrue( usr.queueAccess ), "admin" )#</td>
 									<td class="text-right">
 										<div class="action-buttons btn-group">
-											<a class="row-link" href="#event.buildAdminLink( linkto='dataApi.configureApiUser', queryString='id=#usr.id#&api=#api#' )#">
+											<a class="row-link" href="#event.buildAdminLink( linkto='dataApiManager.configureApiUser', queryString='id=#usr.id#&api=#api#' )#">
 												<i class="fa fa-fw fa-cogs blue"></i>
 											</a>
-											<a class="confirmation-prompt" href="#event.buildAdminLink( linkto='dataApi.revokeAccessAction', queryString='id=#usr.id#&api=#api#' )#" title="#HtmlEditFormat( translateResource( uri='dataapi:revoke.access.prompt', data=[ usr.name, api ] ) )#">
+											<a class="confirmation-prompt" href="#event.buildAdminLink( linkto='dataApiManager.revokeAccessAction', queryString='id=#usr.id#&api=#api#' )#" title="#HtmlEditFormat( translateResource( uri='dataapi:revoke.access.prompt', data=[ usr.name, api ] ) )#">
 												<i class="fa fa-fw fa-ban red"></i>
 											</a>
 										</div>

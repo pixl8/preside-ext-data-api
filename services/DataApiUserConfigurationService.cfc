@@ -50,6 +50,13 @@ component {
  		return users;
 	}
 
+	public void function revokeAccess( required string userId, required string api ) {
+		var namespace = _getApiConfigService().getNamespaceForRoute( arguments.api );
+
+		$getPresideObject( "rest_user_api_access" ).deleteData( filter={ api=arguments.api, rest_user=arguments.userId } );
+		$getPresideObject( "data_api_user_settings" ).deleteData( filter={ namespace=namespace, user=arguments.userId } );
+	}
+
 // PRIVATE HELPERS
 
 // GETTERS AND SETTERS
