@@ -1,5 +1,6 @@
 <cfscript>
-	api = rc.api ?: "";
+	api    = rc.api ?: "";
+	userId = rc.id  ?: "";
 	cancelAction = prc.cancelAction ?: "";
 	submitAction = prc.submitAction ?: "";
 </cfscript>
@@ -7,6 +8,7 @@
 <cfoutput>
 	<form class="form form-horizontal" method="post" action="#submitAction#" id="add-data-api-user">
 		<input type="hidden" name="api" value="#HtmlEditFormat( api )#" />
+		<input type="hidden" name="user" value="#HtmlEditFormat( userId )#" />
 
 		#renderForm(
 			  formName         = "admin.dataapi.user.access.edit"
@@ -24,7 +26,7 @@
 				<button type="submit" class="btn btn-success" tabindex="#getNextTabIndex()#">
 					<i class="fa fa-fw fa-check bigger-110"></i>
 
-					#translateResource( "dataapi:configure.access.form.add.user.btn" )#
+					#translateResource( "dataapi:configure.access.form.save.btn" )#
 				</button>
 			</div>
 		</div>
