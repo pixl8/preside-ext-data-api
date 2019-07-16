@@ -72,6 +72,35 @@ component {
 		var hasAccess = false;
 		var namespace = _getApiConfigService().getNamespaceForRoute( arguments.api );
 
+		if ( !Len( Trim( arguments.entity ) ) ) {
+			hasAccess = $getPresideObject( "data_api_user_settings" ).dataExists(
+				  filter = "namespace = :namespace and user = :user and ( subscribe_to_deletes=1 or subscribe_to_updates=1 or subscribe_to_inserts=1 )"
+				, filterParams = {
+					  namespace = namespace
+					, user      = arguments.userId
+				  }
+			);
+		} else {
+			$getPresideObject( "data_api_user_settings" ).selectData( filter={
+				  namespace = namespace
+				, user      = arguments.userId
+			} );
+
+			if ( !settings.recordCount ) {
+				hasAccess = false;
+			} else if ( settings.recordCount == 1 && settings.object_name == "" ) {
+				hasAccess = _isTrue( settings.subscribe_to_deletes || settings.subscribe_to_updates || settings.subscribe_to_inserts );
+			} else {
+				var objectName = apiConfigService.getEntityObject( arguments.entity, namespace );
+				for( var setting in settings ) {
+					if ( setting.object_name == objectName ) {
+						hasAccess = _isTrue( setting.subscribe_to_deletes || setting.subscribe_to_updates || setting.subscribe_to_inserts );
+						break;
+					}
+				}
+			}
+		}
+
 		cache.set( cacheKey, hasAccess );
 
 		return hasAccess;
