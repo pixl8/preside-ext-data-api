@@ -12,12 +12,13 @@ component {
 
 // private helpers
 	private void function _setupFeatures() {
+		settings.features.apiManager.enabled    = true;
+		settings.features.restTokenAuth.enabled = true;
+
 		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
 	}
 
 	private void function _setupRestApis( required struct settings ) {
-		settings.features.apiManager.enabled    = true;
-		settings.features.restTokenAuth.enabled = true;
 
 		settings.rest.apis[ "/data/v1" ] = {
 			  authProvider = "dataApi"
