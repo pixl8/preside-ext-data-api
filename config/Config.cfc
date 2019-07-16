@@ -15,11 +15,13 @@ component {
 		settings.features.restTokenAuth.enabled = true;
 
 		settings.rest.apis[ "/data/v1" ] = {
-			  authProvider = "token"
+			  authProvider = "dataApi"
 			, description  = "Generic Preside REST API for external systems to interact with Preside data"
+			, configHandler = "dataApiManager"
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
-			description  = "Documentation for REST APIs (no authentication required)"
+			  description     = "Documentation for REST APIs (no authentication required)"
+			, hideFromManager = true
 		};
 	}
 
