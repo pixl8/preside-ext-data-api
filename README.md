@@ -198,36 +198,9 @@ Fires after deleting data through the API. Receives the following keys in the `i
 * `entity`: Name of the entity being operated on
 * `recordId`: ID of the record to be deleted
 
-## The Data Queue and per user/object permissioning
+## Data Change Queue(s)
 
-In addition to simple CRUD operations for entities, the system also provides a data change queue for API users to subscribe to. **There is currently no user interface for this!**. To enable the queue for an API user (API users can be found and managed in Preside admin -> System -> API Manager), you will need to run the following SQL:
-
-```
-insert into pobj_data_api_user_settings (
-	  user
-	, object_name
-	, subscribe_to_deletes
-	, subscribe_to_updates
-	, subscribe_to_inserts
-	, access_allowed
-	, get_allowed
-	, put_allowed
-	, delete_allowed
-	, post_allowed
-) values (
-	   '{id of user}' /* user                 */
-	,  null           /* object_name          */
-	,  1              /* subscribe_to_deletes */
-	,  1              /* subscribe_to_updates */
-	,  1              /* subscribe_to_inserts */
-	,  1              /* access_allowed       */
-	,  1              /* get_allowed          */
-	,  1              /* put_allowed          */
-	,  1              /* delete_allowed       */
-	,  1              /* post_allowed         */
-)
-```
-
+By default, they system enables a queue feature: `settings.features.dataApiQueue`. When enabled, API users can be subscribed, through the admin UI, to listen for data changes to all, or a number, of entities in the system
 
 ## Namespaces and multiple APIs
 
