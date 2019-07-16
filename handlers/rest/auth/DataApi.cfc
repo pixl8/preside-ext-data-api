@@ -2,33 +2,41 @@
  * Handler for authenticating with token authentication
  *
  */
-component {
+component extends="preside.system.handlers.rest.auth.Token" {
 
-	property name="authService" inject="presideRestAuthService";
 	property name="dataApiUserConfigurationService" inject="dataApiUserConfigurationService";
+	property name="presideRestService" inject="presideRestService";
 
 	private string function authenticate() {
-		var headers    = getHTTPRequestData().headers;
-		var authHeader = headers.Authorization ?: "";
-		var token      = "";
+		var userId = super.authenticate( argumentCollection=arguments );
 
-		try {
-			authHeader = toString( toBinary( listRest( authHeader, ' ' ) ) );
-			token      = ListFirst( authHeader, ":" );
+		if ( Len( Trim( userId ) ) ) {
+			var uri      = restRequest.getUri();
+			var verb     = restRequest.getVerb();
+			var api      = restRequest.getApi();
+			var resource = restRequest.getResource();
+			var args     = presideRestService.extractTokensFromUri( restRequest );
 
-			if ( !token.trim().len() ) {
-				throw( type="missing.token" );
+			switch( resource.handler ) {
+				case "data.v1.WholeEntity":
+				case "data.v1.SingleRecord":
+					if ( !dataApiUserConfigurationService.hasEntityAccess( userId, api, args.entity ?: "", verb ) ) {
+						restResponse.setStatusText( "Access denied. Contact your administrator to ensure that you have [#verb#] access to the [#args.entity#] entity." );
+						return "";
+					}
+				break;
+
+				case "data.v1.QueueDelete":
+				case "data.v1.QueueGet":
+					if ( !dataApiUserConfigurationService.hasQueueAccess( userId, api, args.entity ?: "" ) ) {
+						restResponse.setStatusText( "Access denied. Contact your administrator to ensure that you have a Queue subscription." );
+						return "";
+					}
+				break;
 			}
-		} catch( any e ) {
-			return "";
 		}
 
-		var userId = authService.getUserIdByToken( token );
-		if ( userId.len() && authService.userHasAccessToApi( userId, restRequest.getApi() ) ) {
-			return userId;
-		}
-
-		return "";
+		return userId;
 	}
 
 	private string function configure() {

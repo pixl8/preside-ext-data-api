@@ -7,15 +7,77 @@ component {
 // CONSTRUCTOR
 	/**
 	 * @apiConfigService.inject dataApiConfigurationService
-	 *
+	 * @cache.inject cachebox:PermissionsCache
 	 */
-	public any function init( required any apiConfigService ) {
+	public any function init( required any apiConfigService, required any cache ) {
 		_setApiConfigService( arguments.apiConfigService );
+		_setCache( arguments.cache );
 
 		return this;
 	}
 
 // PUBLIC API METHODS
+	public boolean function hasEntityAccess( required string userId, required string api, required string entity, required string verb ) {
+		var cache     = _getCache();
+		var cacheKey  = "dataapi.#Hash( arguments.api & arguments.userId )#.#arguments.verb#.#arguments.entity#";
+		var fromCache = cache.get( cacheKey );
+
+		if ( !IsNull( local.fromCache ) ) {
+			return fromCache;
+		}
+
+		var hasAccess = false;
+		var apiConfigService = _getApiConfigService();
+		var namespace = apiConfigService.getNamespaceForRoute( arguments.api );
+		var settings  = $getPresideObject( "data_api_user_settings" ).selectData( filter={
+			  namespace = namespace
+			, user      = arguments.userId
+		} );
+
+		if ( !settings.recordCount ) {
+			hasAccess = $getPresideObject( "rest_user_api_access" ).dataExists( filter={
+				  rest_user = arguments.userId
+				, api       = arguments.api
+			} );
+		} else {
+			var key = "#arguments.verb#_allowed";
+
+			if ( settings.recordCount == 1 && settings.object_name == "" ) {
+				hasAccess = _isTrue( settings[ key ][1] ?: "" );
+			} else {
+				var objectName = apiConfigService.getEntityObject( arguments.entity, namespace );
+				for( var setting in settings ) {
+					if ( setting.object_name == objectName ) {
+						hasAccess = _isTrue( setting[ key ] ?: "" );
+						break;
+					}
+				}
+			}
+		}
+
+		cache.set( cacheKey, hasAccess );
+
+		return hasAccess;
+	}
+
+	public boolean function hasQueueAccess( required string userId, required string api, required string entity ) {
+		var cache = _getCache();
+		var cacheKey = "dataapi.#Hash( arguments.api & arguments.userId )#.queue.#arguments.entity#";
+		var fromCache = cache.get( cacheKey );
+
+		if ( !IsNull( local.fromCache ) ) {
+			return fromCache;
+		}
+
+		var hasAccess = false;
+		var namespace = _getApiConfigService().getNamespaceForRoute( arguments.api );
+
+		cache.set( cacheKey, hasAccess );
+
+		return hasAccess;
+	}
+
+
 	public array function listUsersWithApiAccess( required string apiEndpoint ) {
 		var namespace = _getApiConfigService().getNamespaceForRoute( arguments.apiEndpoint );
 		var users     = [];
@@ -110,6 +172,12 @@ component {
 				dataApiAccessDao.insertData( accessRecord );
 			}
 		}
+
+		_getCache().clearByKeySnippet(
+			  keySnippet = "^dataapi\.#Hash( arguments.api & arguments.userId )#\."
+			, regex      = true
+			, async      = false
+		);
 
 	}
 
@@ -249,5 +317,12 @@ component {
 	}
 	private void function _setApiConfigService( required any apiConfigService ) {
 	    _apiConfigService = arguments.apiConfigService;
+	}
+
+	private any function _getCache() {
+	    return _cache;
+	}
+	private void function _setCache( required any cache ) {
+	    _cache = arguments.cache;
 	}
 }
