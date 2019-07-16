@@ -93,7 +93,28 @@ component extends="preside.system.base.AdminHandler" {
 	}
 
 	public void function configureApiUser() {
-		WriteDump( 'TODO' ); abort;
+		var api    = rc.api ?: "";
+		var userId = rc.id  ?: "";
+
+		if ( !Len( Trim( api ) ) || !Len( Trim( userId ) ) ) {
+			event.notFound();
+		}
+
+		_checkPermissions( event=event, key="edit" );
+
+		var userName = renderLabel( "rest_user", userId );
+
+		prc.pageIcon = "fa-plus";
+		prc.pagetitle = translateResource( uri="dataapi:edit.user.page.title", data=[ userName ] );
+		prc.pagesubtitle = translateResource( uri="dataapi:edit.user.page.subtitle", data=[ userName ] );
+
+		prc.cancelAction = event.buildAdminLink( linkTo="apimanager.configureAuth", queryString="id=#api#" );
+		prc.submitAction = event.buildAdminLink( linkto="dataapiManager.editUserAction" );
+
+		event.addAdminBreadCrumb(
+			  title = translateResource( uri="dataapi:edit.user.page.crumb", data=[ userName ] )
+			, link  = ""
+		);
 	}
 
 	public void function revokeAccessAction() {
