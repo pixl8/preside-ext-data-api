@@ -29,28 +29,28 @@
 			<tbody>
 				<tr class="all">
 					<th class="resource-header all">#translateResource( "dataapi:configure.access.table.all.apis.th" )#</th>
-					<td class="stand first"><input type="checkbox" data-subj="all"    data-cat="standard" name="all_all" class="all" checked></td>
-					<td class="stand"><input type="checkbox" data-subj="read"   data-cat="standard" name="all_read" checked></td>
-					<td class="stand"><input type="checkbox" data-subj="insert" data-cat="standard" name="all_insert" checked></td>
-					<td class="stand"><input type="checkbox" data-subj="update" data-cat="standard" name="all_update" checked></td>
-					<td class="stand"><input type="checkbox" data-subj="delete" data-cat="standard" name="all_delete" checked></td>
-					<td class="queue first"><input type="checkbox" data-subj="all"    data-cat="queue"    name="all_queue_all"></td>
-					<td class="queue"><input type="checkbox" data-subj="insert" data-cat="queue"    name="all_queue_insert"></td>
-					<td class="queue"><input type="checkbox" data-subj="update" data-cat="queue"    name="all_queue_update"></td>
-					<td class="queue"><input type="checkbox" data-subj="delete" data-cat="queue"    name="all_queue_delete"></td>
+					<td class="stand first"><input type="checkbox" value="1" data-subj="all"    data-cat="standard" name="all_all" class="all" checked></td>
+					<td class="stand"><input type="checkbox" value="1" data-subj="read"   data-cat="standard" name="all_read" checked></td>
+					<td class="stand"><input type="checkbox" value="1" data-subj="insert" data-cat="standard" name="all_insert" checked></td>
+					<td class="stand"><input type="checkbox" value="1" data-subj="update" data-cat="standard" name="all_update" checked></td>
+					<td class="stand"><input type="checkbox" value="1" data-subj="delete" data-cat="standard" name="all_delete" checked></td>
+					<td class="queue first"><input type="checkbox" value="1" data-subj="all"    data-cat="queue"    name="all_queue_all"></td>
+					<td class="queue"><input type="checkbox" value="1" data-subj="insert" data-cat="queue"    name="all_queue_insert"></td>
+					<td class="queue"><input type="checkbox" value="1" data-subj="update" data-cat="queue"    name="all_queue_update"></td>
+					<td class="queue"><input type="checkbox" value="1" data-subj="delete" data-cat="queue"    name="all_queue_delete"></td>
 				</tr>
 				<cfloop array="#entities#" index="i" item="entity">
 					<tr class="entity">
 						<th><i class="fa fa-fw fa-angle-double-right light-grey"></i> <code>/#entity#</code></th>
-						<td class="stand first"><input type="checkbox" data-subj="all"    data-cat="standard" name="#HtmlEditFormat( entity )#_all" class="all" checked></td>
-						<td class="stand"><input type="checkbox" data-subj="read"   data-cat="standard" name="#HtmlEditFormat( entity )#_read" checked></td>
-						<td class="stand"><input type="checkbox" data-subj="insert" data-cat="standard" name="#HtmlEditFormat( entity )#_insert" checked></td>
-						<td class="stand"><input type="checkbox" data-subj="update" data-cat="standard" name="#HtmlEditFormat( entity )#_update" checked></td>
-						<td class="stand"><input type="checkbox" data-subj="delete" data-cat="standard" name="#HtmlEditFormat( entity )#_delete" checked></td>
-						<td class="queue first"><input type="checkbox" data-subj="all"    data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_all"></td>
-						<td class="queue"><input type="checkbox" data-subj="insert" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_insert"></td>
-						<td class="queue"><input type="checkbox" data-subj="update" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_update"></td>
-						<td class="queue"><input type="checkbox" data-subj="delete" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_delete"></td>
+						<td class="stand first"><input type="checkbox" value="1" data-subj="all"    data-cat="standard" name="#HtmlEditFormat( entity )#_all" class="all" checked></td>
+						<td class="stand"><input type="checkbox" value="1" data-subj="read"   data-cat="standard" name="#HtmlEditFormat( entity )#_read" checked></td>
+						<td class="stand"><input type="checkbox" value="1" data-subj="insert" data-cat="standard" name="#HtmlEditFormat( entity )#_insert" checked></td>
+						<td class="stand"><input type="checkbox" value="1" data-subj="update" data-cat="standard" name="#HtmlEditFormat( entity )#_update" checked></td>
+						<td class="stand"><input type="checkbox" value="1" data-subj="delete" data-cat="standard" name="#HtmlEditFormat( entity )#_delete" checked></td>
+						<td class="queue first"><input type="checkbox" value="1" data-subj="all"    data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_all"></td>
+						<td class="queue"><input type="checkbox" value="1" data-subj="insert" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_insert"></td>
+						<td class="queue"><input type="checkbox" value="1" data-subj="update" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_update"></td>
+						<td class="queue"><input type="checkbox" value="1" data-subj="delete" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_delete"></td>
 					</tr>
 				</cfloop>
 			</tbody>
