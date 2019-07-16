@@ -41,12 +41,12 @@ component {
 		} );
 	}
 
-	public string function getEntityObject( required string entity ) {
+	public string function getEntityObject( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getEntityObject" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getEntityObject" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var entities = getEntities();
+			var entities = getEntities( args.namespace );
 			return entities[ args.entity ].objectName ?: "";
 		} );
 	}

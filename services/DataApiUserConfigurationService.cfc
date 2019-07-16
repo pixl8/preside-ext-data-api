@@ -74,7 +74,7 @@ component {
 			var accessRecord = {
 				  user                 = arguments.userId
 				, namespace            = namespace
-				, object_name          = ( entity == "all" ? "" : entity )
+				, object_name          = ( entity == "all" ? "" : apiConfigService.getEntityObject( entity, namespace ) )
 				, get_allowed          = _isTrue( arguments.rules[ "#entity#_read"         ] ?: "" )
 				, post_allowed         = _isTrue( arguments.rules[ "#entity#_insert"       ] ?: "" )
 				, put_allowed          = _isTrue( arguments.rules[ "#entity#_update"       ] ?: "" )
@@ -173,7 +173,7 @@ component {
 		var queueDeleteAll = true;
 
 		for( var setting in settings ) {
-			var entity = setting.object_name;
+			var entity = apiConfigService.getObjectEntity( setting.object_name, namespace );
 
 			accessDetails[ "#entity#_read"         ] = _isTrue( setting.get_allowed          );
 			accessDetails[ "#entity#_insert"       ] = _isTrue( setting.post_allowed         );
