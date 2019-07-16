@@ -51,12 +51,12 @@ component {
 		} );
 	}
 
-	public string function getObjectEntity( required string objectName ) {
+	public string function getObjectEntity( required string objectName, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getObjectEntity" & _getDataApiNamespace() & args.objectName;
+		var cacheKey = "getObjectEntity" & args.namespace & args.objectName;
 
 		return _simpleLocalCache( cacheKey, function(){
-			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName#_getNamespaceWithSeparator()#", args.objectName );
+			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName#_getNamespaceWithSeparator( args.namespace )#", args.objectName );
 		} );
 	}
 
@@ -158,8 +158,9 @@ component {
 		} );
 	}
 
-	public struct function getEntities() {
-		var cacheKey = "getEntities" & _getDataApiNamespace();
+	public struct function getEntities( string namespace=_getDataApiNamespace() ) {
+		var cacheKey = "getEntities" & arguments.namespace;
+		var args     = arguments;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var poService = $getPresideObjectService();
@@ -167,9 +168,9 @@ component {
 			var entities  = {};
 
 			for( var objectName in objects ) {
-				var isEnabled = objectIsApiEnabled( objectName );
+				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
-					var namespace           = _getNamespaceWithSeparator();
+					var namespace           = _getNamespaceWithSeparator( args.namespace );
 					var entityName          = getObjectEntity( objectName );
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );

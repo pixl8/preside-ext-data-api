@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form i18nBaseUri="dataapi:configure.access.form.">
+	<tab id="default">
+		<fieldset id="default" sortorder="10">
+			<field binding="data_api_user_settings.user" superquickadd="true" />
+			<field name="access_settings" control="dataApiAccessPicker"  />
+		</fieldset>
+	</tab>
+</form>
