@@ -4,12 +4,17 @@ component {
 		var conf     = arguments.config;
 		var settings = conf.settings ?: {};
 
+		_setupFeatures( settings );
 		_setupRestApis( settings );
 		_setupEnums( settings );
 		_setupInterceptors( conf );
 	}
 
 // private helpers
+	private void function _setupFeatures() {
+		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
+	}
+
 	private void function _setupRestApis( required struct settings ) {
 		settings.features.apiManager.enabled    = true;
 		settings.features.restTokenAuth.enabled = true;

@@ -26,7 +26,11 @@ component {
 		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
-		_addQueueSpec( spec );
+
+		if ( $isFeatureEnabled( "dataApiQueue" ) ) {
+			_addQueueSpec( spec );
+		}
+
 		_addEntitySpecs( spec );
 
 		$announceInterception( "onOpenApiSpecGeneration#namespace#", { spec=spec } );

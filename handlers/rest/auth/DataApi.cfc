@@ -28,7 +28,10 @@ component extends="preside.system.handlers.rest.auth.Token" {
 
 				case "data.v1.QueueDelete":
 				case "data.v1.QueueGet":
-					if ( !dataApiUserConfigurationService.hasQueueAccess( userId, api, args.entity ?: "" ) ) {
+					if ( !isFeatureEnabled( "dataApiQueue" ) ) {
+						restResponse.setStatusText( "The queue system is not enabled for this API." );
+						return "";
+					} else if ( !dataApiUserConfigurationService.hasQueueAccess( userId, api, args.entity ?: "" ) ) {
 						restResponse.setStatusText( "Access denied. Contact your administrator to ensure that you have a Queue subscription." );
 						return "";
 					}
