@@ -6,15 +6,17 @@ if  [[ $TRAVIS_PULL_REQUEST != 'false' ]] ; then
 fi
 
 if [[ $TRAVIS_TAG == v* ]] || [[ $TRAVIS_BRANCH == release* ]] ; then
-	GIT_BRANCH=$TRAVIS_TAG
 	BUILD_DIR=build/
 	PADDED_BUILD_NUMBER=`printf %05d $TRAVIS_BUILD_NUMBER`
 
-	if [[ $GIT_BRANCH == v* ]] ; then
+	if [[ $TRAVIS_TAG == v* ]] ; then
+		GIT_BRANCH=$TRAVIS_TAG
 		VERSION_NUMBER="${GIT_BRANCH//v}.$PADDED_BUILD_NUMBER"
 	else
+		GIT_BRANCH=$TRAVIS_BRANCH
 		VERSION_NUMBER="${GIT_BRANCH//release-}-SNAPSHOT$PADDED_BUILD_NUMBER"
 	fi
+
 	ZIP_FILE=$VERSION_NUMBER.zip
 
 	echo "Building Preside Extension: Data API"
