@@ -65,7 +65,7 @@ component {
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
 							try {
-								dataEntry.record = DeserializeJson( record.data );
+								dataEntry.record = _aliasFields( record.object_name, DeserializeJson( record.data ) );
 							} catch( any e ) {
 								dataEntry.record = record.data;
 							}
@@ -321,6 +321,17 @@ component {
 		}
 
 		return 0;
+	}
+
+	private struct function _aliasFields( required string objectName, required struct data ) {
+		var aliased = {};
+		var configService = _getConfigService();
+		for( var key in arguments.data ) {
+			var alias = configService.getAliasForPropertyName( arguments.objectName, key );
+			aliased[ alias ] = arguments.data[ key ];
+		}
+
+		return aliased;
 	}
 
 // GETTERS AND SETTERS

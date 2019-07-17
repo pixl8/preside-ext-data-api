@@ -136,15 +136,15 @@ component {
 		} );
 	}
 
-	public struct function getFieldSettings( required string entity ) {
+	public struct function getFieldSettings( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getFieldSettings" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getFieldSettings" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var objectName    = getEntityObject( args.entity );
+			var objectName    = getEntityObject( args.entity, args.namespace );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
-			var namespace     = _getNamespaceWithSeparator();
+			var namespace     = _getNamespaceWithSeparator( args.namespace );
 
 			for( var field in props ) {
 				fieldSettings[ field ] = {
@@ -292,6 +292,24 @@ component {
 		}
 
 		return arguments.field;
+	}
+
+	public string function getAliasForPropertyName( required string objectName, required string propertyName, string namespace=_getDataApiNamespace() ) {
+		var args          = arguments;
+		var cacheKey      = "getAliasForPropertyName-#args.objectName#-#args.propertyName#-#args.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entityName    = getObjectEntity( args.objectName, args.namespace );
+			var fieldSettings = getFieldSettings( entityName, args.namespace );
+
+			for( var fieldName in fieldSettings ) {
+				if ( fieldName == args.propertyName ) {
+					return fieldSettings[ fieldName ].alias ?: args.propertyName;
+				}
+			}
+
+			return args.propertyName;
+		} );
 	}
 
 	public void function addDataApiRoute(
