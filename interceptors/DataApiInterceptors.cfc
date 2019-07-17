@@ -19,13 +19,21 @@ component extends="coldbox.system.Interceptor" {
 		var apiSettings        = getSetting( name="rest.apis", defaultValue={} );
 		var dataApiNamespace   = "";
 		var dataApiDocs        = false;
+		var dataApiQueues      = {};
 		var base               = [];
 
 		for( var apiRoute in apiSettings ) {
 			dataApiNamespace = apiSettings[ apiRoute ].dataApiNamespace ?: "";
 			if ( len( dataApiNamespace ) ) {
-				dataApiDocs = isTrue( apiSettings[ apiRoute ].dataApiDocs ?: "" );
-				dataApiConfigurationService.addDataApiRoute( apiRoute, dataApiNamespace, dataApiDocs );
+				dataApiDocs   = isTrue( apiSettings[ apiRoute ].dataApiDocs ?: "" );
+				dataApiQueues = apiSettings[ apiRoute ].dataApiQueues ?: {};
+
+				dataApiConfigurationService.addDataApiRoute(
+					  dataApiRoute     = apiRoute
+					, dataApiNamespace = dataApiNamespace
+					, dataApiDocs      = dataApiDocs
+					, dataApiQueues    = dataApiQueues
+				);
 
 				base = duplicate( dataApiDocs ? apis[ "/data/v1/docs" ] : apis[ "/data/v1" ] );
 
@@ -35,6 +43,9 @@ component extends="coldbox.system.Interceptor" {
 				apiSettings[ apiRoute ].append( ( dataApiDocs ? apiSettings[ "/data/v1/docs" ] : apiSettings[ "/data/v1" ] ), false )
 			}
 		}
+
+		dataApiConfigurationService.addDataApiRoute( "/data/v1", "", false, apiSettings[ "/data/v1" ].dataApiQueues ?: {} );
+		dataApiConfigurationService.addDataApiRoute( "/data/v1/docs", "", true, {} );
 	}
 
 	public void function afterConfigurationLoad( event, interceptData ) {
@@ -89,6 +100,15 @@ component extends="coldbox.system.Interceptor" {
 	public void function postDeleteObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
 		dataApiQueueService.queueDelete( argumentCollection=interceptData );
+	}
+
+
+	public void function preUpdateObjectData( event, interceptData ) {
+		if ( !_applicationLoaded ) return;
+
+		if ( dataApiQueueService.queueRequired( argumentCollection=interceptData ) ) {
+			interceptData.calculateChangedData = true;
+		}
 	}
 
 	public void function postUpdateObjectData( event, interceptData ) {

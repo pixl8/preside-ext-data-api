@@ -7,7 +7,6 @@ component {
 // CONSTRUCTOR
 	/**
 	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
-	 *
 	 */
 	public any function init( required any presideFieldRuleGenerator ) {
 		_localCache = {};
@@ -291,11 +290,17 @@ component {
 		return arguments.field;
 	}
 
-	public void function addDataApiRoute( required string dataApiRoute, required string dataApiNamespace, required boolean dataApiDocs ) {
+	public void function addDataApiRoute(
+		  required string  dataApiRoute
+		, required string  dataApiNamespace
+		, required boolean dataApiDocs
+		, required struct  dataApiQueues
+	) {
 		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
 		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
 			  dataApiNamespace = arguments.dataApiNamespace
 			, dataApiDocs      = arguments.dataApiDocs
+			, dataApiQueues    = arguments.dataApiQueues
 		};
 		_addNamespace( arguments.dataApiNamespace );
 	}
@@ -313,6 +318,80 @@ component {
 		var routes = getDataApiRoutes();
 
 		return routes[ arguments.route ].dataApiNamespace ?: "";
+	}
+
+	public struct function getQueueForObject( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueueForObject-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var queueAnnotation = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiQueue#_getNamespaceWithSeparator( args.namespace )#" );
+			var apiRoutes       = getDataApiRoutes();
+
+			for( var apiRouteName in apiRoutes ) {
+				var apiRoute = apiRoutes[ apiRouteName ];
+				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && !apiRoute.dataApiDocs  ) {
+					if ( !Len( Trim( queueAnnotation ) ) ) {
+						queueAnnotation = "default";
+					}
+
+					if ( apiRoute.dataApiQueues.keyExists( queueAnnotation ) ) {
+						return {
+							  name          = apiRoute.dataApiQueues[ queueAnnotation ].name ?: queueAnnotation
+							, pageSize      = Val( apiRoute.dataApiQueues[ queueAnnotation ].pageSize ?: 1 )
+							, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges
+						};
+					}
+
+					break;
+				}
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public struct function getQueue( required string queueName, string namespace=_getDataApiNamespace(), throwOnMissing=false ) {
+		var args     = arguments;
+		var cacheKey = "getQueue-#arguments.queueName#-#arguments.namespace#-#arguments.throwOnMissing#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoutes = getDataApiRoutes();
+			for( var apiRouteName in apiRoutes ) {
+				var apiRoute = apiRoutes[ apiRouteName ];
+				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && !apiRoute.dataApiDocs ) {
+					if ( !Len( Trim( args.queueName ) ) ) {
+						args.queueName = "default";
+					}
+
+					if ( StructKeyExists( apiRoute.dataApiQueues, args.queueName ) ) {
+						return {
+							  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
+							, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
+							, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
+						};
+					} else if ( args.throwOnMissing ) {
+						throw( type="dataapi.queue.not.found", message="No queue is configured named, [#args.queueName#]." );
+					}
+
+					break;
+				}
+			}
+
+			if ( args.throwOnMissing ) {
+				throw( type="dataapi.queue.not.found", message="No queue is configured with the name, [#args.queueName#]." );
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public struct function getDefaultQueueConfig() {
+		return {
+			  name          = ""
+			, pageSize      = 1
+			, atomicChanges = false
+		};
 	}
 
 // PRIVATE HELPERS
