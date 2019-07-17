@@ -26,13 +26,15 @@ component extends="coldbox.system.Interceptor" {
 			dataApiNamespace = apiSettings[ apiRoute ].dataApiNamespace ?: "";
 			if ( len( dataApiNamespace ) ) {
 				dataApiDocs   = isTrue( apiSettings[ apiRoute ].dataApiDocs ?: "" );
+				dataApiQueueEnabled = isTrue( apiSettings[ apiRoute ].dataApiQueueEnabled ?: !dataApiDocs );
 				dataApiQueues = apiSettings[ apiRoute ].dataApiQueues ?: {};
 
 				dataApiConfigurationService.addDataApiRoute(
-					  dataApiRoute     = apiRoute
-					, dataApiNamespace = dataApiNamespace
-					, dataApiDocs      = dataApiDocs
-					, dataApiQueues    = dataApiQueues
+					  dataApiRoute        = apiRoute
+					, dataApiNamespace    = dataApiNamespace
+					, dataApiDocs         = dataApiDocs
+					, dataApiQueueEnabled = dataApiQueueEnabled
+					, dataApiQueues       = dataApiQueues
 				);
 
 				base = duplicate( dataApiDocs ? apis[ "/data/v1/docs" ] : apis[ "/data/v1" ] );
@@ -44,8 +46,20 @@ component extends="coldbox.system.Interceptor" {
 			}
 		}
 
-		dataApiConfigurationService.addDataApiRoute( "/data/v1", "", false, apiSettings[ "/data/v1" ].dataApiQueues ?: {} );
-		dataApiConfigurationService.addDataApiRoute( "/data/v1/docs", "", true, {} );
+		dataApiConfigurationService.addDataApiRoute(
+			  dataApiRoute        = "/data/v1"
+			, dataApiNamespace    = ""
+			, dataApiDocs         = false
+			, dataApiQueueEnabled = IsTrue( apiSettings[ "/data/v1" ].dataApiQueueEnabled ?: true )
+			, dataApiQueues       = apiSettings[ "/data/v1" ].dataApiQueues ?: {}
+		);
+		dataApiConfigurationService.addDataApiRoute(
+			  dataApiRoute        = "/data/v1/docs"
+			, dataApiNamespace    = ""
+			, dataApiDocs         = true
+			, dataApiQueueEnabled = false
+			, dataApiQueues       = {}
+		);
 	}
 
 	public void function afterConfigurationLoad( event, interceptData ) {

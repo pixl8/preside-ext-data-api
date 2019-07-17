@@ -15,8 +15,11 @@ component {
 
 		var namespace = apiConfigService.getNamespaceForRoute( api );
 
-		args.entities = StructKeyArray( apiConfigService.getEntities( namespace ) );
+		args.allEntities = apiConfigService.getEntities( namespace );
+		args.entities = StructKeyArray( args.allEntities );
 		ArraySort( args.entities, "textnocase" );
+
+		args.queueEnabled = apiConfigService.isQueueEnabled( namespace );
 
 		return renderView( view="/formcontrols/dataApiAccessPicker", args=args );
 	}

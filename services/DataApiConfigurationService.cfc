@@ -177,6 +177,7 @@ component {
 					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields#namespace#", "" );
 					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
+					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
@@ -184,6 +185,7 @@ component {
 						, selectFields  = ListToArray( LCase( selectFields ) )
 						, upsertFields  = ListToArray( LCase( upsertFields ) )
 						, allowIdInsert = _isTrue( allowIdInsert )
+						, allowQueue    = _isTrue( allowQueue    )
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -294,13 +296,15 @@ component {
 		  required string  dataApiRoute
 		, required string  dataApiNamespace
 		, required boolean dataApiDocs
+		, required boolean dataApiQueueEnabled
 		, required struct  dataApiQueues
 	) {
 		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
 		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
-			  dataApiNamespace = arguments.dataApiNamespace
-			, dataApiDocs      = arguments.dataApiDocs
-			, dataApiQueues    = arguments.dataApiQueues
+			  dataApiNamespace    = arguments.dataApiNamespace
+			, dataApiDocs         = arguments.dataApiDocs
+			, dataApiQueueEnabled = arguments.dataApiQueueEnabled
+			, dataApiQueues       = arguments.dataApiQueues
 		};
 		_addNamespace( arguments.dataApiNamespace );
 	}
@@ -320,30 +324,43 @@ component {
 		return routes[ arguments.route ].dataApiNamespace ?: "";
 	}
 
+	public struct function getRouteForNamespace( required string namespace, boolean docs=false ) {
+		var args     = arguments;
+		var cacheKey = "getRouteForNamespace-#arguments.namespace#-#arguments.docs#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoutes = getDataApiRoutes();
+
+			for( var apiRouteName in apiRoutes ) {
+				var apiRoute = apiRoutes[ apiRouteName ];
+				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && apiRoute.dataApiDocs == args.docs  ) {
+					return apiRoute;
+				}
+			}
+
+			return {};
+		} );
+	}
+
 	public struct function getQueueForObject( required string objectName, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "getQueueForObject-#arguments.objectName#-#arguments.namespace#";
 
 		return _simpleLocalCache( cacheKey, function(){
 			var queueAnnotation = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiQueue#_getNamespaceWithSeparator( args.namespace )#" );
-			var apiRoutes       = getDataApiRoutes();
+			var apiRoute        = getRouteForNamespace( args.namespace );
 
-			for( var apiRouteName in apiRoutes ) {
-				var apiRoute = apiRoutes[ apiRouteName ];
-				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && !apiRoute.dataApiDocs  ) {
-					if ( !Len( Trim( queueAnnotation ) ) ) {
-						queueAnnotation = "default";
-					}
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( queueAnnotation ) ) ) {
+					queueAnnotation = "default";
+				}
 
-					if ( apiRoute.dataApiQueues.keyExists( queueAnnotation ) ) {
-						return {
-							  name          = apiRoute.dataApiQueues[ queueAnnotation ].name ?: queueAnnotation
-							, pageSize      = Val( apiRoute.dataApiQueues[ queueAnnotation ].pageSize ?: 1 )
-							, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges
-						};
-					}
-
-					break;
+				if ( apiRoute.dataApiQueues.keyExists( queueAnnotation ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ queueAnnotation ].name ?: queueAnnotation
+						, pageSize      = Val( apiRoute.dataApiQueues[ queueAnnotation ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges
+					};
 				}
 			}
 
@@ -351,38 +368,87 @@ component {
 		} );
 	}
 
-	public struct function getQueue( required string queueName, string namespace=_getDataApiNamespace(), throwOnMissing=false ) {
+	public struct function getQueue( required string queueName, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getQueue-#arguments.queueName#-#arguments.namespace#-#arguments.throwOnMissing#";
+		var cacheKey = "getQueue-#arguments.queueName#-#arguments.namespace#";
 
 		return _simpleLocalCache( cacheKey, function(){
-			var apiRoutes = getDataApiRoutes();
-			for( var apiRouteName in apiRoutes ) {
-				var apiRoute = apiRoutes[ apiRouteName ];
-				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && !apiRoute.dataApiDocs ) {
-					if ( !Len( Trim( args.queueName ) ) ) {
-						args.queueName = "default";
-					}
+			var apiRoute = getRouteForNamespace( args.namespace );
 
-					if ( StructKeyExists( apiRoute.dataApiQueues, args.queueName ) ) {
-						return {
-							  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
-							, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
-							, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
-						};
-					} else if ( args.throwOnMissing ) {
-						throw( type="dataapi.queue.not.found", message="No queue is configured named, [#args.queueName#]." );
-					}
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( args.queueName ) ) ) {
+					args.queueName = "default";
+				}
 
-					break;
+				if ( StructKeyExists( apiRoute.dataApiQueues, args.queueName ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
+						, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
+					};
 				}
 			}
 
-			if ( args.throwOnMissing ) {
-				throw( type="dataapi.queue.not.found", message="No queue is configured with the name, [#args.queueName#]." );
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public boolean function queueExists( required string queueName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "queueExists-#arguments.queueName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && StructKeyExists( apiRoute.dataApiQueues, args.queueName );
+		} );
+	}
+
+	public boolean function isQueueEnabled( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isQueueEnabled-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !$isFeatureEnabled( "dataApiQueue" ) ) {
+				return false;
 			}
 
-			return getDefaultQueueConfig();
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && apiRoute.dataApiQueueEnabled && listQueueEnabledObjects( args.namespace ).len();
+		} );
+	}
+
+	public array function listQueueEnabledObjects( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "listQueueEnabledObjects-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var enabledObjects = [];
+			var entities = getEntities( args.namespace );
+
+			for( var entityName in entities ) {
+				var entity = entities[ entityName ];
+
+				if ( entity.allowQueue ) {
+					enabledObjects.append( entity.objectName );
+				}
+			}
+
+			return enabledObjects;
+		} );
+	}
+
+	public array function isObjectQueueEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isObjectQueueEnabled-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !isQueueEnabled( args.namespace ) ) {
+				return false;
+			}
+
+			return ArrayFindNoCase( listQueueEnabledObjects( args.namespace ), args.objectName );
 		} );
 	}
 

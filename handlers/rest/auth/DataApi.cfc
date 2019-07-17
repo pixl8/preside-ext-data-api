@@ -5,6 +5,7 @@
 component extends="preside.system.handlers.rest.auth.Token" {
 
 	property name="dataApiUserConfigurationService" inject="dataApiUserConfigurationService";
+	property name="dataApiConfigurationService" inject="dataApiConfigurationService";
 	property name="presideRestService" inject="presideRestService";
 
 	private string function authenticate() {
@@ -26,9 +27,8 @@ component extends="preside.system.handlers.rest.auth.Token" {
 					}
 				break;
 
-				case "data.v1.QueueDelete":
-				case "data.v1.QueueGet":
-					if ( !isFeatureEnabled( "dataApiQueue" ) ) {
+				case "data.v1.Queue":
+					if ( !dataApiConfigurationService.isQueueEnabled() ) {
 						restResponse.setStatusText( "The queue system is not enabled for this API." );
 						return "";
 					} else if ( !dataApiUserConfigurationService.hasQueueAccess( userId, api, args.entity ?: "" ) ) {
