@@ -20,20 +20,19 @@ component {
 // PUBLIC API METHODS
 	public struct function getSpec() {
 		var spec      = StructNew( "linked" );
-		var namespace = _getInterceptorNamespace();
+		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 
 		_addGeneralSpec( spec );
 		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
+		_addEntitySpecs( spec );
 
-		if ( $isFeatureEnabled( "dataApiQueue" ) ) {
+		if ( _getConfigService().isQueueEnabled( namespace ) ) {
 			_addQueueSpec( spec );
 		}
 
-		_addEntitySpecs( spec );
-
-		$announceInterception( "onOpenApiSpecGeneration#namespace#", { spec=spec } );
+		$announceInterception( "onOpenApiSpecGeneration#_getInterceptorNamespace()#", { spec=spec } );
 
 		return spec;
 	}
@@ -122,44 +121,91 @@ component {
 		} );
 
 		spec.components.schemas.QueueItem = {
-			  required = [ "operation", "entity", "recordId", "queueId" ]
+			  required = [ "operation", "entity", "recordId", "queueId", "timestamp" ]
 			, properties = {
-				  operation = { type="string", description=_i18nNamespaced( "dataapi:schemas.queueItem.operation" ), enum=[ "insert", "update", "delete" ] }
-				, entity    = { type="string", description=_i18nNamespaced( "dataapi:schemas.queueItem.entity"    ) }
-				, recordId  = { type="string", description=_i18nNamespaced( "dataapi:schemas.queueItem.recordId"  ) }
-				, queueId   = { type="string", description=_i18nNamespaced( "dataapi:schemas.queueItem.queueId"   ) }
-				, record    = { type="object", description=_i18nNamespaced( "dataapi:schemas.queueItem.record"    ) }
+				  operation = { type="string" , description=_i18nNamespaced( "dataapi:schemas.queueItem.operation" ), enum=[ "insert", "update", "delete" ] }
+				, entity    = { type="string" , description=_i18nNamespaced( "dataapi:schemas.queueItem.entity"    ) }
+				, recordId  = { type="string" , description=_i18nNamespaced( "dataapi:schemas.queueItem.recordId"  ) }
+				, queueId   = { type="string" , description=_i18nNamespaced( "dataapi:schemas.queueItem.queueId"   ) }
+				, timestamp = { type="integer", description=_i18nNamespaced( "dataapi:schemas.queueItem.timestamp" ) }
+				, record    = { type="object" , description=_i18nNamespaced( "dataapi:schemas.queueItem.record"    ) }
 			}
 		};
+		spec.components.schemas.QueueItemAtomic = spec.components.schemas.QueueItem;
+		spec.components.schemas.QueueItemAtomic.properties.record.description = _i18nNamespaced( "dataapi:schemas.queueItem.record.atomic" )
 
+		var queues = _getConfigService().getQueues();
 
-		spec.paths[ "/queue/" ] = {
-			get = {
-				  summary = "GET /queue/"
-				, description = _i18nNamespaced( "dataapi:operation.queue.get" )
+		for( var queue in queues ) {
+			var rootPath       = queue.name == "" ? "/" : "/#queue.name#/";
+			var queueName      = queue.name == "" ? "default" : queue.name;
+			var multiQueue     = queue.pageSize != 1;
+			var responseSchema = { "$ref"="##/components/schemas/QueueItem#( queue.atomicChanges ? 'Atomic' : '' )#" };
+			var getDescription = _i18nNamespaced( uri="dataapi:operation.queue.#queuename#.get", data=[ queue.pageSize ], defaultValue="" );
+
+			if ( !Len( Trim( getDescription ) ) ) {
+				getDescription = multiQueue ? _i18nNamespaced( uri="dataapi:operation.queue.get.multi", data=[ queueName, queue.pageSize ] ) : _i18nNamespaced( uri="dataapi:operation.queue.get", data=[ queueName ] );
+				if ( queue.atomicChanges ) {
+					getDescription &= "<br><br>" & _i18nNamespaced( uri="dataapi:operation.queue.get.atomic", data=[ queueName ] );
+				} else {
+					getDescription &= "<br><br>" & _i18nNamespaced( uri="dataapi:operation.queue.get.nonatomic", data=[ queueName ] );
+				}
+			}
+
+			if ( multiQueue ) {
+				responseSchema = { type="array", items=responseSchema };
+			}
+
+			spec.paths[ "/queue#rootPath#" ] = StructNew( "linked" );
+			spec.paths[ "/queue#rootPath#" ].get = {
+				  summary = "GET /queue#rootPath#"
+				, description = getDescription
 				, tags = [ _i18nNamespaced( "dataapi:tags.queue.title" ) ]
 				, responses = { "200" = {
-					  description = _i18nNamespaced( "dataapi:operation.queue.get.200.description" )
-					, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/QueueItem" } } }
+					  description = multiQueue ? _i18nNamespaced( uri="dataapi:operation.queue.get.multi.200.description", data=[ queueName, queue.pageSize ] ) : _i18nNamespaced( uri="dataapi:operation.queue.get.200.description", data=[ queueName ] )
+					, content     = { "application/json" = { schema=responseSchema } }
 					, headers     = {
 						  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
 						, "Link"            = { "$ref"="##/components/headers/Link" }
 					  }
 				  } }
+			};
+
+			if ( multiQueue ) {
+				spec.paths[ "/queue#rootPath#" ].delete = {
+					  summary = "DELETE /queue#rootPath#"
+					, description = _i18nNamespaced( uri="dataapi:operation.queue.batch.delete", data=[ queueName, rootPath ] )
+					, tags = [ _i18nNamespaced( "dataapi:tags.queue.title" ) ]
+					, requestBody = {
+						  description = _i18nNamespaced( uri="dataapi:operation.queue.batch.delete.post.body.description"  )
+						, required    = true
+						, content     = { "application/json" = {
+							schema={ type="array", items={ type="string" } }
+						  } }
+					  }
+					, responses = { "200" = {
+						  description = _i18nNamespaced( uri="dataapi:operation.queue.batch.delete.200.description", data=[ queueName ] )
+						, content = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description=_i18nNamespaced( "dataapi:operation.queue.batch.delete.schema.removed") } } } } }
+					  } }
+				};
+			} else {
+				spec.paths[ "/queue#rootPath#{queueId}/" ] = {
+					delete = {
+						  summary = "DELETE /queue#rootPath#{queueId}/"
+						, description = _i18nNamespaced( uri="dataapi:operation.queue.delete", data=[ queueName ] )
+						, tags = [ _i18nNamespaced( "dataapi:tags.queue.title" ) ]
+						, responses = { "200" = {
+							  description = _i18nNamespaced( uri="dataapi:operation.queue.delete.200.description", data=[ queueName ] )
+							, content = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description=_i18nNamespaced( "dataapi:operation.queue.delete.schema.removed") } } } } }
+						  } }
+					},
+					parameters = [{name="queueId", in="path", required=true, description=_i18nNamespaced( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
+				};
 			}
-		};
-		spec.paths[ "/queue/{queueId}/" ] = {
-			delete = {
-				  summary = "DELETE /queue/{queueId}/"
-				, description = _i18nNamespaced( "dataapi:operation.queue.delete" )
-				, tags = [ _i18nNamespaced( "dataapi:tags.queue.title" ) ]
-				, responses = { "200" = {
-					  description = _i18nNamespaced( "dataapi:operation.queue.delete.200.description" )
-					, content = { "application/json" = { schema={ required=[ "removed" ], properties={ removed={ type="integer", description=_i18nNamespaced( "dataapi:operation.queue.delete.schema.removed") } } } } }
-				  } }
-			},
-			parameters = [{name="queueId", in="path", required=true, description=_i18nNamespaced( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
-		};
+
+		}
+
+
 	}
 
 	private void function _addEntitySpecs( required struct spec ) {

@@ -7,7 +7,6 @@ component {
 // CONSTRUCTOR
 	/**
 	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
-	 *
 	 */
 	public any function init( required any presideFieldRuleGenerator ) {
 		_localCache = {};
@@ -137,15 +136,15 @@ component {
 		} );
 	}
 
-	public struct function getFieldSettings( required string entity ) {
+	public struct function getFieldSettings( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getFieldSettings" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getFieldSettings" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var objectName    = getEntityObject( args.entity );
+			var objectName    = getEntityObject( args.entity, args.namespace );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
-			var namespace     = _getNamespaceWithSeparator();
+			var namespace     = _getNamespaceWithSeparator( args.namespace );
 
 			for( var field in props ) {
 				fieldSettings[ field ] = {
@@ -171,13 +170,15 @@ component {
 				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
 					var namespace           = _getNamespaceWithSeparator( args.namespace );
-					var entityName          = getObjectEntity( objectName );
+					var entityName          = getObjectEntity( objectName, args.namespace );
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
 					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields#namespace#", "" );
 					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
+					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
+					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
@@ -185,6 +186,8 @@ component {
 						, selectFields  = ListToArray( LCase( selectFields ) )
 						, upsertFields  = ListToArray( LCase( upsertFields ) )
 						, allowIdInsert = _isTrue( allowIdInsert )
+						, allowQueue    = _isTrue( allowQueue    )
+						, queueName     = queueName
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -291,11 +294,37 @@ component {
 		return arguments.field;
 	}
 
-	public void function addDataApiRoute( required string dataApiRoute, required string dataApiNamespace, required boolean dataApiDocs ) {
+	public string function getAliasForPropertyName( required string objectName, required string propertyName, string namespace=_getDataApiNamespace() ) {
+		var args          = arguments;
+		var cacheKey      = "getAliasForPropertyName-#args.objectName#-#args.propertyName#-#args.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entityName    = getObjectEntity( args.objectName, args.namespace );
+			var fieldSettings = getFieldSettings( entityName, args.namespace );
+
+			for( var fieldName in fieldSettings ) {
+				if ( fieldName == args.propertyName ) {
+					return fieldSettings[ fieldName ].alias ?: args.propertyName;
+				}
+			}
+
+			return args.propertyName;
+		} );
+	}
+
+	public void function addDataApiRoute(
+		  required string  dataApiRoute
+		, required string  dataApiNamespace
+		, required boolean dataApiDocs
+		, required boolean dataApiQueueEnabled
+		, required struct  dataApiQueues
+	) {
 		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
 		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
-			  dataApiNamespace = arguments.dataApiNamespace
-			, dataApiDocs      = arguments.dataApiDocs
+			  dataApiNamespace    = arguments.dataApiNamespace
+			, dataApiDocs         = arguments.dataApiDocs
+			, dataApiQueueEnabled = arguments.dataApiQueueEnabled
+			, dataApiQueues       = arguments.dataApiQueues
 		};
 		_addNamespace( arguments.dataApiNamespace );
 	}
@@ -313,6 +342,170 @@ component {
 		var routes = getDataApiRoutes();
 
 		return routes[ arguments.route ].dataApiNamespace ?: "";
+	}
+
+	public struct function getRouteForNamespace( required string namespace, boolean docs=false ) {
+		var args     = arguments;
+		var cacheKey = "getRouteForNamespace-#arguments.namespace#-#arguments.docs#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoutes = getDataApiRoutes();
+
+			for( var apiRouteName in apiRoutes ) {
+				var apiRoute = apiRoutes[ apiRouteName ];
+				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && apiRoute.dataApiDocs == args.docs  ) {
+					return apiRoute;
+				}
+			}
+
+			return {};
+		} );
+	}
+
+	public struct function getQueueForObject( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueueForObject-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var queueAnnotation = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiQueue#_getNamespaceWithSeparator( args.namespace )#" );
+			var apiRoute        = getRouteForNamespace( args.namespace );
+
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( queueAnnotation ) ) ) {
+					queueAnnotation = "default";
+				}
+
+				if ( apiRoute.dataApiQueues.keyExists( queueAnnotation ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ queueAnnotation ].name ?: queueAnnotation
+						, pageSize      = Val( apiRoute.dataApiQueues[ queueAnnotation ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges
+					};
+				}
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public struct function getQueue( required string queueName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueue-#arguments.queueName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( args.queueName ) ) ) {
+					args.queueName = "default";
+				}
+
+				if ( StructKeyExists( apiRoute.dataApiQueues, args.queueName ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
+						, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
+					};
+				}
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public boolean function queueExists( required string queueName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "queueExists-#arguments.queueName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && StructKeyExists( apiRoute.dataApiQueues, args.queueName );
+		} );
+	}
+
+	public array function getQueues( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueues-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var route  = getRouteForNamespace( args.namespace );
+			var queues = StructKeyArray( route.dataApiQueues ?: {} );
+
+			queues.sort( "textnocase" );
+
+			if ( !ArrayFindNoCase( queues, "default" ) ) {
+				queues.prepend( "default" );
+			}
+
+			for( var i=queues.len(); i>0; i-- ) {
+				if ( !listQueueEnabledObjects( args.namespace, queues[ i ] ).len() ) {
+					queues.deleteAt( i );
+				} else {
+					queues[ i ] = getQueue( queues[ i ], args.namespace );
+				}
+			}
+
+			return queues;
+		} );
+	}
+
+	public boolean function isQueueEnabled( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isQueueEnabled-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !$isFeatureEnabled( "dataApiQueue" ) ) {
+				return false;
+			}
+
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && apiRoute.dataApiQueueEnabled && listQueueEnabledObjects( args.namespace ).len();
+		} );
+	}
+
+	public array function listQueueEnabledObjects( string namespace=_getDataApiNamespace(), string queue="" ) {
+		var args     = arguments;
+		var cacheKey = "listQueueEnabledObjects-#arguments.namespace#-#arguments.queue#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var enabledObjects = [];
+			var entities = getEntities( args.namespace );
+
+			for( var entityName in entities ) {
+				var entity = entities[ entityName ];
+
+				if ( entity.allowQueue ) {
+					if ( !Len( Trim( args.queue ) ) || entity.queueName == args.queue ) {
+						enabledObjects.append( entity.objectName );
+					}
+				}
+			}
+
+			return enabledObjects;
+		} );
+	}
+
+	public array function isObjectQueueEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isObjectQueueEnabled-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !isQueueEnabled( args.namespace ) ) {
+				return false;
+			}
+
+			return ArrayFindNoCase( listQueueEnabledObjects( args.namespace ), args.objectName );
+		} );
+	}
+
+	public struct function getDefaultQueueConfig() {
+		return {
+			  name          = ""
+			, pageSize      = 1
+			, atomicChanges = false
+		};
 	}
 
 // PRIVATE HELPERS

@@ -1,10 +1,11 @@
 <cfscript>
+	allEntities = args.allEntities ?: {};
 	entities = args.entities ?: [];
 	event.include( "/js/admin/specific/dataapiAccessTable/" )
 	     .include( "/css/admin/specific/dataapiAccessTable/" );
 
 	existingData = args.existingData ?: {};
-	queueEnabled = isFeatureEnabled( "dataApiQueue" );
+	queueEnabled = IsTrue( args.queueEnabled ?: "" );
 
 	function _isChecked( key ) {
 		return IsTrue( existingData[ key ] ?: ( rc[ key ] ?: "" ) );
@@ -61,10 +62,34 @@
 						<td class="stand"><input type="checkbox" value="1" data-subj="update" data-cat="standard" name="#HtmlEditFormat( entity )#_update"<cfif _isChecked( "#entity#_update" )> checked</cfif>></td>
 						<td class="stand"><input type="checkbox" value="1" data-subj="delete" data-cat="standard" name="#HtmlEditFormat( entity )#_delete"<cfif _isChecked( "#entity#_delete" )> checked</cfif>></td>
 						<cfif queueEnabled>
-							<td class="queue first"><input type="checkbox" value="1" data-subj="all"    data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_all"<cfif _isChecked( "#entity#_queue_all" )> checked</cfif>></td>
-							<td class="queue"><input type="checkbox" value="1" data-subj="insert" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_insert"<cfif _isChecked( "#entity#_queue_insert" )> checked</cfif>></td>
-							<td class="queue"><input type="checkbox" value="1" data-subj="update" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_update"<cfif _isChecked( "#entity#_queue_update" )> checked</cfif>></td>
-							<td class="queue"><input type="checkbox" value="1" data-subj="delete" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_delete"<cfif _isChecked( "#entity#_queue_delete" )> checked</cfif>></td>
+							<td class="queue first">
+								<cfif allEntities[ entity ].allowQueue>
+									<input type="checkbox" value="1" data-subj="all"    data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_all"<cfif _isChecked( "#entity#_queue_all" )> checked</cfif>>
+								<cfelse>
+									&nbsp;
+								</cfif>
+							</td>
+							<td class="queue">
+								<cfif allEntities[ entity ].allowQueue>
+									<input type="checkbox" value="1" data-subj="insert" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_insert"<cfif _isChecked( "#entity#_queue_insert" )> checked</cfif>>
+								<cfelse>
+									&nbsp;
+								</cfif>
+							</td>
+							<td class="queue">
+								<cfif allEntities[ entity ].allowQueue>
+									<input type="checkbox" value="1" data-subj="update" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_update"<cfif _isChecked( "#entity#_queue_update" )> checked</cfif>>
+								<cfelse>
+									&nbsp;
+								</cfif>
+							</td>
+							<td class="queue">
+								<cfif allEntities[ entity ].allowQueue>
+									<input type="checkbox" value="1" data-subj="delete" data-cat="queue"    name="#HtmlEditFormat( entity )#_queue_delete"<cfif _isChecked( "#entity#_queue_delete" )> checked</cfif>>
+								<cfelse>
+									&nbsp;
+								</cfif>
+							</td>
 						</cfif>
 					</tr>
 				</cfloop>

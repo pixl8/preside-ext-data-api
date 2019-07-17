@@ -215,7 +215,7 @@ component {
 		var hasDefaultAccess = false;
 		var apiConfigService = _getApiConfigService();
 		var namespace = apiConfigService.getNamespaceForRoute( arguments.api );
-		var entities  = StructKeyArray( apiConfigService.getEntities( namespace ) );
+		var entities  = apiConfigService.getEntities( namespace );
 		var settings = $getPresideObject( "data_api_user_settings" ).selectData( filter={
 			  namespace = namespace
 			, user      = arguments.userId
@@ -286,9 +286,12 @@ component {
 			insertAll      = insertAll      && accessDetails[ "#entity#_insert"       ];
 			updateAll      = updateAll      && accessDetails[ "#entity#_update"       ];
 			deleteAll      = deleteAll      && accessDetails[ "#entity#_delete"       ];
-			queueInsertAll = queueInsertAll && accessDetails[ "#entity#_queue_insert" ];
-			queueUpdateAll = queueUpdateAll && accessDetails[ "#entity#_queue_update" ];
-			queueDeleteAll = queueDeleteAll && accessDetails[ "#entity#_queue_delete" ];
+
+			if ( _isTrue( entities[ entity ].allowQueue ?: "" ) ) {
+				queueInsertAll = queueInsertAll && accessDetails[ "#entity#_queue_insert" ];
+				queueUpdateAll = queueUpdateAll && accessDetails[ "#entity#_queue_update" ];
+				queueDeleteAll = queueDeleteAll && accessDetails[ "#entity#_queue_delete" ];
+			}
 		}
 
 		accessDetails.all_read         = readAll;
