@@ -170,7 +170,7 @@ component {
 				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
 					var namespace           = _getNamespaceWithSeparator( args.namespace );
-					var entityName          = getObjectEntity( objectName );
+					var entityName          = getObjectEntity( objectName, args.namespace );
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
