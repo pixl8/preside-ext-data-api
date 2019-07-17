@@ -19,14 +19,7 @@ component {
 
 
 		if ( Len( Trim( arguments.queueName ) ) ) {
-			var notFound = arguments.queueName == "default"; // should be accessed as just `/queue/`, not `/queue/default/`
-			if ( !notFound ) {
-				try {
-					dataApiConfigurationService.getQueue( queueName=arguments.queueName, throwOnMissing=true );
-				} catch( "dataapi.queue.not.found" e ) {
-					notFound = true;
-				}
-			}
+			var notFound = arguments.queueName == "default" || !dataApiConfigurationService.queueExists( queueName=arguments.queueName );
 
 			if ( notFound ) {
 				restResponse.setStatus( 404, "The queue, [#arguments.queueName#], does not exist in this API." );
@@ -46,7 +39,28 @@ component {
 	}
 
 	public void function delete( required string queueId, string queueName="" ) {
-		var deleted = dataApiQueueService.removeFromQueue( subscriber=restRequest.getUser(), queueId=arguments.queueId, queueName=arguments.queueName );
+		var queueIds = [];
+		if ( !Len( Trim( arguments.queueName ) ) && dataApiConfigurationService.queueExists( arguments.queueId ) ) {
+			arguments.queueName = arguments.queueId;
+
+			var body = event.getHttpContent();
+
+			try {
+				queueIds = DeserializeJson( body );
+			} catch( any e ) {
+				logError( e );
+				restResponse.setError(
+					  errorCode = 400
+					, title     = "Bad request"
+					, message   = "Could not parse JSON body.."
+				);
+				return;
+			}
+		} else {
+			queueIds = [ arguments.queueId ]
+		}
+
+		var deleted = dataApiQueueService.removeFromQueue( subscriber=restRequest.getUser(), queueIds=queueIds, queueName=arguments.queueName );
 
 		restResponse.setData( { removed=deleted } );
 	}

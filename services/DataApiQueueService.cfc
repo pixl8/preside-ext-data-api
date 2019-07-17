@@ -92,10 +92,10 @@ component {
 		);
 	}
 
-	public numeric function removeFromQueue( required string subscriber, required string queueId, required string queueName ) {
+	public numeric function removeFromQueue( required string subscriber, required array queueIds, required string queueName ) {
 		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		return $getPresideObject( "data_api_queue" ).deleteData( filter={
-			  id         = arguments.queueId
+			  id         = arguments.queueIds
 			, subscriber = arguments.subscriber
 			, namespace  = namespace
 			, queue_name = arguments.queueName
