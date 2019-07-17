@@ -20,20 +20,20 @@ component {
 // PUBLIC API METHODS
 	public struct function getSpec() {
 		var spec      = StructNew( "linked" );
-		var namespace = _getInterceptorNamespace();
+		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 
 		_addGeneralSpec( spec );
 		_addTraits( spec );
 		_addCommonHeaderSpecs( spec );
 		_addCommonSchemas( spec );
 
-		if ( $isFeatureEnabled( "dataApiQueue" ) ) {
+		if ( _getConfigService().isQueueEnabled( namespace ) ) {
 			_addQueueSpec( spec );
 		}
 
 		_addEntitySpecs( spec );
 
-		$announceInterception( "onOpenApiSpecGeneration#namespace#", { spec=spec } );
+		$announceInterception( "onOpenApiSpecGeneration#_getInterceptorNamespace()#", { spec=spec } );
 
 		return spec;
 	}
