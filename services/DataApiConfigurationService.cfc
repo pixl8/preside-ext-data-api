@@ -178,6 +178,7 @@ component {
 					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
 					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
+					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
@@ -186,6 +187,7 @@ component {
 						, upsertFields  = ListToArray( LCase( upsertFields ) )
 						, allowIdInsert = _isTrue( allowIdInsert )
 						, allowQueue    = _isTrue( allowQueue    )
+						, queueName     = queueName
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -404,6 +406,32 @@ component {
 		} );
 	}
 
+	public array function getQueues( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueues-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var route  = getRouteForNamespace( args.namespace );
+			var queues = StructKeyArray( route.dataApiQueues ?: {} );
+
+			queues.sort( "textnocase" );
+
+			if ( !ArrayFindNoCase( queues, "default" ) ) {
+				queues.prepend( "default" );
+			}
+
+			for( var i=queues.len(); i>0; i-- ) {
+				if ( !listQueueEnabledObjects( args.namespace, queues[ i ] ).len() ) {
+					queues.deleteAt( i );
+				} else {
+					queues[ i ] = getQueue( queues[ i ], args.namespace );
+				}
+			}
+
+			return queues;
+		} );
+	}
+
 	public boolean function isQueueEnabled( string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "isQueueEnabled-#arguments.namespace#";
@@ -419,9 +447,9 @@ component {
 		} );
 	}
 
-	public array function listQueueEnabledObjects( string namespace=_getDataApiNamespace() ) {
+	public array function listQueueEnabledObjects( string namespace=_getDataApiNamespace(), string queue="" ) {
 		var args     = arguments;
-		var cacheKey = "listQueueEnabledObjects-#arguments.namespace#";
+		var cacheKey = "listQueueEnabledObjects-#arguments.namespace#-#arguments.queue#";
 
 		return _simpleLocalCache( cacheKey, function(){
 			var enabledObjects = [];
@@ -431,7 +459,9 @@ component {
 				var entity = entities[ entityName ];
 
 				if ( entity.allowQueue ) {
-					enabledObjects.append( entity.objectName );
+					if ( !Len( Trim( args.queue ) ) || entity.queueName == args.queue ) {
+						enabledObjects.append( entity.objectName );
+					}
 				}
 			}
 
