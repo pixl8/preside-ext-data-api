@@ -32,6 +32,7 @@ if [[ $TRAVIS_TAG == v* ]] || [[ $TRAVIS_BRANCH == release* ]] ; then
         cd assets
         npm install || exit 1
         grunt || exit 1
+        cd ../
         echo "Done"
 
 
