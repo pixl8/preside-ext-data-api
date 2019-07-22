@@ -455,13 +455,14 @@ component {
 
 	private struct function _mapFieldType(
 		  string relationship = ""
+		, string relatedTo    = ""
 		, string type         = ""
 		, string dbtype       = ""
 		, string enum         = ""
 	) {
-		if ( relationship=="many-to-many" ) {
+		if ( relationship=="many-to-many" && _pkIsUUId( arguments.relatedTo ) ) {
 			return { type="array", items={ type="string", format="Foreign Key (UUID)" } };
-		} else if ( relationship=="many-to-one" ) {
+		} else if ( relationship=="many-to-one" && _pkIsUUId( arguments.relatedTo ) ) {
 			return { type="string", format="Foreign Key (UUID)" };
 		}
 
@@ -509,6 +510,16 @@ component {
 		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
 
 		return _mapFieldType( argumentCollection=props[ propName ] ?: {} );
+	}
+
+	private boolean function _pkIsUUId( required string objectName ) {
+		var generator = $getPresideObjectService().getObjectPropertyAttribute(
+			  objectName    = arguments.objectName
+			, propertyName  = $getPresideObjectService().getIdField( arguments.objectName )
+			, attributeName = "generator"
+		);
+
+		return generator == "UUID";
 	}
 
 
