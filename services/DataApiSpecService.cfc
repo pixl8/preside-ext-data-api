@@ -472,9 +472,11 @@ component {
 		switch( fieldSettings[ arguments.name ].renderer ?: "" ) {
 			case "dataApiAssetLinkArray":
 			case "dataApiLinkLinkArray":
+			case "dataApiPageLinkArray":
 				return { type="array", items={ type="string", format="URL" } };
 			case "dataApiAssetLink":
 			case "dataApiLinkLink":
+			case "dataApiPageLink":
 				return { type="string", format="URL" };
 		}
 

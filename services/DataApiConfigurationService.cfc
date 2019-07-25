@@ -546,6 +546,8 @@ component {
 					return field.relationship contains "-to-many" ? "dataApiAssetLinkArray" : "dataApiAssetLink";
 				case "link":
 					return field.relationship contains "-to-many" ? "dataApiLinkLinkArray" : "dataApiLinkLink";
+				case "page":
+					return field.relationship contains "-to-many" ? "dataApiPageLinkArray" : "dataApiPageLink";
 			}
 		}
 
