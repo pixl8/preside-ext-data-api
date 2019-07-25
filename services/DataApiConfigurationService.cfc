@@ -150,6 +150,8 @@ component {
 				fieldSettings[ field ] = {
 					  alias    = props[ field ][ "dataApiAlias#namespace#"    ] ?: field
 					, renderer = props[ field ][ "dataApiRenderer#namespace#" ] ?: _getDefaultRendererForField( props[ field ] ?: {} )
+					, type     = props[ field ][ "dataApiType#namespace#" ] ?: ""
+					, format   = props[ field ][ "dataApiFormat#namespace#" ] ?: ""
 				};
 			}
 
