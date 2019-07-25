@@ -469,6 +469,14 @@ component {
 			}
 			return { type=fieldSettings[ arguments.name ].type };
 		}
+		switch( fieldSettings[ arguments.name ].renderer ?: "" ) {
+			case "dataApiAssetLinkArray":
+			case "dataApiLinkLinkArray":
+				return { type="array", items={ type="string", format="URL" } };
+			case "dataApiAssetLink":
+			case "dataApiLinkLink":
+				return { type="string", format="URL" };
+		}
 
 		if ( relationship=="many-to-many" && _pkIsUUId( arguments.relatedTo ) ) {
 			return { type="array", items={ type="string", format="Foreign Key (UUID)" } };

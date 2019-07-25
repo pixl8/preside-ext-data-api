@@ -540,6 +540,15 @@ component {
 	}
 
 	private string function _getDefaultRendererForField( required struct field ) {
+		if ( Len( Trim( field.relationship ?: "" ) ) ) {
+			switch( field.relatedTo ?: "" ) {
+				case "asset":
+					return field.relationship contains "-to-many" ? "dataApiAssetLinkArray" : "dataApiAssetLink";
+				case "link":
+					return field.relationship contains "-to-many" ? "dataApiLinkLinkArray" : "dataApiLinkLink";
+			}
+		}
+
 		switch( field.relationship ?: "" ) {
 			case "many-to-many": return "array";
 		}
