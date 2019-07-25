@@ -1,0 +1,44 @@
+.data-api-access-table {
+	thead {
+		tr:first-child {
+			th {
+				border-bottom : none !important;
+				width : auto;
+				font-weight : bold !important;
+			}
+		}
+	}
+
+	th, td {
+		width : 6em;
+		font-weight : normal !important;
+
+		&.all {
+			font-weight : bold !important;
+		}
+
+		&.resource-header {
+			width : auto;
+		}
+
+		&.stand {
+			background-color : #f7f7ff;
+
+			&.first {
+				border-left  : 2px dashed #ccc;
+				padding-left : 3em;
+				width        : 8em;
+			}
+		}
+
+		&.queue {
+			background-color : #fff7f7;
+			&.first {
+				border-left  : 2px dashed #ccc;
+				padding-left : 3em;
+				width        : 8em;
+			}
+		}
+
+	}
+}
