@@ -446,7 +446,7 @@ component {
 				description = _i18nNamespaced( uri="dataapi:entity.#arguments.entityName#.field.#fieldAlias#.description", defaultValue=_i18nNamespaced( uri="#basei18n#field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#fieldAlias#.description", defaultValue="" ) ) )
 			};
 			schema.properties[ fieldSettings[ field ].alias ?: field ].append(
-				_mapFieldType( argumentCollection=props[ field ] ?: {} )
+				_mapFieldType( argumentCollection=props[ field ] ?: {}, entity=arguments.entityName )
 			);
 		}
 
@@ -454,12 +454,22 @@ component {
 	}
 
 	private struct function _mapFieldType(
-		  string relationship = ""
-		, string relatedTo    = ""
-		, string type         = ""
-		, string dbtype       = ""
-		, string enum         = ""
+		  required string entity
+		,          string name         = ""
+		,          string relationship = ""
+		,          string relatedTo    = ""
+		,          string type         = ""
+		,          string dbtype       = ""
+		,          string enum         = ""
 	) {
+		var fieldSettings = _getConfigService().getFieldSettings( arguments.entity );
+		if ( Len( Trim( fieldSettings[ arguments.name ].type ?: "" ) ) ) {
+			if ( Len( Trim( fieldSettings[ arguments.name ].format ?: "" ) ) ) {
+				return { type=fieldSettings[ arguments.name ].type, format=fieldSettings[ arguments.name ].format };
+			}
+			return { type=fieldSettings[ arguments.name ].type };
+		}
+
 		if ( relationship=="many-to-many" && _pkIsUUId( arguments.relatedTo ) ) {
 			return { type="array", items={ type="string", format="Foreign Key (UUID)" } };
 		} else if ( relationship=="many-to-one" && _pkIsUUId( arguments.relatedTo ) ) {
@@ -509,7 +519,7 @@ component {
 		var props         = $getPresideObjectService().getObjectProperties( objectName );
 		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
 
-		return _mapFieldType( argumentCollection=props[ propName ] ?: {} );
+		return _mapFieldType( argumentCollection=props[ propName ] ?: {}, entity=arguments.entity );
 	}
 
 	private boolean function _pkIsUUId( required string objectName ) {
