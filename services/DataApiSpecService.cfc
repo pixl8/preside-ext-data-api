@@ -212,6 +212,7 @@ component {
 		var configService = _getConfigService();
 		var entities = _getConfigService().getEntities();
 		var entityNames = StructKeyArray( entities );
+		var tags = [];
 
 		entityNames.sort( "textnocase" );
 
@@ -220,7 +221,7 @@ component {
 			var basei18n   = $getPresideObjectService().getResourceBundleUriRoot( objectName );
 			var entityTag  = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title.singular", defaultValue=entityName ) )
 
-			spec.tags.append( {
+			tags.append( {
 				  name        = entityTag
 				, description = _i18nNamespaced( uri="dataapi:entity.#entityName#.description", defaultValue=_i18nNamespaced( uri=basei18n & "description", defaultValue="" ) )
 			} );
@@ -417,6 +418,12 @@ component {
 			}
 
 		}
+
+		tags.sort( function( a, b ){
+			return a.name > b.name ? 1 : -1;
+		} );
+
+		spec.tags.append( tags, true );
 	}
 
 	private struct function _getEntitySchema( required string entityName, boolean forSelect=true, boolean forceIdField=false ) {
@@ -541,8 +548,6 @@ component {
 
 		return generator == "UUID";
 	}
-
-
 
 // GETTERS AND SETTERS
 	private any function _getConfigService() {
