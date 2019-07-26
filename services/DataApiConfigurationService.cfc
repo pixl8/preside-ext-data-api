@@ -176,8 +176,8 @@ component {
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
-					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields#namespace#", "" );
-					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
+					var excludeFields       = _getExcludedFields( objectName, namespace );
+					var upsertExcludeFields = _getExcludedFields( objectName, namespace, "upsert" );
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
 					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
@@ -193,7 +193,7 @@ component {
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
-						entities[ entityName ].selectFields = _defaultSelectFields( objectName );
+						entities[ entityName ].selectFields = _defaultFields( objectName, namespace );
 					}
 					if ( !entities[ entityName ].upsertFields.len() ) {
 						entities[ entityName ].upsertFields = entities[ entityName ].selectFields;
@@ -577,22 +577,25 @@ component {
 		return "none";
 	}
 
-	private array function _defaultSelectFields( required string objectName ) {
-		var dbFields            = $getPresideObjectService().getObjectAttribute( objectName, "dbFieldlist" );
-		var props               = $getPresideObjectService().getObjectProperties( objectName );
-		var defaultSelectFields = ListToArray( LCase( dbFields ) );
+	private array function _defaultFields( required string objectName, required string namespace, string context="select" ) {
+		var dbFields       = $getPresideObjectService().getObjectAttribute( arguments.objectName, "dbFieldlist" );
+		var props          = $getPresideObjectService().getObjectProperties( arguments.objectName );
+		var propEnabledKey = arguments.context == "upsert" ? "dataApiUpsertEnabled#arguments.namespace#" : "dataApiEnabled#arguments.namespace#";
+		var fields         = ListToArray( LCase( dbFields ) );
 
 		for( var fieldName in props ) {
-			if ( defaultSelectFields.find( LCase( fieldName ) ) ) {
+			if ( fields.find( LCase( fieldName ) ) ) {
 				continue;
 			}
 
-			if ( Len( Trim( props[ fieldName ].formula ?: "" ) ) ) {
-				defaultSelectFields.append( fieldName );
+			if ( IsBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) && props[ fieldName ][ propEnabledKey ] ) {
+				fields.append( fieldName );
+			} else if ( arguments.context != "upsert" && Len( Trim( props[ fieldName ].formula ?: "" ) ) ) {
+				fields.append( fieldName );
 			}
 		}
 
-		return defaultSelectFields;
+		return fields;
 	}
 
 	private array function _cleanupUpsertFields( required string objectName, required array fields, required boolean allowIdInsert ) {
@@ -649,6 +652,25 @@ component {
 
 	private boolean function _isTrue( required any value ) {
 		return IsBoolean( arguments.value ) && arguments.value;
+	}
+
+	private string function _getExcludedFields(
+		  required string objectName
+		, required string namespace
+		,          string context = "select"
+	) {
+		var objAttr  = arguments.context == "upsert" ? "dataApiUpsertExcludeFields" : "dataApiExcludeFields";
+		var propAttr = arguments.context == "upsert" ? "dataApiUpsertEnabled" : "dataApiEnabled";
+		var excluded = ListToArray( $getPresideObjectService().getObjectAttribute( arguments.objectName, "#objAttr##arguments.namespace#", "" ) );
+		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
+
+		for( var propName in props ) {
+			if ( IsBoolean( props[ propname ][ propAttr & namespace ] ?: "" ) && !props[ propname ][ propAttr & namespace ] ) {
+				excluded.append( propName );
+			}
+		}
+
+		return excluded.toList();
 	}
 
 // GETTERS AND SETTERS
