@@ -219,7 +219,7 @@ component {
 		for( var entityName in entityNames ) {
 			var objectName = entities[ entityName ].objectName;
 			var basei18n   = $getPresideObjectService().getResourceBundleUriRoot( objectName );
-			var entityTag  = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title.singular", defaultValue=entityName ) )
+			var entityTag  = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title", defaultValue=entityName ) )
 
 			tags.append( {
 				  name        = entityTag
