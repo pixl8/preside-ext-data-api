@@ -38,16 +38,16 @@
 							<cfif Len( Trim( subschema.format ?: "" ) )>
 								<span class="api-doc-schema-type-format">#subschema.format#</span>
 							</cfif>
-							<cfif ArrayLen( subschema.enum ?: [] )>
-								<span class="api-doc-schema-type-enum">
-									enum: <cfloop array="#subschema.enum#" index="n" item="enum"><code>#enum#</code><cfif n lt schema.enum.len()>, </cfif></cfloop>
-								</span>
-							</cfif>
 						</div>
 						<cfif Len( Trim( subschema.description ?: "" ) )>
 							<div class="api-doc-schema-description">
 								<div class="api-doc-markdown">#openApiMarkdown( subschema.description )#</div>
 							</div>
+						</cfif>
+						<cfif ArrayLen( subschema.enum ?: [] )>
+							<p class="api-doc-schema-type-enum">
+								<span class="enum">enum</span>: <cfloop array="#subschema.enum#" index="n" item="enum"><code>#enum#</code><cfif n lt schema.enum.len()>, </cfif></cfloop>
+							</p>
 						</cfif>
 					</div>
 				<cfelseif StructKeyExists( subschema, "properties" )>
@@ -71,16 +71,16 @@
 						<cfif Len( Trim( schema.format ?: "" ) )>
 							<span class="api-doc-schema-type-format">#schema.format#</span>
 						</cfif>
-						<cfif ArrayLen( schema.enum ?: [] )>
-							<span class="api-doc-schema-type-enum">
-								enum: <cfloop array="#schema.enum#" index="n" item="enum"><code>#enum#</code><cfif n lt schema.enum.len()>, </cfif></cfloop>
-							</span>
-						</cfif>
 					</div>
 					<cfif Len( Trim( description ) )>
 						<div class="api-doc-schema-description">
 							<div class="api-doc-markdown">#openApiMarkdown( description )#</div>
 						</div>
+					</cfif>
+					<cfif ArrayLen( schema.enum ?: [] )>
+						<p class="api-doc-schema-type-enum">
+							<span class="enum">enum</span>: <cfloop array="#schema.enum#" index="n" item="enum"><code>#enum#</code><cfif n lt schema.enum.len()>, </cfif></cfloop>
+						</p>
 					</cfif>
 				</div>
 			</cfdefaultcase>

@@ -72,8 +72,15 @@ h6 {
 
 }
 
-.api-doc-schema-type-type {
+.api-doc-schema-type-type,
+.api-doc-schema-type-enum > .enum {
 	color: #2679b5;
+}
+.api-doc-schema-type-enum > code {
+	background-color : #fdebea;
+	padding : 5px;
+	border-radius : 4px;
+	margin-right : 5px;
 }
 
 .table .api-doc-schema-description,
