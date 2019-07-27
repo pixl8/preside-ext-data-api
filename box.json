@@ -16,6 +16,12 @@
         ".git/*",
         ".gitignore",
         ".travis.yml",
-        ".twgit_features_subject",
-    ]
+        ".twgit_features_subject"
+    ],
+    "dependencies":{
+        "cbmarkdown":"^3.2.0+27"
+    },
+    "installPaths":{
+        "cbmarkdown":"modules/cbmarkdown/"
+    }
 }

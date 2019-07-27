@@ -32,7 +32,6 @@
       .redoc-wrap .lmeAqe {
         color:##777;
         border-color:##777;
-
       }
 
       .sc-bwzfXH.jMSjCT path {
@@ -58,6 +57,18 @@
 
       .redoc-wrap .menu-content .idskhQ {
         border-style: none none dotted;
+      }
+
+      .redoc-wrap .fFLSgh {
+        width : calc(58%);
+      }
+
+      .redoc-wrap .kdQNko {
+        width : 400px;
+      }
+
+      .redoc-wrap .cwqihx {
+        white-space: nowrap;
       }
     </style>
   </head>

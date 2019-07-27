@@ -1,0 +1,167 @@
+body.api-doc {
+	background-color : #eee;
+}
+
+.api-doc .container {
+	background-color : #fff;
+	padding          : 10px 50px;
+}
+
+h1, h2 {
+	color: #2679b5;
+	border-bottom : 1px dotted #2679b5;
+	margin-bottom : 30px;
+	margin-top    : 75px;
+	page-break-before : always;
+}
+
+h1.api-doc-header-title {
+	page-break-before : never;
+	margin-top : 20px;
+}
+
+h3, h4, h5, h6 {
+	color : #454545;
+}
+
+h3 {
+	margin-top : 50px;
+	margin-bottom : 20px;
+}
+
+h4 {
+	margin-top    : 30px;
+	margin-bottom : 30px;
+	text-transform: uppercase;
+	color         : #999;
+	border-bottom : 1px solid #ccc;
+	padding-bottom : 5px;
+	font-size     : 1.1rem;
+	font-weight   : normal;
+}
+
+h6 {
+	text-transform: uppercase;
+	color         : #999;
+	font-size     : 0.8rem;
+	margin-bottom : 20px;
+	margin-top    : 20px;
+	border-bottom : 1px dotted #ccc;
+	padding-bottom : 3px;
+}
+
+.table {
+	margin-left : 35px;
+	margin-bottom : 40px;
+	font-size: 0.9rem;
+	page-break-inside: avoid;
+}
+
+.table tr td {
+	border : none;
+	padding : 6px 12px;
+}
+.table tr td[kind=field] {
+	border-left : 1px solid #dee2e6;
+	padding-left : 0;
+	color: #666;
+	font-weight : bold;
+    white-space: nowrap;
+    min-width : 18%;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+
+}
+
+.api-doc-schema-type-type {
+	color: #2679b5;
+}
+
+.table .api-doc-schema-description,
+.table .api-doc-schema-type-format {
+	color : #999;
+	font-size : 0.8rem;
+}
+.table .api-doc-schema-type-format {
+	margin-left : 5px;
+}
+
+.table tr td[kind=field]::before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: .75rem;
+	height: 1px;
+	margin-right : 5px;
+	background: #dee2e6 none repeat scroll 0% 0%;
+}
+
+.api-doc-responses-response-title {
+	float : left;
+	margin-right : 0.5em;
+	padding : 5px 15px;
+	border-radius : 5px;
+	background-color : #eee;
+}
+
+.api-doc-responses-response {
+	background-color : #fafafa;
+	padding : 20px;
+	margin-bottom : 35px;
+}
+
+.api-doc-responses-response-2 .api-doc-responses-response-title {
+	background-color : #e5f6e7;
+}
+
+.api-doc-responses-response-4 .api-doc-responses-response-title,
+.api-doc-responses-response-5 .api-doc-responses-response-title {
+	background-color : #fdebea;
+}
+
+.api-doc-responses-response-description {
+	float : left;
+	color : #999;
+	padding-top : 7px;
+}
+
+.api-doc-responses-response-detail {
+	margin-left : 15px;
+}
+
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type + table,
+.api-doc-schema-type-object > .api-doc-schema-type-type + table {
+	margin-top : 20px;
+}
+
+.api-doc-schema-type-object > .api-doc-schema-type-type::after,
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type::after {
+	content : "{";
+	color : #999;
+	font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+	padding-left : 1em;
+}
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type::after {
+	content : "[ {";
+}
+
+.api-doc-schema-type-object,
+.api-doc-schema-type-array-of-objects {
+	margin-bottom : 40px;
+}
+
+.api-doc-schema-type-object > .api-doc-schema-type-type + table,
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type + table {
+	margin-bottom : 10px;
+}
+
+.api-doc-schema-type-object::after,
+.api-doc-schema-type-array-of-objects::after {
+	content : "}";
+	color : #999;
+	font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+	padding-left : 1em;
+	margin-bottom : 40px;
+}
+.api-doc-schema-type-array-of-objects::after {
+	content : "} ]";
+}

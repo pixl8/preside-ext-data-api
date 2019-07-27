@@ -23,7 +23,7 @@ component {
 		var entity        = tokens.entity ?: "";
 		var configService = _getConfigService();
 
-		if ( restRequest.getUri().reFindNoCase( "^/(queue|spec|docs|swagger)/" ) ) {
+		if ( restRequest.getUri().reFindNoCase( "^/(queue|spec|docs|swagger|html)/" ) ) {
 			return;
 		}
 

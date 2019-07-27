@@ -10,3 +10,4 @@
 /build
 npm-debug.log
 /tests/server*.json
+/modules
