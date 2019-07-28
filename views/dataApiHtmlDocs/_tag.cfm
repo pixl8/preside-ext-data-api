@@ -2,11 +2,11 @@
 	tag = args.tag ?: {};
 	spec = args.spec ?: {};
 	paths = spec.paths ?: {};
-	headerId = "tag/#slugify( tag.name ?: '' )#";
+	headerId = "section/#slugify( tag.name ?: '' )#";
 </cfscript>
 
 <cfoutput>
-	<div class="api-doc-section api-doc-tag-section">
+	<section class="api-doc-section api-doc-tag-section">
 		<h2 class="api-doc-section-title" id="#headerId#">
 			<a href="###headerId#"></a>
 			#( tag.name ?: '' )#
@@ -31,5 +31,5 @@
 				</cfloop>
 			</cfloop>
 		</cfif>
-	</div>
+	</section>
 </cfoutput>

@@ -6,7 +6,7 @@
 <cfif security.len()>
 	<cfoutput>
 		<div class="api-doc-section api-doc-auth-section">
-			<h2 class="api-doc-section-title">Authentication</h2>
+			<h2 class="api-doc-section-title" id="section/authentication">Authentication</h2>
 
 			<cfloop array="#security#" index="i" item="instance">
 				<cfloop collection="#security[ i ]#" index="securityType" item="whatever">
