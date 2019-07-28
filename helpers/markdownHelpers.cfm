@@ -1,8 +1,11 @@
 <cffunction name="openApiMarkdown" access="public" returntype="any" output="false">
 	<cfargument name="markdown" type="string" required="true" />
-	<cfreturn getSingleton( "Processor@cbmarkdown" ).toHtml( arguments.markdown ) />
-</cffunction>
 
+	<cfscript>
+		highlighted = getSingleton( "HtmlDocumentationSyntaxHighlighter" ).renderHighlights( arguments.markdown );
+		return getSingleton( "Processor@cbmarkdown" ).toHtml( highlighted );
+	</cfscript>
+</cffunction>
 
 <!--- helpers --->
 <cffunction name="simpleRequestCache" access="public" returntype="any" output="false">
