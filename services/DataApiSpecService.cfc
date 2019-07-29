@@ -218,11 +218,12 @@ component {
 		entityNames.sort( "textnocase" );
 
 		for( var entityName in entityNames ) {
-			var objectName = entities[ entityName ].objectName;
-			var category   = entities[ entityName ].category;
-			var basei18n   = $getPresideObjectService().getResourceBundleUriRoot( objectName );
-			var entityTag  = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title", defaultValue=entityName ) )
-			var tag        = {
+			var objectName     = entities[ entityName ].objectName;
+			var category       = entities[ entityName ].category;
+			var basei18n       = $getPresideObjectService().getResourceBundleUriRoot( objectName );
+			var entityTag      = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title", defaultValue=entityName ) )
+			var entitySingular = _i18nNamespaced( uri="dataapi:entity.#entityName#.name.singular", defaultValue=_i18nNamespaced( uri=basei18n & "title.singular", defaultValue=entityName ) )
+			var tag            = {
 				  name        = entityTag
 				, description = _i18nNamespaced( uri="dataapi:entity.#entityName#.description", defaultValue=_i18nNamespaced( uri=basei18n & "description", defaultValue="" ) )
 			};
@@ -283,10 +284,10 @@ component {
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
 					, summary = "GET /entity/#entityName#/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.description", defaultValue="", data=[ entitySingular ] ) )
 					, parameters = params
 					, responses = { "200" = {
-						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.200.description", defaultValue="", data=[ entityTag ] ) )
+						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.200.description", defaultValue="", data=[ entitySingular ] ) )
 						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
 						, headers     = {
 							  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
@@ -299,10 +300,10 @@ component {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].get = {
 					  tags = [ entityTag ]
 					, summary = "GET /entity/#entityName#/{recordId}/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.description", defaultValue="", data=[ entitySingular ] ) )
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.200.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.200.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
 						  }
 						, "404" = {
@@ -313,7 +314,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.params.recordId", defaultValue="", data=[ entityTag ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
@@ -328,8 +329,8 @@ component {
 					, title    = _i18nNamespaced( uri="dataapi:schemas.validationFailureMultiple.title", data=[ entityTag ] )
 					, properties = {
 						  record         = { "$ref"="##/components/schemas/#entityName#upsert" }
-						, valid          = { type="boolean", description=_i18nNamespaced( uri="dataapi:schemas.validationFailure.valid"         , data=[ entityTag ] ) }
-						, errorMessages  = { type="array"  , description=_i18nNamespaced( uri="dataapi:schemas.validationFailure.errorMessages" , data=[ entityTag ] ), items={ "$ref"="##/components/schemas/validationMessage" } }
+						, valid          = { type="boolean", description=_i18nNamespaced( uri="dataapi:schemas.validationFailure.valid"         , data=[ entitySingular ] ) }
+						, errorMessages  = { type="array"  , description=_i18nNamespaced( uri="dataapi:schemas.validationFailure.errorMessages" , data=[ entitySingular ] ), items={ "$ref"="##/components/schemas/validationMessage" } }
 					}
 				};
 			}
@@ -338,9 +339,9 @@ component {
 				spec.paths[ "/entity/#entityName#/" ].put = {
 					  tags = [ entityTag ]
 					, summary = "PUT /entity/#entityName#/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.description", defaultValue="", data=[ entitySingular ] ) )
 					, requestBody = {
-						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entityTag ] ) )
+						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.body.description", defaultValue="", data=[ entitySingular ] ) )
 						, required    = true
 						, content     = { "application/json" = {
 							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsertWithId" } }
@@ -348,11 +349,11 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
 						  }
 						, "422" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.422.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.422.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationFailureMultiple#entityName#" } } } }
 						  }
 					  }
@@ -361,9 +362,9 @@ component {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].put = {
 					  tags = [ entityTag ]
 					, summary = "PUT /entity/#entityName#/{recordId}/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.description", defaultValue="", data=[ entitySingular ] ) )
 					, requestBody = {
-						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entityTag ] ) )
+						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.body.description", defaultValue="", data=[ entitySingular ] ) )
 						, required    = true
 						, content     = { "application/json" = {
 							schema = { "$ref"="##/components/schemas/#entityName#upsert" }
@@ -371,14 +372,14 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.200.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.200.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
 						  }
 						, "404" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.404.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.404.description", defaultValue="", data=[ entitySingular ] ) )
 						  }
 						, "422" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.422.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.422.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationMessage" } } } }
 						  }
 					  }
@@ -386,7 +387,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entityTag ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
@@ -396,9 +397,9 @@ component {
 				spec.paths[ "/entity/#entityName#/" ].post = {
 					  tags = [ entityTag ]
 					, summary = "POST /entity/#entityName#/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.description", defaultValue="", data=[ entitySingular ] ) )
 					, requestBody = {
-						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entityTag ] ) )
+						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.body.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.body.description", defaultValue="", data=[ entitySingular ] ) )
 						, required    = true
 						, content     = { "application/json" = {
 							schema={ type="array", items={"$ref"="##/components/schemas/#entityName#upsert" } }
@@ -406,11 +407,11 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
 						  }
 						, "422" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.422.description", defaultValue="", data=[ entityTag ] ) )
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.422.description", defaultValue="", data=[ entitySingular ] ) )
 							, content     = { "application/json" = { schema={ type="array", items={ "$ref"="##/components/schemas/validationFailureMultiple#entityName#" } } } }
 						  }
 					  }
@@ -421,7 +422,7 @@ component {
 				spec.paths[ "/entity/#entityName#/{recordId}/" ].delete = {
 					  tags = [ entityTag ]
 					, summary = "DELETE /entity/#entityName#/{recordId}/"
-					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.description", defaultValue="", data=[ entityTag ] ) )
+					, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.description", defaultValue="", data=[ entitySingular ] ) )
 					, responses = { "200" = {
 						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.200.description", defaultValue="" ) )
 						, content     = { "application/json" = { schema={ required=[ "deleted" ], properties={ deleted={ type="integer", description=_i18nNamespaced( uri="dataapi:operation.delete.schema.removed" ) } } } } }
@@ -430,7 +431,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.params.recordId", defaultValue="", data=[ entityTag ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
