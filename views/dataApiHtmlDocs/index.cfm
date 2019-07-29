@@ -11,6 +11,9 @@
 <html>
 	<head>
 		<title>#( spec.info.title ?: 'API' )# #( spec.info.version ?: '1.0.0')#</title>
+		<cfif Len( Trim( spec.info[ "x-favicon" ] ?: "" ) )>
+			<link rel="shortcut icon" href="#spec.info[ "x-favicon" ]#" type="image/x-icon" />
+		</cfif>
 		<style>
 			<cfinclude template="htmlDocsCss.css" />
 		</style>

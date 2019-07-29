@@ -67,9 +67,10 @@ component {
 
 		spec.openapi = "3.0.1";
 		spec.info    = {
-				title       = _i18nNamespaced( "dataapi:api.title" )
-			  , description = _i18nNamespaced( "dataapi:api.description", "" )
-			  , version     = _i18nNamespaced( "dataapi:api.version" )
+				title       = _i18nNamespaced( uri="dataapi:api.title" )
+			  , description = _i18nNamespaced( uri="dataapi:api.description", defaultValue="" )
+			  , version     = _i18nNamespaced( uri="dataapi:api.version" )
+			  , "x-favicon" = _i18nNamespaced( uri="dataapi:api.favicon", defaultValue="" )
 		};
 		spec.servers    = [ { url="#protocol#://#domain#/api#route#" } ];
 		spec.components = {
@@ -152,7 +153,7 @@ component {
 		var queues = _getConfigService().getQueues();
 
 		for( var queue in queues ) {
-			var rootPath       = queue.name == "" ? "/" : "/#queue.name#/";
+			var rootPath       = queue.name == "" || queue.name == "default" ? "/" : "/#queue.name#/";
 			var queueName      = queue.name == "" ? "default" : queue.name;
 			var multiQueue     = queue.pageSize != 1;
 			var responseSchema = { "$ref"="##/components/schemas/QueueItem#( queue.atomicChanges ? 'Atomic' : '' )#" };
