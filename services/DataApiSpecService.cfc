@@ -6,13 +6,19 @@ component {
 
 // CONSTRUCTOR
 	/**
-	 * @configService.inject  dataApiConfigurationService
-	 * @dataApiService.inject dataApiService
+	 * @configService.inject            dataApiConfigurationService
+	 * @dataApiService.inject           dataApiService
+	 * @presideRestConfigWrapper.inject presideRestConfigurationWrapper
 	 *
 	 */
-	public any function init( required any configService, required any dataApiService ) {
+	public any function init(
+		  required any configService
+		, required any dataApiService
+		, required any presideRestConfigWrapper
+	) {
 		_setConfigService( arguments.configService );
 		_setDataApiService( arguments.dataApiService );
+		_setPresideRestConfigWrapper( arguments.presideRestConfigWrapper );
 
 		return this;
 	}
@@ -51,12 +57,13 @@ component {
 	}
 
 	private void function _addGeneralSpec( required struct spec ) {
-		var event    = $getRequestContext();
-		var site     = event.getSite();
-		var domain   = site.domain ?: event.getServerName()
-		var protocol = site.protocol ?: event.getProtocol();
-		var api      = event.getValue( name="dataApiNamespace", defaultValue="data" );
-		var route    = event.getValue( name="dataApiRoute"    , defaultValue="/data/v1" );
+		var event        = $getRequestContext();
+		var site         = event.getSite();
+		var domain       = site.domain ?: event.getServerName()
+		var protocol     = site.protocol ?: event.getProtocol();
+		var api          = event.getValue( name="dataApiNamespace", defaultValue="data" );
+		var route        = event.getValue( name="dataApiRoute"    , defaultValue="/data/v1" );
+		var authProvider = _getPresideRestConfigWrapper().getSetting( "authProvider", "", route.rereplace( "/docs$", "" ) );
 
 		spec.openapi = "3.0.1";
 		spec.info    = {
@@ -65,12 +72,20 @@ component {
 			  , version     = _i18nNamespaced( "dataapi:api.version" )
 		};
 		spec.servers    = [ { url="#protocol#://#domain#/api#route#" } ];
-		spec.security   = [ { "#_i18nNamespaced( "dataapi:basic.auth.name" )#"=[] } ];
 		spec.components = {
-			  securitySchemes = { "#_i18nNamespaced( "dataapi:basic.auth.name" )#"={ type="http", scheme="Basic", description=_i18nNamespaced( "dataapi:basic.auth.description" ) } }
-			, schemas         = {}
+			  schemas         = {}
 			, headers         = {}
-		};
+			, securitySchemes = {}
+		}
+		if ( Len( Trim( authProvider ) ) ) {
+			var authProviderId = _i18nNamespaced( uri="dataapi:#authProvider#.auth.name", default=authProvider );
+			spec.security   = [ { "#authProviderId#"=[] } ];
+			spec.components.securitySchemes[ authProviderId ] = {
+				  type        = _i18nNamespaced( uri="dataapi:#authProvider#.auth.type"       , defaultValue="http"  )
+				, scheme      = _i18nNamespaced( uri="dataapi:#authProvider#.auth.scheme"     , defaultValue="Basic" )
+				, description = _i18nNamespaced( uri="dataapi:#authProvider#.auth.description", defaultValue=""      )
+			};
+		}
 		spec.tags  = [];
 		spec.paths = StructNew( "linked" );
 	}
@@ -613,5 +628,12 @@ component {
 	}
 	private void function _setDataApiService( required any dataApiService ) {
 		_dataApiService = arguments.dataApiService;
+	}
+
+	private any function _getPresideRestConfigWrapper() {
+	    return _presideRestConfigWrapper;
+	}
+	private void function _setPresideRestConfigWrapper( required any presideRestConfigWrapper ) {
+	    _presideRestConfigWrapper = arguments.presideRestConfigWrapper;
 	}
 }
