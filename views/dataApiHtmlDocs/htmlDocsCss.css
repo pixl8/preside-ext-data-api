@@ -1,0 +1,339 @@
+<cfinclude template="htmlDocsBootstrap.css" />
+<cfinclude template="htmlDocsSyntaxHighlighting.css" />
+
+
+body.api-doc {
+	background-color : #fafafa;
+}
+
+/* TABLE OF CONTENTS */
+.api-doc .api-doc-toc {
+	position : fixed;
+	overflow-y : scroll;
+	padding : 20px;
+	top:0;
+	bottom:0;
+	width : 450px;
+}
+
+.api-doc .api-doc-toc h2.data-api-toc-title {
+	margin-top : 30px;
+	padding-bottom : 4px;
+	font-size : 1.2rem;
+}
+
+.data-api-toc-list {
+	list-style   : none;
+	padding-left : 0px;
+}
+
+.data-api-toc-category > ul {
+	list-style : none;
+	padding-left : 0px;
+	border-left : 1px solid #dee2e6;
+	margin-left : 10px;
+}
+
+.data-api-toc-category > ul > li > label {
+	font-size : 0.9rem;
+}
+
+ul.data-api-toc-methods {
+	list-style : none;
+	margin-bottom : 2px;
+	padding-left : 0px;
+	margin-left : 25px;
+	border-left : 1px solid #dee2e6;
+}
+
+.data-api-toc-category > ul > li:last-child {
+	margin-bottom : 20px;
+}
+
+ul.data-api-toc-methods > li > label {
+	padding-left : 0;
+	font-size : 0.8rem;
+}
+
+.data-api-toc-category > ul > li > label::before,
+ul.data-api-toc-methods > li > label::before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: .75rem;
+	height: 1px;
+	margin-right: 5px;
+	background: #dee2e6 none repeat scroll 0% 0%
+}
+
+.data-api-toc-list a,
+.data-api-toc-list a:visited {
+	color : #666;
+}
+.data-api-toc-list a:hover,
+.data-api-toc-list a:active {
+	color : #333;
+	text-decoration : none;
+}
+
+.data-api-toc-list li > ul .operation-type {
+	text-transform: uppercase;
+	min-width : 2rem;
+	padding : 2px;
+	background-color : #eee;
+	border-radius : 3px;
+	display : inline-block;
+	text-align : center;
+	margin-right : 5px;
+	font-size : 0.6rem;
+	/*color : #fff;*/
+}
+.data-api-toc-list li > ul .operation-type.get {
+	background-color : #6bbd5b60;
+}
+.data-api-toc-list li > ul .operation-type.post {
+	background-color : #248fb260;
+}
+.data-api-toc-list li > ul .operation-type.put {
+	background-color : #9b708b60;
+}
+.data-api-toc-list li > ul .operation-type.delete {
+	background-color : #e27a7a60;
+}
+/* END TABLE OF CONTENTS */
+
+
+.api-doc .api-doc-content {
+	background-color : #263238;
+	margin-left      : 450px;
+}
+
+.api-doc .api-doc-content .api-doc-content-inner {
+	max-width : 980px;
+	background-color : #fff;
+	padding          : 10px 50px;
+}
+
+h1, h2 {
+	color: #2679b5;
+	border-bottom : 1px dotted #2679b5;
+	margin-bottom : 30px;
+	margin-top    : 75px;
+}
+
+h1.api-doc-header-title {
+	margin-top : 20px;
+}
+
+h3, h4, h5, h6 {
+	color : #454545;
+}
+
+h3 {
+	margin-top : 50px;
+	margin-bottom : 20px;
+}
+
+h4 {
+	margin-top    : 30px;
+	margin-bottom : 30px;
+	text-transform: uppercase;
+	color         : #999;
+	border-bottom : 1px solid #ccc;
+	padding-bottom : 5px;
+	font-size     : 1.1rem;
+	font-weight   : normal;
+}
+
+h6 {
+	text-transform: uppercase;
+	color         : #999;
+	font-size     : 0.8rem;
+	margin-bottom : 20px;
+	margin-top    : 20px;
+	border-bottom : 1px dotted #ccc;
+	padding-bottom : 3px;
+}
+
+.table {
+	margin-left : 35px;
+	margin-bottom : 40px;
+	font-size: 0.9rem;
+	page-break-inside: avoid;
+}
+
+.table tr td {
+	border : none;
+	padding : 9px 12px;
+}
+.table tr td p:last-child {
+	margin-bottom : 0;
+}
+.table tr td[kind=field] {
+	border-left : 1px solid #dee2e6;
+	padding-left : 0;
+	color: #666;
+	font-weight : bold;
+    white-space: nowrap;
+    width : 20%;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+
+}
+
+.api-doc-schema-type-type,
+.api-doc-schema-type-enum > .enum {
+	color: #2679b5;
+}
+.api-doc-responses-response-detail > .api-doc-schema > .api-doc-schema-type > .api-doc-schema-type-type {
+	font-size : 0.9rem;
+}
+
+.api-doc-schema-type-enum > code {
+	background-color : #fdebea;
+	padding : 5px;
+	border-radius : 4px;
+	margin-right : 5px;
+}
+
+.table .api-doc-schema-description,
+.table .api-doc-schema-type-format {
+	color : #999;
+	font-size : 0.8rem;
+}
+.table .api-doc-schema-type-format {
+	margin-left : 5px;
+}
+
+.table tr td[kind=field]::before {
+	content: "";
+	display: inline-block;
+	vertical-align: middle;
+	width: .75rem;
+	height: 1px;
+	margin-right : 5px;
+	background: #dee2e6 none repeat scroll 0% 0%;
+}
+
+.api-doc-responses-response-title {
+	float : left;
+	margin-right : 0.5em;
+	padding : 5px 15px;
+	border-radius : 5px;
+	background-color : #eee;
+}
+
+.api-doc-responses-response {
+	background-color : #fafafa;
+	padding : 20px;
+	margin-bottom : 35px;
+}
+
+.api-doc-responses-response-2 .api-doc-responses-response-title {
+	background-color : #e5f6e7;
+}
+
+.api-doc-responses-response-4 .api-doc-responses-response-title,
+.api-doc-responses-response-5 .api-doc-responses-response-title {
+	background-color : #fdebea;
+}
+
+.api-doc-responses-response-description {
+	float : left;
+	color : #999;
+	padding-top : 7px;
+}
+
+.api-doc-responses-response-detail {
+	margin-left : 15px;
+}
+
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type + table,
+.api-doc-schema-type-object > .api-doc-schema-type-type + table {
+	margin-top : 20px;
+}
+
+.api-doc-schema-type-object > .api-doc-schema-type-type::after,
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type::after {
+	content : "{";
+	color : #999;
+	font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+	padding-left : 1em;
+}
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type::after {
+	content : "[ {";
+}
+
+.api-doc-schema-type-object,
+.api-doc-schema-type-array-of-objects {
+	margin-bottom : 40px;
+}
+
+.api-doc-schema-type-object > .api-doc-schema-type-type + table,
+.api-doc-schema-type-array-of-objects > .api-doc-schema-type-type + table {
+	margin-bottom : 10px;
+}
+
+.api-doc-schema-type-object::after,
+.api-doc-schema-type-array-of-objects::after {
+	content : "}";
+	color : #999;
+	font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+	padding-left : 1em;
+	margin-bottom : 40px;
+}
+.api-doc-schema-type-array-of-objects::after {
+	content : "} ]";
+}
+
+.api-doc-params-required {
+	color : #e83e8c;
+	font-weight : normal;
+	display : block;
+	margin-left : calc(0.75rem + 12px);
+}
+
+/* PRINT STYLES */
+@media print {
+	.api-doc-toc {
+		display : none!important;
+	}
+
+	.api-doc-content {
+		background-color : #fff!important;
+		margin-left : 0!important;
+	}
+
+	.api-doc-content ..api-doc-content-inner {
+		width : 100%!important;
+		max-width : none!important;
+	}
+}
+/* END PRINT STYLES */
+
+/* RESPONSIVE STYLES */
+@media only screen and (max-width: 1440px) {
+	.api-doc .api-doc-toc {
+		width : 350px;
+	}
+
+	.api-doc .api-doc-content {
+		margin-left : 350px;
+	}
+}
+@media only screen and (max-width: 1200px) {
+	.api-doc-toc {
+		display : none!important;
+	}
+
+	.api-doc-content {
+		background-color : #fff!important;
+		margin-left : 0!important;
+	}
+
+	.api-doc-content .api-doc-content-inner {
+		width : 100%!important;
+		max-width : none!important;
+	}
+}
+
+/* END RESPONSIVE STYLES */

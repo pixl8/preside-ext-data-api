@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.0.0
+
+### Administration
+
+* Add admin UI for managing individual user access to entities, verbs and queues
+
+### Queue enhancements
+
+* Ability to turn off the queue feature entirely
+* Ability to turn off the queue feature per object
+* Allow queue to contain atomic data changes
+* Allow queue to return configurable number of records, rather than always 1
+* Allow multiple queues for different groups of objects and with individual queue settings
+
+### Documentation enhancements
+
+* Add new plain HTML documentation endpoint
+* Object properties should be able to specify type and format for their spec definitions
+* Ability to categorize entities (applies to HTML documentation only)
+* Ability to set sort order on entities
+* Ability to set favicon for an API
+* Use plural name of entity for default entity tag name
+
+### Miscellaneous
+
+* Automatically convert foreign keys to assets, links and pages to URLs.
+* Ability to exclude/include properties in the API through annotations on the properties
+
+### Bug fixes
+
+* Documentation of foreign keys: only use 'Foreign Key UUID' format when it really is a UUID (i.e., not for int)
+* Do not show authentication description when API does not use authentication
+
+
 ## v2.0.2
 
 * Fix path to docs

@@ -4,22 +4,30 @@ component {
 		var conf     = arguments.config;
 		var settings = conf.settings ?: {};
 
+		_setupFeatures( settings );
 		_setupRestApis( settings );
 		_setupEnums( settings );
 		_setupInterceptors( conf );
 	}
 
 // private helpers
-	private void function _setupRestApis( required struct settings ) {
+	private void function _setupFeatures( settings ) {
 		settings.features.apiManager.enabled    = true;
 		settings.features.restTokenAuth.enabled = true;
 
+		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
+	}
+
+	private void function _setupRestApis( required struct settings ) {
 		settings.rest.apis[ "/data/v1" ] = {
-			  authProvider = "token"
+			  authProvider = "dataApi"
 			, description  = "Generic Preside REST API for external systems to interact with Preside data"
+			, configHandler = "dataApiManager"
+			, dataApiQueues = { default={ pageSize=1, name="", atomicChanges=false } }
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
-			description  = "Documentation for REST APIs (no authentication required)"
+			  description     = "Documentation for REST APIs (no authentication required)"
+			, hideFromManager = true
 		};
 	}
 

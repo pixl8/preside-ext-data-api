@@ -18,86 +18,116 @@ component {
 	}
 
 // PUBLIC API METHODS
-	public struct function getNextQueuedItem( required string subscriber ) {
-		var dao       = $getPresideObject( "data_api_queue" );
-		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
-		var record    = dao.selectData(
-			  selectFields = [ "id", "object_name", "record_id", "operation" ]
-			, filter       = { subscriber=arguments.subscriber, namespace=namespace }
-			, maxRows      = 1
+	public struct function getNextQueuedItems( required string subscriber, required string queueName ) {
+		var dao           = $getPresideObject( "data_api_queue" );
+		var namespace     = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		var configSvc     = _getConfigService();
+		var apiSvc        = _getDataApiService();
+		var queueSettings = configSvc.getQueue( queueName, namespace );
+		var returnStruct  = {
+			  queueSize = getQueueCount( arguments.subscriber, arguments.queueName  )
+			, data      = []
+		};
+		var records       = dao.selectData(
+			  selectFields = [ "id", "object_name", "record_id", "operation", "data", "dateCreated" ]
+			, filter       = { subscriber=arguments.subscriber, namespace=namespace, queue_name=arguments.queueName }
+			, maxRows      = Val( queueSettings.pageSize ?: 1 )
 			, orderBy      = "order_number"
 		);
 
-		if ( record.recordCount ) {
+		if ( records.recordCount ) {
 			dao.updateData(
-				  id   = record.id
+				  filter = { id=ValueArray( records.id ) }
 				, data = { is_checked_out=true, check_out_date=Now() }
 			);
 
-			var entity = _getConfigService().getObjectEntity( record.object_name );
+			for( var record in records ) {
+				var entity = configSvc.getObjectEntity( record.object_name );
 
-			switch( record.operation ) {
-				case "delete":
-					return {
-						  operation = "delete"
-						, entity    = entity
-						, recordId  = record.record_id
-						, queueId   = record.id
-					};
-				break;
-				case "update":
-				case "insert":
-					return {
-						  operation = record.operation
-						, entity    = entity
-						, recordId  = record.record_id
-						, record    = _getDataApiService().getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
-						, queueId   = record.id
-					};
+				switch( record.operation ) {
+					case "delete":
+						returnStruct.data.append( {
+							  operation = "delete"
+							, entity    = entity
+							, recordId  = record.record_id
+							, queueId   = record.id
+							, timestamp = _unixTimestamp( record.dateCreated )
+						} );
+					break;
+					case "update":
+					case "insert":
+						var dataEntry = {
+							  operation = record.operation
+							, entity    = entity
+							, recordId  = record.record_id
+							, queueId   = record.id
+							, timestamp = _unixTimestamp( record.dateCreated )
+						};
+						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
+							try {
+								dataEntry.record = _aliasFields( record.object_name, DeserializeJson( record.data ) );
+							} catch( any e ) {
+								dataEntry.record = record.data;
+							}
+						} else {
+							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
+						}
+						returnStruct.data.append( dataEntry );
+				}
 			}
 		}
 
-		return {};
+		if ( queueSettings.pageSize == 1 ) {
+			returnStruct.data = returnStruct.data[ 1 ] ?: {};
+		}
+
+		return returnStruct;
 	}
 
-	public numeric function getQueueCount( required string subscriber ) {
+	public numeric function getQueueCount( required string subscriber, required string queueName ) {
 		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		return $getPresideObject( "data_api_queue" ).selectData(
-			  filter  = { subscriber=arguments.subscriber, namespace=namespace }
+			  filter  = { subscriber=arguments.subscriber, namespace=namespace, queue_name=arguments.queueName }
 			, recordCountOnly = true
 		);
 	}
 
-	public numeric function removeFromQueue( required string subscriber, required string queueId ) {
+	public numeric function removeFromQueue( required string subscriber, required array queueIds, required string queueName ) {
 		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		return $getPresideObject( "data_api_queue" ).deleteData( filter={
-			  id         = arguments.queueId
+			  id         = arguments.queueIds
 			, subscriber = arguments.subscriber
 			, namespace  = namespace
+			, queue_name = arguments.queueName
 		} );
 	}
 
 	public void function queueInsert(
 		  string objectName = ""
-		, string newId         = ""
+		, string newId      = ""
+		, struct data       = {}
 	) {
 		if ( objectName.len() && newId.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
-			var namespaces = _getConfigService().getNamespaces( true );
+			var configService = _getConfigService();
+			var namespaces = configService.getNamespaces( true );
 			for( var namespace in namespaces ) {
-				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+				if ( !configService.objectIsApiEnabled( objectName, namespace ) ) {
 					continue;
 				}
-				var subscribers = getSubscribers( arguments.objectName, "insert", namespace );
+				var subscribers   = getSubscribers( arguments.objectName, "insert", namespace );
 
 				if ( subscribers.len() ) {
+					var queueSettings = configService.getQueueForObject( objectName, namespace );
 					var dao = $getPresideObject( "data_api_queue" );
 					for( var subscriber in subscribers ) {
 						dao.insertData( {
 							  object_name = arguments.objectName
 							, record_id   = arguments.newId
+							, queue_name  = queueSettings.name
 							, subscriber  = subscriber
 							, namespace   = namespace
 							, operation   = "insert"
+							, data        = queueSettings.atomicChanges ? SerializeJson( arguments.data ) : ""
 						} );
 					}
 				}
@@ -106,10 +136,23 @@ component {
 	}
 
 	public void function queueUpdate(
-		  string objectName = ""
-		, string id         = ""
+		  string objectName  = ""
+		, string id          = ""
+		, struct changedData = {}
 	) {
-		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+		if ( objectName.len() && changedData.count() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+			var actualChanges = {};
+
+			for( var recordId in arguments.changedData ) {
+				if ( arguments.changedData[ recordId ].count() ) {
+					actualChanges[ recordId ] = arguments.changedData[ recordId ];
+				}
+			}
+
+			if ( !actualChanges.count() ) {
+				return;
+			}
+
 			var namespaces = _getConfigService().getNamespaces( true );
 
 			for( var namespace in namespaces ) {
@@ -119,25 +162,33 @@ component {
 				var subscribers = getSubscribers( arguments.objectName, "update", namespace );
 
 				if ( subscribers.len() ) {
+					var queueSettings = _getConfigService().getQueueForObject( objectName, namespace );
+
+
 					var dao = $getPresideObject( "data_api_queue" );
 					for( var subscriber in subscribers ) {
-						var alreadyQueued = dao.dataExists( filter={
-							  object_name    = arguments.objectName
-							, record_id      = arguments.id
-							, subscriber     = subscriber
-							, namespace      = namespace
-							, operation      = [ "insert", "update" ]
-							, is_checked_out = false
-						} );
-
-						if ( !alreadyQueued ) {
-							dao.insertData( {
-								  object_name = arguments.objectName
-								, record_id   = arguments.id
-								, subscriber  = subscriber
-								, namespace   = namespace
-								, operation   = "update"
+						for( var recordId in actualChanges ) {
+							var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
+								  object_name    = arguments.objectName
+								, queue_name     = queueSettings.name
+								, record_id      = recordId
+								, subscriber     = subscriber
+								, namespace      = namespace
+								, operation      = [ "insert", "update" ]
+								, is_checked_out = false
 							} );
+
+							if ( !alreadyQueued ) {
+								dao.insertData( {
+									  object_name = arguments.objectName
+									, queue_name  = queueSettings.name
+									, record_id   = recordId
+									, subscriber  = subscriber
+									, namespace   = namespace
+									, operation   = "update"
+									, data        = queueSettings.atomicChanges ? SerializeJson( actualChanges[ recordId ] ) : ""
+								} );
+							}
 						}
 					}
 				}
@@ -171,12 +222,14 @@ component {
 				var subscribers = getSubscribers( arguments.objectName, "delete", namespace );
 
 				if ( subscribers.len() ) {
+					var queueSettings = _getConfigService().getQueueForObject( objectName, namespace );
 					var dao = $getPresideObject( "data_api_queue" );
 					for( var subscriber in subscribers ) {
-						var deletedInserts = dao.deleteData( filter = {
+						var deletedInserts = !queueSettings.atomicChanges && dao.deleteData( filter = {
 							  is_checked_out = false
 							, subscriber     = subscriber
 							, namespace      = namespace
+							, queue_name     = queueSettings.name
 							, operation      = "insert"
 							, object_name    = arguments.objectName
 							, record_id      = arguments.id
@@ -188,17 +241,21 @@ component {
 								, record_id   = arguments.id
 								, subscriber  = subscriber
 								, namespace   = namespace
+								, queue_name  = queueSettings.name
 								, operation   = "delete"
 							} );
 
-							dao.deleteData( filter = {
-								  is_checked_out = false
-								, subscriber     = subscriber
-								, namespace      = namespace
-								, operation      = "update"
-								, object_name    = arguments.objectName
-								, record_id      = arguments.id
-							} );
+							if ( !queueSettings.atomicChanges ) {
+								dao.deleteData( filter = {
+									  is_checked_out = false
+									, subscriber     = subscriber
+									, namespace      = namespace
+									, queue_name     = queueSettings.name
+									, operation      = "update"
+									, object_name    = arguments.objectName
+									, record_id      = arguments.id
+								} );
+							}
 						}
 					}
 				}
@@ -206,8 +263,11 @@ component {
 		}
 	}
 
-	public array function getSubscribers( required string objectName, required string operation, string namespace="" ) {
+	public boolean function queueRequired( string objectName="", ) {
+		return ( objectName.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) );
+	}
 
+	public array function getSubscribers( required string objectName, required string operation, string namespace="" ) {
 		var currentApiUser = $getRequestContext().getRestRequestUser();
 		var operationField = "";
 		var subscribers    = [];
@@ -255,6 +315,24 @@ component {
 
 
 // PRIVATE HELPERS
+	private numeric function _unixTimestamp( required string theDate ) {
+		if ( IsDate( arguments.thedate ) ) {
+			return dateDiff( 's', '1970-01-01', arguments.theDate );
+		}
+
+		return 0;
+	}
+
+	private struct function _aliasFields( required string objectName, required struct data ) {
+		var aliased = {};
+		var configService = _getConfigService();
+		for( var key in arguments.data ) {
+			var alias = configService.getAliasForPropertyName( arguments.objectName, key );
+			aliased[ alias ] = arguments.data[ key ];
+		}
+
+		return aliased;
+	}
 
 // GETTERS AND SETTERS
 	private any function _getConfigService() {

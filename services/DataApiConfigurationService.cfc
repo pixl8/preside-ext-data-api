@@ -7,7 +7,6 @@ component {
 // CONSTRUCTOR
 	/**
 	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
-	 *
 	 */
 	public any function init( required any presideFieldRuleGenerator ) {
 		_localCache = {};
@@ -41,22 +40,22 @@ component {
 		} );
 	}
 
-	public string function getEntityObject( required string entity ) {
+	public string function getEntityObject( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getEntityObject" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getEntityObject" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var entities = getEntities();
+			var entities = getEntities( args.namespace );
 			return entities[ args.entity ].objectName ?: "";
 		} );
 	}
 
-	public string function getObjectEntity( required string objectName ) {
+	public string function getObjectEntity( required string objectName, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getObjectEntity" & _getDataApiNamespace() & args.objectName;
+		var cacheKey = "getObjectEntity" & args.namespace & args.objectName;
 
 		return _simpleLocalCache( cacheKey, function(){
-			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName#_getNamespaceWithSeparator()#", args.objectName );
+			return $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiEntityName#_getNamespaceWithSeparator( args.namespace )#", args.objectName );
 		} );
 	}
 
@@ -137,20 +136,22 @@ component {
 		} );
 	}
 
-	public struct function getFieldSettings( required string entity ) {
+	public struct function getFieldSettings( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getFieldSettings" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getFieldSettings" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var objectName    = getEntityObject( args.entity );
+			var objectName    = getEntityObject( args.entity, args.namespace );
 			var props         = $getPresideObjectService().getObjectProperties( objectName );
 			var fieldSettings = {};
-			var namespace     = _getNamespaceWithSeparator();
+			var namespace     = _getNamespaceWithSeparator( args.namespace );
 
 			for( var field in props ) {
 				fieldSettings[ field ] = {
 					  alias    = props[ field ][ "dataApiAlias#namespace#"    ] ?: field
 					, renderer = props[ field ][ "dataApiRenderer#namespace#" ] ?: _getDefaultRendererForField( props[ field ] ?: {} )
+					, type     = props[ field ][ "dataApiType#namespace#" ] ?: ""
+					, format   = props[ field ][ "dataApiFormat#namespace#" ] ?: ""
 				};
 			}
 
@@ -158,8 +159,9 @@ component {
 		} );
 	}
 
-	public struct function getEntities() {
-		var cacheKey = "getEntities" & _getDataApiNamespace();
+	public struct function getEntities( string namespace=_getDataApiNamespace() ) {
+		var cacheKey = "getEntities" & arguments.namespace;
+		var args     = arguments;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var poService = $getPresideObjectService();
@@ -167,27 +169,33 @@ component {
 			var entities  = {};
 
 			for( var objectName in objects ) {
-				var isEnabled = objectIsApiEnabled( objectName );
+				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
-					var namespace           = _getNamespaceWithSeparator();
-					var entityName          = getObjectEntity( objectName );
+					var namespace           = _getNamespaceWithSeparator( args.namespace );
+					var entityName          = getObjectEntity( objectName, args.namespace );
 					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
-					var excludeFields       = poService.getObjectAttribute( objectName, "dataApiExcludeFields#namespace#", "" );
-					var upsertExcludeFields = poService.getObjectAttribute( objectName, "dataApiUpsertExcludeFields#namespace#", "" );
+					var excludeFields       = _getExcludedFields( objectName, namespace );
+					var upsertExcludeFields = _getExcludedFields( objectName, namespace, "upsert" );
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
+					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
+					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
+					var category            = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
+						, category      = category
 						, verbs         = ListToArray( LCase( supportedVerbs ) )
 						, selectFields  = ListToArray( LCase( selectFields ) )
 						, upsertFields  = ListToArray( LCase( upsertFields ) )
 						, allowIdInsert = _isTrue( allowIdInsert )
+						, allowQueue    = _isTrue( allowQueue    )
+						, queueName     = queueName
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
-						entities[ entityName ].selectFields = _defaultSelectFields( objectName );
+						entities[ entityName ].selectFields = _defaultFields( objectName, namespace );
 					}
 					if ( !entities[ entityName ].upsertFields.len() ) {
 						entities[ entityName ].upsertFields = entities[ entityName ].selectFields;
@@ -290,11 +298,37 @@ component {
 		return arguments.field;
 	}
 
-	public void function addDataApiRoute( required string dataApiRoute, required string dataApiNamespace, required boolean dataApiDocs ) {
+	public string function getAliasForPropertyName( required string objectName, required string propertyName, string namespace=_getDataApiNamespace() ) {
+		var args          = arguments;
+		var cacheKey      = "getAliasForPropertyName-#args.objectName#-#args.propertyName#-#args.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entityName    = getObjectEntity( args.objectName, args.namespace );
+			var fieldSettings = getFieldSettings( entityName, args.namespace );
+
+			for( var fieldName in fieldSettings ) {
+				if ( fieldName == args.propertyName ) {
+					return fieldSettings[ fieldName ].alias ?: args.propertyName;
+				}
+			}
+
+			return args.propertyName;
+		} );
+	}
+
+	public void function addDataApiRoute(
+		  required string  dataApiRoute
+		, required string  dataApiNamespace
+		, required boolean dataApiDocs
+		, required boolean dataApiQueueEnabled
+		, required struct  dataApiQueues
+	) {
 		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
 		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
-			  dataApiNamespace = arguments.dataApiNamespace
-			, dataApiDocs      = arguments.dataApiDocs
+			  dataApiNamespace    = arguments.dataApiNamespace
+			, dataApiDocs         = arguments.dataApiDocs
+			, dataApiQueueEnabled = arguments.dataApiQueueEnabled
+			, dataApiQueues       = arguments.dataApiQueues
 		};
 		_addNamespace( arguments.dataApiNamespace );
 	}
@@ -306,6 +340,176 @@ component {
 	public array function getNamespaces( boolean includeDefault=false) {
 		var namespaces = variables._dataApiNamespaces ?: [];
 		return arguments.includeDefault ? duplicate( namespaces ).prepend( "" ) : namespaces;
+	}
+
+	public string function getNamespaceForRoute( required string route ) {
+		var routes = getDataApiRoutes();
+
+		return routes[ arguments.route ].dataApiNamespace ?: "";
+	}
+
+	public struct function getRouteForNamespace( required string namespace, boolean docs=false ) {
+		var args     = arguments;
+		var cacheKey = "getRouteForNamespace-#arguments.namespace#-#arguments.docs#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoutes = getDataApiRoutes();
+
+			for( var apiRouteName in apiRoutes ) {
+				var apiRoute = apiRoutes[ apiRouteName ];
+				if ( ( apiRoute.dataApiNamespace ?: "" ) == args.namespace && apiRoute.dataApiDocs == args.docs  ) {
+					return apiRoute;
+				}
+			}
+
+			return {};
+		} );
+	}
+
+	public struct function getQueueForObject( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueueForObject-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var queueAnnotation = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiQueue#_getNamespaceWithSeparator( args.namespace )#" );
+			var apiRoute        = getRouteForNamespace( args.namespace );
+
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( queueAnnotation ) ) ) {
+					queueAnnotation = "default";
+				}
+
+				if ( apiRoute.dataApiQueues.keyExists( queueAnnotation ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ queueAnnotation ].name ?: queueAnnotation
+						, pageSize      = Val( apiRoute.dataApiQueues[ queueAnnotation ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ queueAnnotation ].atomicChanges
+					};
+				}
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public struct function getQueue( required string queueName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueue-#arguments.queueName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			if ( apiRoute.count() ) {
+				if ( !Len( Trim( args.queueName ) ) ) {
+					args.queueName = "default";
+				}
+
+				if ( StructKeyExists( apiRoute.dataApiQueues, args.queueName ) ) {
+					return {
+						  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
+						, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
+						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
+					};
+				}
+			}
+
+			return getDefaultQueueConfig();
+		} );
+	}
+
+	public boolean function queueExists( required string queueName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "queueExists-#arguments.queueName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && StructKeyExists( apiRoute.dataApiQueues, args.queueName );
+		} );
+	}
+
+	public array function getQueues( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getQueues-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var route  = getRouteForNamespace( args.namespace );
+			var queues = StructKeyArray( route.dataApiQueues ?: {} );
+
+			queues.sort( "textnocase" );
+
+			if ( !ArrayFindNoCase( queues, "default" ) ) {
+				queues.prepend( "default" );
+			}
+
+			for( var i=queues.len(); i>0; i-- ) {
+				if ( !listQueueEnabledObjects( args.namespace, queues[ i ] ).len() ) {
+					queues.deleteAt( i );
+				} else {
+					queues[ i ] = getQueue( queues[ i ], args.namespace );
+				}
+			}
+
+			return queues;
+		} );
+	}
+
+	public boolean function isQueueEnabled( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isQueueEnabled-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !$isFeatureEnabled( "dataApiQueue" ) ) {
+				return false;
+			}
+
+			var apiRoute = getRouteForNamespace( args.namespace );
+
+			return apiRoute.count() && apiRoute.dataApiQueueEnabled && listQueueEnabledObjects( args.namespace ).len();
+		} );
+	}
+
+	public array function listQueueEnabledObjects( string namespace=_getDataApiNamespace(), string queue="" ) {
+		var args     = arguments;
+		var cacheKey = "listQueueEnabledObjects-#arguments.namespace#-#arguments.queue#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			var enabledObjects = [];
+			var entities = getEntities( args.namespace );
+
+			for( var entityName in entities ) {
+				var entity = entities[ entityName ];
+
+				if ( entity.allowQueue ) {
+					if ( !Len( Trim( args.queue ) ) || entity.queueName == args.queue ) {
+						enabledObjects.append( entity.objectName );
+					}
+				}
+			}
+
+			return enabledObjects;
+		} );
+	}
+
+	public array function isObjectQueueEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isObjectQueueEnabled-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !isQueueEnabled( args.namespace ) ) {
+				return false;
+			}
+
+			return ArrayFindNoCase( listQueueEnabledObjects( args.namespace ), args.objectName );
+		} );
+	}
+
+	public struct function getDefaultQueueConfig() {
+		return {
+			  name          = ""
+			, pageSize      = 1
+			, atomicChanges = false
+		};
 	}
 
 // PRIVATE HELPERS
@@ -338,6 +542,17 @@ component {
 	}
 
 	private string function _getDefaultRendererForField( required struct field ) {
+		if ( Len( Trim( field.relationship ?: "" ) ) ) {
+			switch( field.relatedTo ?: "" ) {
+				case "asset":
+					return field.relationship contains "-to-many" ? "dataApiAssetLinkArray" : "dataApiAssetLink";
+				case "link":
+					return field.relationship contains "-to-many" ? "dataApiLinkLinkArray" : "dataApiLinkLink";
+				case "page":
+					return field.relationship contains "-to-many" ? "dataApiPageLinkArray" : "dataApiPageLink";
+			}
+		}
+
 		switch( field.relationship ?: "" ) {
 			case "many-to-many": return "array";
 		}
@@ -364,22 +579,25 @@ component {
 		return "none";
 	}
 
-	private array function _defaultSelectFields( required string objectName ) {
-		var dbFields            = $getPresideObjectService().getObjectAttribute( objectName, "dbFieldlist" );
-		var props               = $getPresideObjectService().getObjectProperties( objectName );
-		var defaultSelectFields = ListToArray( LCase( dbFields ) );
+	private array function _defaultFields( required string objectName, required string namespace, string context="select" ) {
+		var dbFields       = $getPresideObjectService().getObjectAttribute( arguments.objectName, "dbFieldlist" );
+		var props          = $getPresideObjectService().getObjectProperties( arguments.objectName );
+		var propEnabledKey = arguments.context == "upsert" ? "dataApiUpsertEnabled#arguments.namespace#" : "dataApiEnabled#arguments.namespace#";
+		var fields         = ListToArray( LCase( dbFields ) );
 
 		for( var fieldName in props ) {
-			if ( defaultSelectFields.find( LCase( fieldName ) ) ) {
+			if ( fields.find( LCase( fieldName ) ) ) {
 				continue;
 			}
 
-			if ( Len( Trim( props[ fieldName ].formula ?: "" ) ) ) {
-				defaultSelectFields.append( fieldName );
+			if ( IsBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) && props[ fieldName ][ propEnabledKey ] ) {
+				fields.append( fieldName );
+			} else if ( arguments.context != "upsert" && Len( Trim( props[ fieldName ].formula ?: "" ) ) ) {
+				fields.append( fieldName );
 			}
 		}
 
-		return defaultSelectFields;
+		return fields;
 	}
 
 	private array function _cleanupUpsertFields( required string objectName, required array fields, required boolean allowIdInsert ) {
@@ -436,6 +654,25 @@ component {
 
 	private boolean function _isTrue( required any value ) {
 		return IsBoolean( arguments.value ) && arguments.value;
+	}
+
+	private string function _getExcludedFields(
+		  required string objectName
+		, required string namespace
+		,          string context = "select"
+	) {
+		var objAttr  = arguments.context == "upsert" ? "dataApiUpsertExcludeFields" : "dataApiExcludeFields";
+		var propAttr = arguments.context == "upsert" ? "dataApiUpsertEnabled" : "dataApiEnabled";
+		var excluded = ListToArray( $getPresideObjectService().getObjectAttribute( arguments.objectName, "#objAttr##arguments.namespace#", "" ) );
+		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
+
+		for( var propName in props ) {
+			if ( IsBoolean( props[ propname ][ propAttr & namespace ] ?: "" ) && !props[ propname ][ propAttr & namespace ] ) {
+				excluded.append( propName );
+			}
+		}
+
+		return excluded.toList();
 	}
 
 // GETTERS AND SETTERS
