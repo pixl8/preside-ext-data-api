@@ -11,7 +11,7 @@
 			<a href="###headerId#" title="#HtmlEditFormat( tag.name ?: '' )#">#( tag.name ?: '' )#</a>
 		</label>
 		<cfif IsFalse( tag[ "x-traitTag" ] ?: "" )>
-			<ul>
+			<ul class="data-api-toc-methods">
 				<cfloop collection="#paths#" item="path" index="pathName">
 					<cfset pathFound = false />
 					<cfloop collection="#path#" item="method" index="methodName">

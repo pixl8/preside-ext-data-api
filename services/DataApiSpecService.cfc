@@ -213,18 +213,37 @@ component {
 		var entities = _getConfigService().getEntities();
 		var entityNames = StructKeyArray( entities );
 		var tags = [];
+		var categories = {};
 
 		entityNames.sort( "textnocase" );
 
 		for( var entityName in entityNames ) {
 			var objectName = entities[ entityName ].objectName;
+			var category   = entities[ entityName ].category;
 			var basei18n   = $getPresideObjectService().getResourceBundleUriRoot( objectName );
 			var entityTag  = _i18nNamespaced( uri="dataapi:entity.#entityName#.name", defaultValue=_i18nNamespaced( uri=basei18n & "title", defaultValue=entityName ) )
-
-			tags.append( {
+			var tag        = {
 				  name        = entityTag
 				, description = _i18nNamespaced( uri="dataapi:entity.#entityName#.description", defaultValue=_i18nNamespaced( uri=basei18n & "description", defaultValue="" ) )
-			} );
+			};
+
+			tag[ "x-sort-order" ] = _i18nNamespaced( uri="dataapi:entity.#entityName#.sort.order", defaultValue=tag.name );
+
+			if ( Len( Trim( category ) ) ) {
+				tag[ "x-category" ] = category;
+
+				if ( !StructKeyExists( categories, category ) ) {
+					categories[ category ] = {
+						  name        = _i18nNamespaced( uri="dataapi:category.#category#.name", defaultValue=category )
+						, description = _i18nNamespaced( uri="dataapi:category.#category#.description", defaultValue="" )
+						, tags        = []
+					};
+					categories[ category ].sortOrder = _i18nNamespaced( uri="dataapi:category.#category#.sort.order", defaultValue=categories[ category ].name )
+				}
+				categories[ category ].tags.append( tag );
+			}
+			tags.append( tag );
+
 			spec.paths[ "/entity/#entityName#/" ] = StructNew( "linked" );
 			spec.paths[ "/entity/#entityName#/{recordId}/" ] = StructNew( "linked" );
 			spec.components.schemas[ entityName ] = _getEntitySchema( entityName );
@@ -416,7 +435,6 @@ component {
 					  } ]
 				};
 			}
-
 		}
 
 		tags.sort( function( a, b ){
@@ -424,6 +442,38 @@ component {
 		} );
 
 		spec.tags.append( tags, true );
+
+		if ( categories.count() ) {
+			for( var tag in tags ) {
+				if ( !Len( Trim( tag[ "x-category" ] ?: "" ) ) ) {
+					tag[ "x-category" ] = "uncategorized";
+					if ( !StructKeyExists( categories, "uncategorized" ) ) {
+						categories[ "uncategorized" ] = {
+							  name        = _i18nNamespaced( uri="dataapi:category.uncategorized.name", defaultValue="uncategorized" )
+							, description = _i18nNamespaced( uri="dataapi:category.uncategorized.description", defaultValue="" )
+							, tags        = []
+							, sortOrder   = "zzzzzzzzzzzzzzzzzzzzz"
+						};
+					}
+					categories[ "uncategorized" ].tags.append( tag );
+				}
+			}
+
+			spec[ "x-categories" ] = [];
+			for( var categoryId in categories ) {
+				var category = categories[ categoryId ];
+				category.id = categoryId;
+				category.tags.sort( function( taga, tagb ) {
+					return taga[ "x-sort-order" ] > tagb[ "x-sort-order" ] ? 1 : -1;
+				} );
+
+				spec[ "x-categories" ].append( category );
+			}
+
+			spec[ "x-categories" ].sort( function( cata, catb ) {
+				return cata.sortOrder > catb.sortOrder ? 1 : -1;
+			} );
+		}
 	}
 
 	private struct function _getEntitySchema( required string entityName, boolean forSelect=true, boolean forceIdField=false ) {

@@ -13,7 +13,7 @@ body.api-doc {
 	padding : 20px;
 	top:0;
 	bottom:0;
-	width : 600px;
+	width : 450px;
 }
 
 .api-doc .api-doc-toc h2.data-api-toc-title {
@@ -25,28 +25,38 @@ body.api-doc {
 .data-api-toc-list {
 	list-style   : none;
 	padding-left : 0px;
-	border-left : 1px solid #dee2e6;
 }
 
-.data-api-toc-list > li::before {
-	content: "";
-	display: inline-block;
-	vertical-align: middle;
-	width: .75rem;
-	height: 1px;
-	margin-right: 5px;
-	background: #dee2e6 none repeat scroll 0% 0%
-}
-
-.data-api-toc-list li > ul {
+.data-api-toc-category > ul {
 	list-style : none;
-	margin-bottom : 20px;
+	padding-left : 0px;
+	border-left : 1px solid #dee2e6;
+	margin-left : 10px;
+}
+
+.data-api-toc-category > ul > li > label {
+	font-size : 0.9rem;
+}
+
+ul.data-api-toc-methods {
+	list-style : none;
+	margin-bottom : 2px;
 	padding-left : 0px;
 	margin-left : 25px;
 	border-left : 1px solid #dee2e6;
 }
 
-.data-api-toc-list li > ul > li::before {
+.data-api-toc-category > ul > li:last-child {
+	margin-bottom : 20px;
+}
+
+ul.data-api-toc-methods > li > label {
+	padding-left : 0;
+	font-size : 0.8rem;
+}
+
+.data-api-toc-category > ul > li > label::before,
+ul.data-api-toc-methods > li > label::before {
 	content: "";
 	display: inline-block;
 	vertical-align: middle;
@@ -57,10 +67,13 @@ body.api-doc {
 }
 
 .data-api-toc-list a,
-.data-api-toc-list a:hover,
-.data-api-toc-list a:active,
 .data-api-toc-list a:visited {
-	color : #2679b5;
+	color : #666;
+}
+.data-api-toc-list a:hover,
+.data-api-toc-list a:active {
+	color : #333;
+	text-decoration : none;
 }
 
 .data-api-toc-list li > ul .operation-type {
@@ -92,7 +105,7 @@ body.api-doc {
 
 .api-doc .api-doc-content {
 	background-color : #263238;
-	margin-left      : 600px;
+	margin-left      : 450px;
 }
 
 .api-doc .api-doc-content .api-doc-content-inner {

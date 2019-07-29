@@ -1,6 +1,7 @@
 <cfscript>
 	spec    = args.spec ?: {};
 	tags    = spec.tags ?: [];
+	categories = spec[ "x-categories" ] ?: [];
 	hasAuth = ( args.hasAuth ?: "" );
 	apiTitle = ( spec.info.title ?: "" ) & " " & ( spec.info.version ?: "" );
 </cfscript>
@@ -23,7 +24,12 @@
 		</cfif>
 
 		<cfloop array="#tags#" index="i" item="tag">
-			#renderView( view="/dataApiHtmlDocs/_tagToc", args={ spec=spec, tag=tag } )#
+			<cfif !categories.len() || !Len( Trim( tag[ "x-category" ] ?: "" ) )>
+				#renderView( view="/dataApiHtmlDocs/_tagToc", args={ spec=spec, tag=tag } )#
+			</cfif>
+		</cfloop>
+		<cfloop array="#categories#" index="i" item="category">
+			#renderView( view="/dataApiHtmlDocs/_categoryToc", args={ spec=spec, category=category } )#
 		</cfloop>
 	</ul>
 </cfoutput>

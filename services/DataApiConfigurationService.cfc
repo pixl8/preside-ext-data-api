@@ -181,9 +181,11 @@ component {
 					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
 					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
+					var category            = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
 
 					entities[ entityName ] = {
 						  objectName    = objectName
+						, category      = category
 						, verbs         = ListToArray( LCase( supportedVerbs ) )
 						, selectFields  = ListToArray( LCase( selectFields ) )
 						, upsertFields  = ListToArray( LCase( upsertFields ) )

@@ -1,6 +1,7 @@
 <cfscript>
-	spec           = args.spec ?: {};
-	tags           = spec.tags ?: [];
+	spec           = args.spec              ?: {};
+	tags           = spec.tags              ?: [];
+	categories     = spec[ "x-categories" ] ?: [];
 	authentication = renderView( view="/dataApiHtmlDocs/_authenticationInfo", args=args )
 	args.hasAuth   = Len( Trim( authentication ) );
 </cfscript>
@@ -25,7 +26,12 @@
 				#renderView( view="/dataApiHtmlDocs/_headerInfo", args=args )#
 				#authentication#
 				<cfloop array="#tags#" index="i" item="tag">
-					#renderView( view="/dataApiHtmlDocs/_tag", args={ spec=spec, tag=tag } )#
+					<cfif !categories.len() || !Len( Trim( tag[ "x-category" ] ?: "" ) )>
+						#renderView( view="/dataApiHtmlDocs/_tag", args={ spec=spec, tag=tag } )#
+					</cfif>
+				</cfloop>
+				<cfloop array="#categories#" index="i" item="category">
+					#renderView( view="/dataApiHtmlDocs/_category", args={ spec=spec, category=category } )#
 				</cfloop>
 			</div>
 		</div>
