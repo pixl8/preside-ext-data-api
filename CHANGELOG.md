@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.1
+
+* [#27](https://github.com/pixl8/preside-ext-data-api/issues/27) Use field aliases when documenting and using filter fields in paginated GET requests
+* [#26](https://github.com/pixl8/preside-ext-data-api/issues/26) Fix for errors raised when calling API for entity whose primary key is numeric
+
 ## v3.0.0
 
 ### Administration
