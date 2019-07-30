@@ -107,7 +107,7 @@ component {
 		, string newId      = ""
 		, struct data       = {}
 	) {
-		if ( objectName.len() && newId.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+		if ( Len( objectName ) && Len( newId ) && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
 			var configService = _getConfigService();
 			var namespaces = configService.getNamespaces( true );
 			for( var namespace in namespaces ) {
@@ -212,7 +212,7 @@ component {
 			return;
 		}
 
-		if ( objectName.len() && id.len() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+		if ( objectName.len() && Len( id ) && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
 			var namespaces = _getConfigService().getNamespaces( true );
 
 			for( var namespace in namespaces ) {
