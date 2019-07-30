@@ -121,8 +121,13 @@ component {
 		return _simpleLocalCache( cacheKey, function(){
 			var objectName   = getEntityObject( args.entity );
 			var filterFields = $getPresideObjectService().getObjectAttribute( objectName, "dataApiFilterFields#_getNamespaceWithSeparator()#", _getDefaultFilterFields( args.entity ) );
+			var aliased = [];
 
-			return ListToArray( filterFields );
+			for( var field in ListToArray( filterFields ) ) {
+				aliased.append( getAliasForPropertyName( objectName, field ) );
+			}
+
+			return aliased;
 		} );
 	}
 

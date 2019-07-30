@@ -68,8 +68,9 @@ component {
 			var filterFields = configService.getFilterFields( arguments.entity );
 
 			for( var field in filterFields ) {
-				if ( arguments.filters.keyExists( field ) ) {
-					args.filter[ configService.getPropertyNameFromFieldAlias( arguments.entity, field ) ] = arguments.filters[ field ];
+				var propName = configService.getPropertyNameFromFieldAlias( arguments.entity, field );
+				if ( StructKeyExists( arguments.filters, field ) || StructKeyExists( arguments.filters, propName ) ) {
+					args.filter[ propName ] = arguments.filters[ field ] ?: arguments.filters[ propName ];
 				}
 			}
 		}
@@ -78,8 +79,6 @@ component {
 			  records    = _selectData( arguments.entity, args, arguments.fields )
 			, totalCount = _selectData( arguments.entity, { recordCountOnly=true, filter=args.filter } )
 		};
-
-
 
 		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
 		result.prevPage   = arguments.page -1;
