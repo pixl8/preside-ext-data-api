@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.2
+
+* [#29](https://github.com/pixl8/preside-ext-data-api/issues/29) Apply saved filters when queueing changes to data
+
 ## v3.0.1
 
 * [#27](https://github.com/pixl8/preside-ext-data-api/issues/27) Use field aliases when documenting and using filter fields in paginated GET requests

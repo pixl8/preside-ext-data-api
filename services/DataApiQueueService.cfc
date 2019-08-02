@@ -110,13 +110,21 @@ component {
 		if ( Len( objectName ) && Len( newId ) && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
 			var configService = _getConfigService();
 			var namespaces = configService.getNamespaces( true );
+
 			for( var namespace in namespaces ) {
-				if ( !configService.objectIsApiEnabled( objectName, namespace ) ) {
+				if ( !configService.objectIsApiEnabled( objectName, namespace ) || !configService.isObjectQueueEnabled( objectName, namespace ) ) {
 					continue;
 				}
-				var subscribers   = getSubscribers( arguments.objectName, "insert", namespace );
 
+				var subscribers  = getSubscribers( arguments.objectName, "insert", namespace );
 				if ( subscribers.len() ) {
+					var objEntity = configService.getObjectEntity( arguments.objectName, namespace );
+					var savedFilters = configService.getSavedFilters( objEntity, namespace );
+
+					if ( savedFilters.len() && !$getPresideObject( objectName ).dataExists( id=newId, savedFilters=savedFilters ) ) {
+						continue;
+					}
+
 					var queueSettings = configService.getQueueForObject( objectName, namespace );
 					var dao = $getPresideObject( "data_api_queue" );
 					for( var subscriber in subscribers ) {
@@ -140,7 +148,8 @@ component {
 		, string id          = ""
 		, struct changedData = {}
 	) {
-		if ( objectName.len() && changedData.count() && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
+		var configService = _getConfigService();
+		if ( objectName.len() && changedData.count() && configService.objectIsApiEnabledInAnyNamespace( objectName ) ) {
 			var actualChanges = {};
 
 			for( var recordId in arguments.changedData ) {
@@ -153,21 +162,27 @@ component {
 				return;
 			}
 
-			var namespaces = _getConfigService().getNamespaces( true );
+			var namespaces = configService.getNamespaces( true );
 
 			for( var namespace in namespaces ) {
-				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+				if ( !configService.objectIsApiEnabled( objectName, namespace ) || !configService.isObjectQueueEnabled( objectName, namespace ) ) {
 					continue;
 				}
 				var subscribers = getSubscribers( arguments.objectName, "update", namespace );
 
 				if ( subscribers.len() ) {
-					var queueSettings = _getConfigService().getQueueForObject( objectName, namespace );
-
-
+					var queueSettings = configService.getQueueForObject( objectName, namespace );
 					var dao = $getPresideObject( "data_api_queue" );
+					var objDao = $getPresideObject( objectName );
+					var objEntity = configService.getObjectEntity( objectName, namespace );
+					var savedFilters = configService.getSavedFilters( objEntity, namespace );
+
 					for( var subscriber in subscribers ) {
 						for( var recordId in actualChanges ) {
+							if ( savedFilters.len() && !objDao.dataExists( id=recordId, savedFilters=savedFilters ) ) {
+								continue;
+							}
+
 							var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
 								  object_name    = arguments.objectName
 								, queue_name     = queueSettings.name
@@ -211,18 +226,19 @@ component {
 			}
 			return;
 		}
+		var configService = _getConfigService();
 
-		if ( objectName.len() && Len( id ) && _getConfigService().objectIsApiEnabledInAnyNamespace( objectName ) ) {
-			var namespaces = _getConfigService().getNamespaces( true );
+		if ( objectName.len() && Len( id ) && configService.objectIsApiEnabledInAnyNamespace( objectName ) ) {
+			var namespaces = configService.getNamespaces( true );
 
 			for( var namespace in namespaces ) {
-				if ( !_getConfigService().objectIsApiEnabled( objectName, namespace ) ) {
+				if ( !configService.objectIsApiEnabled( objectName, namespace ) || !configService.isObjectQueueEnabled( objectName, namespace ) ) {
 					continue;
 				}
 				var subscribers = getSubscribers( arguments.objectName, "delete", namespace );
 
 				if ( subscribers.len() ) {
-					var queueSettings = _getConfigService().getQueueForObject( objectName, namespace );
+					var queueSettings = configService.getQueueForObject( objectName, namespace );
 					var dao = $getPresideObject( "data_api_queue" );
 					for( var subscriber in subscribers ) {
 						var deletedInserts = !queueSettings.atomicChanges && dao.deleteData( filter = {
