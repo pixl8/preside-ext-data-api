@@ -80,14 +80,14 @@ component {
 		} );
 	}
 
-	public array function getSavedFilters( required string entity ) {
+	public array function getSavedFilters( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getSavedFilters" & _getDataApiNamespace() & args.entity;
+		var cacheKey = "getSavedFilters" & args.namespace & args.entity;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var objectName   = getEntityObject( args.entity );
+			var objectName   = getEntityObject( args.entity, args.namespace );
 			var poService    = $getPresideObjectService();
-			var savedFilters = poService.getObjectAttribute( objectName, "dataApiSavedFilters#_getNamespaceWithSeparator()#" );
+			var savedFilters = poService.getObjectAttribute( objectName, "dataApiSavedFilters#_getNamespaceWithSeparator( args.namespace )#" );
 
 			return listToArray( trim( savedFilters ) );
 		} );
@@ -496,7 +496,7 @@ component {
 		} );
 	}
 
-	public array function isObjectQueueEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
+	public boolean function isObjectQueueEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "isObjectQueueEnabled-#arguments.objectName#-#arguments.namespace#";
 
@@ -505,7 +505,7 @@ component {
 				return false;
 			}
 
-			return ArrayFindNoCase( listQueueEnabledObjects( args.namespace ), args.objectName );
+			return ArrayFindNoCase( listQueueEnabledObjects( args.namespace ), args.objectName ) > 0;
 		} );
 	}
 
