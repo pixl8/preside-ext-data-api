@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.3
+
+* [#33](https://github.com/pixl8/preside-ext-data-api/issues/33) Ensure all queue items are picked up for default queues 
+
 ## v3.0.2
 
 * [#29](https://github.com/pixl8/preside-ext-data-api/issues/29) Apply saved filters when queueing changes to data
