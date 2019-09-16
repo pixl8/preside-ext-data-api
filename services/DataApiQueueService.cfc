@@ -28,9 +28,18 @@ component {
 			  queueSize = getQueueCount( arguments.subscriber, arguments.queueName  )
 			, data      = []
 		};
+		var extraFilters = [];
+
+		if ( Len( Trim( arguments.queueName ) ) ) {
+			extraFilters.append( { filter={queue_name=arguments.queueName } } );
+		} else {
+			extraFilters.append( { filter="queue_name is null or queue_name = :queue_name", filterParams={queue_name="default" } } );
+		}
+
 		var records       = dao.selectData(
 			  selectFields = [ "id", "object_name", "record_id", "operation", "data", "dateCreated" ]
-			, filter       = { subscriber=arguments.subscriber, namespace=namespace, queue_name=arguments.queueName }
+			, filter       = { subscriber=arguments.subscriber, namespace=namespace }
+			, extraFilters = extraFilters
 			, maxRows      = Val( queueSettings.pageSize ?: 1 )
 			, orderBy      = "order_number"
 		);
