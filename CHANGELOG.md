@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.4
+
+* [#34](https://github.com/pixl8/preside-ext-data-api/issues/34) Ensure deleting entries from the queue works with all default queues in all namespaces
+
 ## v3.0.3
 
 * [#33](https://github.com/pixl8/preside-ext-data-api/issues/33) Ensure all queue items are picked up for default queues 
