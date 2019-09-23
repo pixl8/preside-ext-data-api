@@ -103,11 +103,18 @@ component {
 
 	public numeric function removeFromQueue( required string subscriber, required array queueIds, required string queueName ) {
 		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
-		return $getPresideObject( "data_api_queue" ).deleteData( filter={
+		var extraFilters = [];
+
+		if ( Len( Trim( arguments.queueName ) ) ) {
+			extraFilters.append( { filter={queue_name=arguments.queueName } } );
+		} else {
+			extraFilters.append( { filter="queue_name is null or queue_name = :queue_name", filterParams={queue_name="default" } } );
+		}
+
+		return $getPresideObject( "data_api_queue" ).deleteData( extraFilters=extraFilters, filter={
 			  id         = arguments.queueIds
 			, subscriber = arguments.subscriber
 			, namespace  = namespace
-			, queue_name = arguments.queueName
 		} );
 	}
 
