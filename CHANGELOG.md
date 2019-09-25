@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.5
+
+* [#36](https://github.com/pixl8/preside-ext-data-api/issues/36) Fix error where DELETE /queue fails for batch delete on default queue (array of IDs in JSON body)
+* [#35](https://github.com/pixl8/preside-ext-data-api/issues/34) Ensure that 404 is shown when API resource URI not found (was throwing 500 error) 
+
 ## v3.0.4
 
 * [#34](https://github.com/pixl8/preside-ext-data-api/issues/34) Ensure deleting entries from the queue works with all default queues in all namespaces

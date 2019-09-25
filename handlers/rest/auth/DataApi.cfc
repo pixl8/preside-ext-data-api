@@ -16,7 +16,12 @@ component extends="preside.system.handlers.rest.auth.Token" {
 			var verb     = restRequest.getVerb();
 			var api      = restRequest.getApi();
 			var resource = restRequest.getResource();
-			var args     = presideRestService.extractTokensFromUri( restRequest );
+
+			if ( StructIsEmpty( resource ) ) { // not found
+				return userId;
+			}
+
+			var args = presideRestService.extractTokensFromUri( restRequest );
 
 			switch( resource.handler ) {
 				case "data.v1.WholeEntity":
