@@ -38,26 +38,33 @@ component {
 		restResponse.setData( result.data );
 	}
 
-	public void function delete( required string queueId, string queueName="" ) {
+	public void function delete( string queueId="", string queueName="" ) {
 		var queueIds = [];
-		if ( !Len( Trim( arguments.queueName ) ) && dataApiConfigurationService.queueExists( arguments.queueId ) ) {
-			arguments.queueName = arguments.queueId;
-
-			var body = event.getHttpContent();
-
-			try {
-				queueIds = DeserializeJson( body );
-			} catch( any e ) {
-				logError( e );
-				restResponse.setError(
-					  errorCode = 400
-					, title     = "Bad request"
-					, message   = "Could not parse JSON body.."
-				);
-				return;
+		if ( !Len( Trim( arguments.queueName ) ) ) {
+			if ( !Len( Trim( arguments.queueId ) ) ) {
+				arguments.queueid = "default";
 			}
-		} else {
-			queueIds = [ arguments.queueId ]
+			if ( dataApiConfigurationService.queueExists( arguments.queueId ) ) {
+				arguments.queueName = arguments.queueId;
+
+				var body = event.getHttpContent();
+
+				try {
+					queueIds = DeserializeJson( body );
+				} catch( any e ) {
+					logError( e );
+					restResponse.setError(
+						  errorCode = 400
+						, title     = "Bad request"
+						, message   = "Could not parse JSON body.."
+					);
+					return;
+				}
+			}
+		}
+
+		if ( !Len( Trim( arguments.queueName ) ) ) {
+			queueIds = [ arguments.queueId ];
 		}
 
 		var deleted = dataApiQueueService.removeFromQueue( subscriber=restRequest.getUser(), queueIds=queueIds, queueName=arguments.queueName );
