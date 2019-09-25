@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.5
+
+* [#35](https://github.com/pixl8/preside-ext-data-api/issues/34) Ensure that 404 is shown when API resource URI not found (was throwing 500 error) 
+
 ## v3.0.4
 
 * [#34](https://github.com/pixl8/preside-ext-data-api/issues/34) Ensure deleting entries from the queue works with all default queues in all namespaces
