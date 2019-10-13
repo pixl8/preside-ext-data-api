@@ -46,6 +46,7 @@ Object properties support the following _optional_ annotations:
 
 * `dataApiAlias`: An alternative name to use for the property in the API. i.e. instead of `contact_status` you may wish to just use `status` through the API.
 * `dataApiRenderer`: A non-default renderer to use when returning data through the API. See custom renderers, below.
+* `dataApiDerivative`: For image assets, specify the derivative to be used when rendering URLs.
 * `dataApiType`: For the documentation. The data type of the property, e.g. 'string'.
 * `dataApiFormat`: For the documentation. The format for the property, e.g. 'Email address'.
 * `dataApiEnabled`: Whether or not this property should be included in the API

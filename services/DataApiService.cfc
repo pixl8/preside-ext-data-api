@@ -287,13 +287,13 @@ component {
 			var renderer = fieldSettings[ field ].renderer ?: "none";
 			var alias    = fieldSettings[ field ].alias ?: field;
 
-			processed[ alias ] = _renderField( record[ field ], renderer );
+			processed[ alias ] = _renderField( record[ field ], renderer, fieldSettings[ field ] );
 		}
 
 		return processed;
 	}
 
-	private any function _renderField( required any value, required string renderer ) {
+	private any function _renderField( required any value, required string renderer, struct fieldSettings={} ) {
 		switch( renderer ) {
 			case "date"           : return IsDate( arguments.value ) ? DateFormat( arguments.value, "yyyy-mm-dd" ) : NullValue();
 			case "datetime"       : return IsDate( arguments.value ) ? DateTimeFormat( arguments.value, "yyyy-mm-dd HH:nn:ss" ) : NullValue();
@@ -306,7 +306,7 @@ component {
 		}
 
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
-			return $renderContent( renderer, arguments.value, "dataapi" );
+			return $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
 		}
 
 		return arguments.value;
