@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.7
+
+* [#38](https://github.com/pixl8/preside-ext-data-api/issues/38) Specifying fields in request should respect property alias
+
 ## v3.0.6
 
 * [#37](https://github.com/pixl8/preside-ext-data-api/issues/37) Add `dataApiDerivative` argument to properties for rendering image asset URLs

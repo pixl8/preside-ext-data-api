@@ -254,7 +254,7 @@ component {
 		var namespace     = _getInterceptorNamespace();
 		var fieldSettings = configService.getFieldSettings( arguments.entity );
 
-		args.selectFields            = _prepareSelectFields( objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
+		args.selectFields            = _prepareSelectFields( arguments.entity, objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
 		args.fromVersionTable        = false;
 		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
 		args.savedFilters            = configService.getSavedFilters( arguments.entity );
@@ -312,7 +312,7 @@ component {
 		return arguments.value;
 	}
 
-	private array function _prepareSelectFields( required string objectName, required array defaultFields, required array suppliedFields ) {
+	private array function _prepareSelectFields( required string entity, required string objectName, required array defaultFields, required array suppliedFields ) {
 		var filtered = [];
 		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
 
@@ -320,8 +320,11 @@ component {
 			filtered = arguments.defaultFields;
 		} else {
 			for( var field in suppliedFields ) {
+				var propName = _getConfigService().getPropertyNameFromFieldAlias( arguments.entity, field );
 				if ( defaultFields.find( LCase( field ) ) ) {
 					filtered.append( field );
+				} else if ( defaultFields.find( LCase( propName ) ) ) {
+					filtered.append( propName );
 				}
 			}
 		}
