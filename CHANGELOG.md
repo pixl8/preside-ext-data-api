@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.8
+
+* Ensure DELETE from queue works in all different queue scenarios
+
 ## v3.0.7
 
 * [#38](https://github.com/pixl8/preside-ext-data-api/issues/38) Specifying fields in request should respect property alias
