@@ -62,8 +62,8 @@ component {
 				}
 			}
 		}
-
-		if ( !Len( Trim( arguments.queueName ) ) ) {
+		
+		if ( !queueIds.len() ) {
 			queueIds = [ arguments.queueId ];
 		}
 
