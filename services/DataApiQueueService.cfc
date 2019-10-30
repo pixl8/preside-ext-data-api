@@ -25,10 +25,14 @@ component {
 		var apiSvc        = _getDataApiService();
 		var queueSettings = configSvc.getQueue( queueName, namespace );
 		var returnStruct  = {
-			  queueSize = getQueueCount( arguments.subscriber, arguments.queueName  )
+			  queueSize = -1
 			, data      = []
 		};
 		var extraFilters = [];
+
+		if ( queueSettings.returnTotalRecords ?: true ) {
+			returnStruct.queueSize = getQueueCount( arguments.subscriber, arguments.queueName  );
+		}
 
 		if ( Len( Trim( arguments.queueName ) ) ) {
 			extraFilters.append( { filter={queue_name=arguments.queueName } } );

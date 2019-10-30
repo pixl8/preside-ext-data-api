@@ -231,6 +231,7 @@ As of **v3.0.0**, you have the ability to configure multiple queue endpoints per
 
 * `pageSize`: Number of records returned with each call to queue. Default is **1**
 * `atomicChanges`: Whether or not the queue should return atomic changes. If true, each item in the queue will contain only the fields that have changed. If false, default, each item in the queue will contain the latest state of the record. Default is **false**.
+* `returnTotalRecords`: Whether or not to return X-Total-Records header with the total queue size when getting items from the queue (default is `true`)
 
 #### Defining queues
 
@@ -240,7 +241,7 @@ Queues are defined in the Preside rest API configuration in `Config.cfc`. To add
 settings.rest.apis[ "/data/v1" ].dataApiQueueEnabled = true;
 settings.rest.apis[ "/data/v1" ].dataApiQueues = {
 	  default    = { pageSize=100, atomicChanges=true } // the default queue
-	, highvolume = { pageSize=1000, atomicChanges=false }
+	, highvolume = { pageSize=1000, atomicChanges=false, returnTotalRecords=false }
 };
 ```
 
