@@ -415,6 +415,7 @@ component {
 						  name          = apiRoute.dataApiQueues[ args.queueName ].name ?: args.queueName
 						, pageSize      = Val( apiRoute.dataApiQueues[ args.queueName ].pageSize ?: 1 )
 						, atomicChanges = IsBoolean( apiRoute.dataApiQueues[ args.queueName ].atomicChanges ?: "" ) && apiRoute.dataApiQueues[ args.queueName ].atomicChanges
+						, returnTotalRecords = !IsBoolean( apiRoute.dataApiQueues[ args.queueName ].returnTotalRecords ?: "" ) || apiRoute.dataApiQueues[ args.queueName ].returnTotalRecords
 					};
 				}
 			}
