@@ -125,13 +125,12 @@ component extends="coldbox.system.Interceptor" {
 		}
 	}
 
-	public void function postUpdateObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
-		dataApiQueueService.queueUpdate( argumentCollection=interceptData );
-	}
-
 	public void function postInsertObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
+
+		var skipQueue = IsBoolean( interceptData.skipSyncQueue ?: "" ) && interceptData.skipSyncQueue;
+		if( skipQueue ) return;  
+
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
 	}
 }
