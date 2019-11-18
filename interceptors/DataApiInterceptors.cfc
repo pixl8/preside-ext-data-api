@@ -128,8 +128,8 @@ component extends="coldbox.system.Interceptor" {
 	public void function postInsertObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
 
-		var skipQueue = IsBoolean( interceptData.skipSyncQueue ?: "" ) && interceptData.skipSyncQueue;
-		if( skipQueue ) return;  
+		var skipDataApiQueue = IsBoolean( interceptData.skipDataApiQueue ?: "" ) && interceptData.skipDataApiQueue;
+		if( skipDataApiQueue ) return;
 
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
 	}
