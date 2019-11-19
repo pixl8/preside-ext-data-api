@@ -264,6 +264,16 @@ or
  */
 ```
 
+#### Skip a data api queue: 
+
+To prevent data api queue to be created when you insert data into an object, you can set `skipDataApiQueue = true` as argument in the `insertData` function. For example:
+
+```
+$getPresideObject( "example_object" ).insertData(
+	  data             = { example_field_name = "example_value" }
+	, skipDataApiQueue = true
+);
+```
 
 ## Namespaces and multiple APIs
 

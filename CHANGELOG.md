@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.10
+
+* Add ability to bypass queuing a record in insertData() with `skipDataApiQueue` argument.
+
 ## v3.0.9
 
 * [#39](https://github.com/pixl8/preside-ext-data-api/issues/39) Add configuration option for disabling X-Total-Records on queue fetches
