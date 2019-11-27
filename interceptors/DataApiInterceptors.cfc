@@ -124,6 +124,11 @@ component extends="coldbox.system.Interceptor" {
 			interceptData.calculateChangedData = true;
 		}
 	}
+	
+	public void function postUpdateObjectData( event, interceptData ) {
+		if ( !_applicationLoaded ) return;
+		dataApiQueueService.queueUpdate( argumentCollection=interceptData );
+	}
 
 	public void function postInsertObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
