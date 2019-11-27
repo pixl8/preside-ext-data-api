@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.11
+
+* Reapply accidentally removed code from v3.0.10 pull request.
+
 ## v3.0.10
 
 * Add ability to bypass queuing a record in insertData() with `skipDataApiQueue` argument.
