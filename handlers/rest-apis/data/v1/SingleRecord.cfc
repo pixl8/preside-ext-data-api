@@ -57,6 +57,7 @@ component {
 			  entity        = entity
 			, data          = validationData
 			, ignoreMissing = true
+			, isUpdate      = true
 		);
 
 		if ( validationResult.len() ) {

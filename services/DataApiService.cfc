@@ -169,7 +169,7 @@ component {
 		return recordsDeleted;
 	}
 
-	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false ) {
+	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false, boolean isUpdate=false ) {
 		var ruleset   = _getConfigService().getValidationRulesetForEntity( arguments.entity );
 		var namespace = _getInterceptorNamespace();
 
@@ -177,7 +177,7 @@ component {
 			var result = { validated=true, validationResults=[] };
 			for( var record in arguments.data ) {
 
-				var prepped = _prepRecordForInsertAndUpdate( arguments.entity, record );
+				var prepped = _prepRecordForInsertAndUpdate( arguments.entity, record, arguments.isUpdate );
 				$announceInterception( "preValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=record } );
 
 				var validation = $getValidationEngine().validate(
@@ -207,7 +207,7 @@ component {
 			return result;
 		}
 
-		var prepped = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data );
+		var prepped = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data, arguments.isUpdate );
 		$announceInterception( "preValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data } );
 
 		return _translateValidationErrors( $getValidationEngine().validate(
@@ -341,7 +341,7 @@ component {
 		return prepared;
 	}
 
-	private struct function _prepRecordForInsertAndUpdate( required string entity, required struct record ) {
+	private struct function _prepRecordForInsertAndUpdate( required string entity, required struct record, boolean isUpdate=false ) {
 		var prepped       = {};
 		var allowedFields = _getConfigService().getUpsertFields( arguments.entity );
 		var fieldSettings = _getConfigService().getFieldSettings( arguments.entity );
@@ -355,6 +355,10 @@ component {
 					prepped[ field ] = arguments.record[ alias ].toList();
 				}
 			}
+		}
+
+		if( arguments.isUpdate && len( arguments.record.id ?: '' ) ) {
+			prepped.id = arguments.record.id;
 		}
 
 		return prepped;
