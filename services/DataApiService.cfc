@@ -357,6 +357,10 @@ component {
 			}
 		}
 
+		if( ( arguments.record.isUpdate ?: "" ) == 1 && len( arguments.record.id ?: '' ) ) {
+			prepped.id = arguments.record.id;
+		}
+
 		return prepped;
 	}
 
