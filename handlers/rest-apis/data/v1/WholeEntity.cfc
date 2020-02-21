@@ -127,6 +127,7 @@ component {
 			  entity        = entity
 			, data          = body
 			, ignoreMissing = true
+			, isUpdate      = true
 		);
 
 		if ( !validationResult.validated ) {
