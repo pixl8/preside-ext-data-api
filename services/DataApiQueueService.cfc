@@ -28,16 +28,10 @@ component {
 			  queueSize = -1
 			, data      = []
 		};
-		var extraFilters = [];
+		var extraFilters  = [ _getQueueFilter( arguments.queueName) ];
 
 		if ( queueSettings.returnTotalRecords ?: true ) {
 			returnStruct.queueSize = getQueueCount( arguments.subscriber, arguments.queueName  );
-		}
-
-		if ( Len( Trim( arguments.queueName ) ) ) {
-			extraFilters.append( { filter={queue_name=arguments.queueName } } );
-		} else {
-			extraFilters.append( { filter="queue_name is null or queue_name = :queue_name", filterParams={queue_name="default" } } );
 		}
 
 		var records       = dao.selectData(
@@ -98,22 +92,19 @@ component {
 	}
 
 	public numeric function getQueueCount( required string subscriber, required string queueName ) {
-		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		var namespace    = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		var extraFilters = [ _getQueueFilter( arguments.queueName) ];
+
 		return $getPresideObject( "data_api_queue" ).selectData(
-			  filter  = { subscriber=arguments.subscriber, namespace=namespace, queue_name=arguments.queueName }
+			  filter          = { subscriber=arguments.subscriber, namespace=namespace }
+			, extraFilters    = extraFilters
 			, recordCountOnly = true
 		);
 	}
 
 	public numeric function removeFromQueue( required string subscriber, required array queueIds, required string queueName ) {
-		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
-		var extraFilters = [];
-
-		if ( Len( Trim( arguments.queueName ) ) ) {
-			extraFilters.append( { filter={queue_name=arguments.queueName } } );
-		} else {
-			extraFilters.append( { filter="queue_name is null or queue_name = :queue_name", filterParams={queue_name="default" } } );
-		}
+		var namespace    = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
+		var extraFilters = [ _getQueueFilter( arguments.queueName) ];
 
 		return $getPresideObject( "data_api_queue" ).deleteData( extraFilters=extraFilters, filter={
 			  id         = arguments.queueIds
@@ -351,6 +342,14 @@ component {
 
 
 // PRIVATE HELPERS
+	private struct function _getQueueFilter( required string queueName ) {
+		if ( Len( Trim( arguments.queueName ) ) ) {
+			return { filter={queue_name=arguments.queueName } };
+		} else {
+			return { filter="queue_name is null or queue_name = :queue_name", filterParams={queue_name="default" } };
+		}
+	}
+
 	private numeric function _unixTimestamp( required string theDate ) {
 		if ( IsDate( arguments.thedate ) ) {
 			return dateDiff( 's', '1970-01-01', arguments.theDate );
