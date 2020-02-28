@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.13
+
+* Fix for Queue Record Count not being returned for the default queue
+
 ## v3.0.12
 
 * Fix for [#43](https://github.com/pixl8/preside-ext-data-api/issues/43). PUT operations could fail when providing an unchanged field that had a unique index.
