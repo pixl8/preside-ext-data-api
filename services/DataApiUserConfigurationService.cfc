@@ -270,27 +270,29 @@ component {
 		var queueDeleteAll = true;
 
 		for( var setting in settings ) {
-			var entity = apiConfigService.getObjectEntity( setting.object_name, namespace );
+			if ( structKeyExists( entities, setting.object_name ) ) {
+				var entity = apiConfigService.getObjectEntity( setting.object_name, namespace );
 
-			accessDetails[ "#entity#_read"         ] = _isTrue( setting.get_allowed          );
-			accessDetails[ "#entity#_insert"       ] = _isTrue( setting.post_allowed         );
-			accessDetails[ "#entity#_update"       ] = _isTrue( setting.put_allowed          );
-			accessDetails[ "#entity#_delete"       ] = _isTrue( setting.delete_allowed       );
-			accessDetails[ "#entity#_queue_insert" ] = _isTrue( setting.subscribe_to_inserts );
-			accessDetails[ "#entity#_queue_update" ] = _isTrue( setting.subscribe_to_updates );
-			accessDetails[ "#entity#_queue_delete" ] = _isTrue( setting.subscribe_to_deletes );
-			accessDetails[ "#entity#_all"          ] = accessDetails[ "#entity#_read" ] && accessDetails[ "#entity#_insert" ] && accessDetails[ "#entity#_update" ] && accessDetails[ "#entity#_delete" ];
-			accessDetails[ "#entity#_queue_all"    ] = accessDetails[ "#entity#_queue_insert" ] && accessDetails[ "#entity#_queue_update" ] && accessDetails[ "#entity#_queue_delete" ];
+				accessDetails[ "#entity#_read"         ] = _isTrue( setting.get_allowed          );
+				accessDetails[ "#entity#_insert"       ] = _isTrue( setting.post_allowed         );
+				accessDetails[ "#entity#_update"       ] = _isTrue( setting.put_allowed          );
+				accessDetails[ "#entity#_delete"       ] = _isTrue( setting.delete_allowed       );
+				accessDetails[ "#entity#_queue_insert" ] = _isTrue( setting.subscribe_to_inserts );
+				accessDetails[ "#entity#_queue_update" ] = _isTrue( setting.subscribe_to_updates );
+				accessDetails[ "#entity#_queue_delete" ] = _isTrue( setting.subscribe_to_deletes );
+				accessDetails[ "#entity#_all"          ] = accessDetails[ "#entity#_read" ] && accessDetails[ "#entity#_insert" ] && accessDetails[ "#entity#_update" ] && accessDetails[ "#entity#_delete" ];
+				accessDetails[ "#entity#_queue_all"    ] = accessDetails[ "#entity#_queue_insert" ] && accessDetails[ "#entity#_queue_update" ] && accessDetails[ "#entity#_queue_delete" ];
 
-			readAll        = readAll        && accessDetails[ "#entity#_read"         ];
-			insertAll      = insertAll      && accessDetails[ "#entity#_insert"       ];
-			updateAll      = updateAll      && accessDetails[ "#entity#_update"       ];
-			deleteAll      = deleteAll      && accessDetails[ "#entity#_delete"       ];
+				readAll        = readAll        && accessDetails[ "#entity#_read"         ];
+				insertAll      = insertAll      && accessDetails[ "#entity#_insert"       ];
+				updateAll      = updateAll      && accessDetails[ "#entity#_update"       ];
+				deleteAll      = deleteAll      && accessDetails[ "#entity#_delete"       ];
 
-			if ( _isTrue( entities[ entity ].allowQueue ?: "" ) ) {
-				queueInsertAll = queueInsertAll && accessDetails[ "#entity#_queue_insert" ];
-				queueUpdateAll = queueUpdateAll && accessDetails[ "#entity#_queue_update" ];
-				queueDeleteAll = queueDeleteAll && accessDetails[ "#entity#_queue_delete" ];
+				if ( _isTrue( entities[ entity ].allowQueue ?: "" ) ) {
+					queueInsertAll = queueInsertAll && accessDetails[ "#entity#_queue_insert" ];
+					queueUpdateAll = queueUpdateAll && accessDetails[ "#entity#_queue_update" ];
+					queueDeleteAll = queueDeleteAll && accessDetails[ "#entity#_queue_delete" ];
+				}
 			}
 		}
 
