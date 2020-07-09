@@ -270,9 +270,15 @@ component {
 		var queueDeleteAll = true;
 
 		for( var setting in settings ) {
-			if ( structKeyExists( entities, setting.object_name ) ) {
-				var entity = apiConfigService.getObjectEntity( setting.object_name, namespace );
+			var entity = "";
 
+			try {
+				entity = apiConfigService.getObjectEntity( setting.object_name, namespace );
+			} catch (any e) {
+				$raiseError(e);
+			}
+				
+			if ( structKeyExists( entities, entity ) ) {
 				accessDetails[ "#entity#_read"         ] = _isTrue( setting.get_allowed          );
 				accessDetails[ "#entity#_insert"       ] = _isTrue( setting.post_allowed         );
 				accessDetails[ "#entity#_update"       ] = _isTrue( setting.put_allowed          );
