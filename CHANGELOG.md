@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.14
+
+* Fix for issue where there may be custom API configuration for objects that do not exist. Just ignore the configuration rather than raise errors.
+
 ## v3.0.13
 
 * Fix for Queue Record Count not being returned for the default queue
