@@ -116,7 +116,6 @@ component extends="coldbox.system.Interceptor" {
 		dataApiQueueService.queueDelete( argumentCollection=interceptData );
 	}
 
-
 	public void function preUpdateObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
 
@@ -124,9 +123,10 @@ component extends="coldbox.system.Interceptor" {
 			interceptData.calculateChangedData = true;
 		}
 	}
-	
+
 	public void function postUpdateObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
+
 		dataApiQueueService.queueUpdate( argumentCollection=interceptData );
 	}
 
@@ -134,6 +134,10 @@ component extends="coldbox.system.Interceptor" {
 		if ( !_applicationLoaded ) return;
 
 		var skipDataApiQueue = IsBoolean( interceptData.skipDataApiQueue ?: "" ) && interceptData.skipDataApiQueue;
+		var skipSyncQueue    = IsBoolean( interceptData.skipSyncQueue    ?: "" ) && interceptData.skipSyncQueue;
+
+		skipDataApiQueue = skipDataApiQueue || ( skipSyncQueue && dataApiConfigurationService.skipApiQueueWhenSkipSyncQueue( interceptData.objectName ) );
+
 		if( skipDataApiQueue ) return;
 
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
