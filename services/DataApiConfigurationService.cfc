@@ -461,6 +461,15 @@ component {
 		} );
 	}
 
+	public boolean function skipApiQueueWhenSkipSyncQueue( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "skipApiQueueWhenSkipSyncQueue-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			return $isFeatureEnabled( "dataApiQueue" ) && $getPresideObjectService().getObjectAttribute( args.objectName, "skipApiQueueWhenSkipSyncQueue#_getNamespaceWithSeparator( args.namespace )#", false );
+		} );
+	}
+
 	public boolean function isQueueEnabled( string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "isQueueEnabled-#arguments.namespace#";
