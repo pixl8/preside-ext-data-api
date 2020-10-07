@@ -1,8 +1,12 @@
 # Changelog
 
+## v3.0.16
+
+* Building on `v3.0.15`, `skipApiQueueWhenSkipSyncQueue` now considered for all CRUD data api changes. **Default value is now true**
+
 ## v3.0.15
 
-* skipApiQueueWhenSkipSyncQueue object decoration to use syncSynQueue intercept data to determine whether to skip the api change queue or not. You can sync object data without it being added to the api change queue.
+* `skipApiQueueWhenSkipSyncQueue` object decoration to use syncSynQueue intercept data to determine whether to skip the api change queue or not. You can sync object data without it being added to the api change queue.
 
 ## v3.0.13
 

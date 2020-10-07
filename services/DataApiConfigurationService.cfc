@@ -466,7 +466,7 @@ component {
 		var cacheKey = "skipApiQueueWhenSkipSyncQueue-#arguments.objectName#-#arguments.namespace#";
 
 		return _simpleLocalCache( cacheKey, function(){
-			return $isFeatureEnabled( "dataApiQueue" ) && $getPresideObjectService().getObjectAttribute( args.objectName, "skipApiQueueWhenSkipSyncQueue#_getNamespaceWithSeparator( args.namespace )#", false );
+			return $isFeatureEnabled( "dataApiQueue" ) && $getPresideObjectService().getObjectAttribute( args.objectName, "skipApiQueueWhenSkipSyncQueue#_getNamespaceWithSeparator( args.namespace )#", true );
 		} );
 	}
 
