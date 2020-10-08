@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.17
+
+* Add some safety checking for non-existant entities when building permissions forms (fixes potential errors with custom namespace configurations)
+
 ## v3.0.16
 
 * Building on `v3.0.15`, `skipApiQueueWhenSkipSyncQueue` now considered for all CRUD data api changes. **Default value is now true**
