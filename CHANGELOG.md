@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.18
+
+* Fix missed merge conflict
+
 ## v3.0.17
 
 * Add some safety checking for non-existant entities when building permissions forms (fixes potential errors with custom namespace configurations)
