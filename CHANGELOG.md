@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.19
+
+* Fix: If object name and the api entity name are different within one entity, no rights can be assigned in the API Manager
+
 ## v3.0.18
 
 * Fix missed merge conflict
