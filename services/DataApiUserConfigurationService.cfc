@@ -276,7 +276,7 @@ component {
 				$raiseError(e);
 			}
 
-			if ( structKeyExists( entities, entity ) ) {
+			if ( _entityExists( entities, setting.object_name ) ) {
 				accessDetails[ "#entity#_read"         ] = _isTrue( setting.get_allowed          );
 				accessDetails[ "#entity#_insert"       ] = _isTrue( setting.post_allowed         );
 				accessDetails[ "#entity#_update"       ] = _isTrue( setting.put_allowed          );
@@ -348,6 +348,16 @@ component {
 	private boolean function _isTrue( required any value ) {
 		return IsBoolean( arguments.value ) && arguments.value;
 	}
+	
+	private boolean function _entityExists( required any entities, required string objectName ) {
+		for ( var entityName in arguments.entities ) {
+		    var entity = arguments.entities [ entityName ];
+		    if ( entity.objectName == arguments.objectName ) {
+			return true;
+		    }
+		}
+    		return false;
+    	}
 
 // GETTERS AND SETTERS
 	private any function _getApiConfigService() {
