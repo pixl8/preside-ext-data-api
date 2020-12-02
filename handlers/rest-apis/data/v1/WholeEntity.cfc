@@ -12,7 +12,8 @@ component {
 		,          numeric pageSize = 100
 		,          string  fields   = ""
 	) {
-		var filters = {};
+		var filters  = {};
+		var filterQs = "";
 
 		for( var paramName in rc ) {
 			if ( paramName.reFindNoCase( "^filter\." ) ) {
@@ -35,13 +36,27 @@ component {
 		var linkHeaderDelim = "";
 		var handler         = event.getValue( name="dataApiHandler"  , defaultValue="data.v1" );
 
+		if ( !isEmpty( filters ) ) {
+			for ( var f in filters ) {
+				filterQs &= "&filter.#f#=#filters[f]#";
+			}
+		}
+
 		if ( result.nextPage ) {
 			var nextLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
+			if ( !isEmptyString( filterQs ) ) {
+				nextLink &= "#filterQs#";
+			}
+
 			linkHeader &= "<#nextLink#>; rel=""next""";
 			linkHeaderDelim = ", ";
 		}
 		if ( result.prevPage ) {
 			var prevLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.prevPage#" );
+			if ( !isEmptyString( filterQs ) ) {
+				prevLink &= "#filterQs#";
+			}
+
 			linkHeader &= linkHeaderDelim & "<#prevLink#>; rel=""prev""";
 		}
 

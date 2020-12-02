@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.20
+
+* Move build and deploy to GitHub actions
+* Fix: include filters in pagination links
+
 ## v3.0.19
 
 * Fix: If object name and the api entity name are different within one entity, no rights can be assigned in the API Manager
