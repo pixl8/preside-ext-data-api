@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.21
+
+* Ensure assets are compiled in build
+
 ## v3.0.20
 
 * Move build and deploy to GitHub actions
