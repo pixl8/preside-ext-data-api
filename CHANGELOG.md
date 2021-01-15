@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.22
+
+* Explicitly pass args through to documentation view (Preside 10.14 compatibility)
+
 ## v3.0.21
 
 * Ensure assets are compiled in build
