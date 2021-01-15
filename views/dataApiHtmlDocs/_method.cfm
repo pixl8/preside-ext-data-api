@@ -29,11 +29,11 @@
 		<!-- TODO: authorizations for custom, per-method authorization -->
 
 		<cfif pathParams.len()>
-			#renderView( view="/dataApiHtmlDocs/_methodParams", args={ params=pathParams, type="path" } )#
+			#renderView( view="/dataApiHtmlDocs/_methodParams", args={ params=pathParams, spec=spec, type="path" } )#
 		</cfif>
 
 		<cfif queryParams.len()>
-			#renderView( view="/dataApiHtmlDocs/_methodParams", args={ params=queryParams, type="query" } )#
+			#renderView( view="/dataApiHtmlDocs/_methodParams", args={ params=queryParams, spec=spec, type="query" } )#
 		</cfif>
 
 		<cfif requestBody.count()>

@@ -1,5 +1,6 @@
 <cfscript>
 	params        = args.params ?: [];
+	spec          = args.spec   ?: [];
 	type          = args.type ?: "query";
 	title         = translateResource( "dataapi:html.docs.#type#.params.title" );
 	requiredTitle = translateResource( "dataapi:html.docs.required.param.title" );
