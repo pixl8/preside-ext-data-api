@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.0
+
+* Introduce new annotation for objects to limit which fields will be watched for pushing changes into a change queue
+
 ## v3.0.22
 
 * Explicitly pass args through to documentation view (Preside 10.14 compatibility)
