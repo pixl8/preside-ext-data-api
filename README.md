@@ -39,6 +39,7 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiUpsertExcludeFields`: Fields **not** to accept in POST/PUT requests (defaults to `dataApiExcludeFields`)
 * `dataApiFilterFields`: Fields to allow as simple filters for paginated GET requests (defaults to foreign keys, boolean and enum fields)
 * `dataApiAllowIdInsert`: Whether or not to allow the ID field to be set during a POST operation to create a new record
+* `dataApiQueueRelevantFields`: Fields that are relevant to trigger a record update to be queued. If not used, then any data change will be queued. If used then only the specified fields will be examined and in case of atomic-changes for the queue only the relevant field changes will be included in the queue item. Inserts and deletes are always queued, only during updates this annotation is evaluated.
 
 ### Property annotations
 

@@ -140,6 +140,18 @@ component {
 			return entities[ args.entity ].upsertFields ?: [];
 		} );
 	}
+	
+	public array function getRelevantQueueFields( required string entity, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getRelevantQueueFields" & args.namespace & args.entity;
+		
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName = getEntityObject( args.entity, args.namespace );
+			var fields     = $getPresideObjectService().getObjectAttribute( objectName, "dataApiQueueRelevantFields#_getNamespaceWithSeparator( args.namespace )#" );
+			
+			return listToArray( fields );
+		} );
+	}
 
 	public struct function getFieldSettings( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
