@@ -181,40 +181,49 @@ component {
 				}
 				var subscribers = getSubscribers( arguments.objectName, "update", namespace );
 
-				if ( subscribers.len() ) {
-					var queueSettings = configService.getQueueForObject( objectName, namespace );
-					var dao = $getPresideObject( "data_api_queue" );
-					var objDao = $getPresideObject( objectName );
-					var objEntity = configService.getObjectEntity( objectName, namespace );
-					var savedFilters = configService.getSavedFilters( objEntity, namespace );
+				if ( isEmpty( subscribers ) ) {
+					continue;
+				}
+				
+				var queueSettings = configService.getQueueForObject( objectName, namespace );
+				var dao = $getPresideObject( "data_api_queue" );
+				var objDao = $getPresideObject( objectName );
+				var objEntity = configService.getObjectEntity( objectName, namespace );
+				var savedFilters = configService.getSavedFilters( objEntity, namespace );
 
+				for( var recordId in actualChanges ) {
+					if ( savedFilters.len() && !objDao.dataExists( id=recordId, savedFilters=savedFilters ) ) {
+						continue;
+					}
+					
+					var relevantRecordFieldChanges = _calculateRelevantFieldChanges( entity=objEntity, namespace=namespace, changedFields=actualChanges[ recordId ] );
+					
+					if ( isEmpty( relevantRecordFieldChanges ) ) {
+						continue;
+					}
+					
 					for( var subscriber in subscribers ) {
-						for( var recordId in actualChanges ) {
-							if ( savedFilters.len() && !objDao.dataExists( id=recordId, savedFilters=savedFilters ) ) {
-								continue;
-							}
 
-							var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
-								  object_name    = arguments.objectName
-								, queue_name     = queueSettings.name
-								, record_id      = recordId
-								, subscriber     = subscriber
-								, namespace      = namespace
-								, operation      = [ "insert", "update" ]
-								, is_checked_out = false
+						var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
+							  object_name    = arguments.objectName
+							, queue_name     = queueSettings.name
+							, record_id      = recordId
+							, subscriber     = subscriber
+							, namespace      = namespace
+							, operation      = [ "insert", "update" ]
+							, is_checked_out = false
+						} );
+
+						if ( !alreadyQueued ) {
+							dao.insertData( {
+								  object_name = arguments.objectName
+								, queue_name  = queueSettings.name
+								, record_id   = recordId
+								, subscriber  = subscriber
+								, namespace   = namespace
+								, operation   = "update"
+								, data        = queueSettings.atomicChanges ? SerializeJson( relevantRecordFieldChanges ) : ""
 							} );
-
-							if ( !alreadyQueued ) {
-								dao.insertData( {
-									  object_name = arguments.objectName
-									, queue_name  = queueSettings.name
-									, record_id   = recordId
-									, subscriber  = subscriber
-									, namespace   = namespace
-									, operation   = "update"
-									, data        = queueSettings.atomicChanges ? SerializeJson( actualChanges[ recordId ] ) : ""
-								} );
-							}
 						}
 					}
 				}
@@ -367,6 +376,25 @@ component {
 		}
 
 		return aliased;
+	}
+	
+	private struct function _calculateRelevantFieldChanges( required string entity, required string namespace, required struct changedFields ) {
+	
+		var relevantFields = _getConfigService().getRelevantQueueFields( entity=arguments.entity, namespace=arguments.namespace );
+		
+		if ( isEmpty( relevantFields ) ) {
+			return arguments.changedFields;
+		}
+		
+		var relevantChangedFields = {};
+		
+		for ( var field in arguments.changedFields ) {
+			if ( relevantFields.findNoCase( field ) ) {
+				relevantChangedFields[ field ] = arguments.changedFields[ field ];
+			}
+		}
+		
+		return relevantChangedFields;
 	}
 
 // GETTERS AND SETTERS
