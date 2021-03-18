@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.1
+
+* Add `getMultipleRecords()` method for embedding entities
+
 ## v3.1.0
 
 * Introduce new annotation for objects to limit which fields will be watched for pushing changes into a change queue
