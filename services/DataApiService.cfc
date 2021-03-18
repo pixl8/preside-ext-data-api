@@ -93,6 +93,10 @@ component {
 		return records[ 1 ] ?: {};
 	}
 
+	public array function getMultipleRecords( required string entity, required string recordIds, array fields=[] ) {
+		return _selectData( arguments.entity, { filter={ id=listToArray( arguments.recordIds ) } }, arguments.fields );
+	}
+
 	public array function createRecords( required string entity, required array records ) {
 		var created = [];
 
