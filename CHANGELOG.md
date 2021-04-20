@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.2
+
+* Pass through all args when using recordCountOnly=true to ensure saved/extra filters are included
+
 ## v3.1.1
 
 * Add `getMultipleRecords()` method for embedding entities

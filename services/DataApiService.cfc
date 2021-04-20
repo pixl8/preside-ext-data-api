@@ -76,9 +76,13 @@ component {
 		}
 
 		var result = {
-			  records    = _selectData( arguments.entity, args, arguments.fields )
-			, totalCount = _selectData( arguments.entity, { recordCountOnly=true, filter=args.filter } )
+			records = _selectData( arguments.entity, args, arguments.fields )
 		};
+
+		args.recordCountOnly = true;
+		structDelete( args, "maxRows" );
+
+		result.totalCount = _selectData( arguments.entity, args, arguments.fields )
 
 		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
 		result.prevPage   = arguments.page -1;
