@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.3
+
+* Add property’s name to data returned by field settings
+
 ## v3.1.2
 
 * Pass through all args when using recordCountOnly=true to ensure saved/extra filters are included
