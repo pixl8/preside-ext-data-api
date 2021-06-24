@@ -111,6 +111,14 @@ component extends="coldbox.system.Interceptor" {
 		}
 	}
 
+	public void function preDeleteObjectData( event, interceptData ) {
+		if ( !_applicationLoaded ) return;
+
+		if( isEmptyString( interceptData.id ?: "" ) ){
+			interceptData.deletedIds = dataApiQueueService.getDeletedRecordIds( argumentCollection = interceptData );
+		}
+	}
+
 	public void function postDeleteObjectData( event, interceptData ) {
 		if ( !_applicationLoaded ) return;
 
