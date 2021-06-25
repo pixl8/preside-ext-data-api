@@ -237,7 +237,7 @@ component {
 		, any    filter     = {}
 		, array  deletedIds = []
 	) {
-		if( $helpers.isEmptyString( filter.id ?: "" ) && arrayLen( deletedIds ) ) {
+		if( !Len( filter.id ?: "" ) && !Len( filter[ "#objectName#.id" ] ?: "" ) && arrayLen( deletedIds ) ) {
 			filter = { id = deletedIds };
 		}
 		if ( IsStruct( filter ) && filter.count() == 1 ) {
