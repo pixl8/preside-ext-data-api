@@ -32,6 +32,7 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiQueue`: Specific queue name for this object
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
 * `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
+* `dataApiIgnoreDefaultFilters`: Comma-separated list of ignore default filters to apply to all requests to this object
 * `dataApiVerbs`: Supported REST HTTP Verbs. If not supplied, all verbs and operations are supported (i.e. GET, POST, PUT and DELETE)
 * `dataApiFields`: Fields to return in GET requests (defaults to all non-excluded fields)
 * `dataApiUpsertFields`: Fields to accept in POST/PUT request (defaults to `dataApiFields`)
@@ -265,7 +266,7 @@ or
  */
 ```
 
-#### Skip a data api queue: 
+#### Skip a data api queue:
 
 To prevent data api queue to be created when you insert data into an object, you can set `skipDataApiQueue = true` as argument in the `insertData` function. For example:
 
