@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.2.0
+
+* Add `dataApiIgnoreDefaultFilters` feature
+* Fix issue deleteData( filter=... ) would not queue deletes
+
 ## v3.1.3
 
 * Add property’s name to data returned by field settings

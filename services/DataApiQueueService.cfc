@@ -235,7 +235,11 @@ component {
 		  string objectName = ""
 		, string id         = ""
 		, any    filter     = {}
+		, array  deletedIds = []
 	) {
+		if( !Len( filter.id ?: "" ) && !Len( filter[ "#objectName#.id" ] ?: "" ) && arrayLen( deletedIds ) ) {
+			filter = { id = deletedIds };
+		}
 		if ( IsStruct( filter ) && filter.count() == 1 ) {
 			var value = filter.id ?: ( filter[ "#objectName#.id" ] ?: "" );
 			if ( !IsArray( value ) ) {
@@ -349,6 +353,28 @@ component {
 		return subscribers;
 	}
 
+	public array function getDeletedRecordIds (
+		  required string objectName
+		,          any    filter       = {}
+		,          struct filterParams = {}
+		,          array  extraFilters = []
+		,          array  savedFilters = []
+	){
+		var values = [];
+
+		arguments.selectFields = [ "id" ];
+
+		try{
+			var queuedObj = $getPresideObject( objectName ).selectData( argumentCollection=arguments );
+			if( queuedObj.recordcount ) {
+				values = valueArray( queuedObj, "id" );
+			}
+		} catch( any e ) {
+			values = [];
+		}
+
+		return values;
+	}
 
 // PRIVATE HELPERS
 	private struct function _getQueueFilter( required string queueName ) {
