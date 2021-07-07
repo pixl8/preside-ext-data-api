@@ -93,6 +93,19 @@ component {
 		} );
 	}
 
+	public array function getIgnoreDefaultFilters( required string entity, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getIgnoreDefaultFilters" & args.namespace & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var objectName           = getEntityObject( args.entity, args.namespace );
+			var poService            = $getPresideObjectService();
+			var ignoreDefaultFilters = poService.getObjectAttribute( objectName, "dataApiIgnoreDefaultFilters#_getNamespaceWithSeparator( args.namespace )#" );
+
+			return listToArray( trim( ignoreDefaultFilters ) );
+		} );
+	}
+
 	public array function getSelectFields( required string entity, boolean aliases=false ) {
 		var args     = arguments;
 		var cacheKey = "getSelectFields" & _getDataApiNamespace() & args.entity & args.aliases;

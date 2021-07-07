@@ -266,6 +266,7 @@ component {
 		args.fromVersionTable        = false;
 		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
 		args.savedFilters            = configService.getSavedFilters( arguments.entity );
+		args.ignoreDefaultFilters    = configService.getIgnoreDefaultFilters( arguments.entity );
 		args.allowDraftVersions      = false;
 		args.autoGroupBy             = true;
 		args.distinct                = true;
