@@ -304,17 +304,17 @@ component {
 
 	private any function _renderField( required any value, required string renderer, struct fieldSettings={} ) {
 
-		var emptyNumericQuotes = false;
-		if ( $isFeatureEnabled( "dataApiQuotesForNumerics" ) ) {
-			emptyNumericQuotes = true;
-		}
 		switch( renderer ) {
 			case "date"           : return IsDate( arguments.value ) ? DateFormat( arguments.value, "yyyy-mm-dd" ) : NullValue();
 			case "datetime"       : return IsDate( arguments.value ) ? DateTimeFormat( arguments.value, "yyyy-mm-dd HH:nn:ss" ) : NullValue();
 			case "strictboolean"  : return IsBoolean( arguments.value ) && arguments.value ? true : false; // looks odd, but aimed at ensuring that we definitely get boolean values back
 			case "nullableboolean": return IsBoolean( arguments.value ) ? ( arguments.value ? true : false ) : NullValue();
 			case "array"          : return ListToArray( arguments.value );
-			case "numeric"        : return IsNumeric( arguments.value ) ? ( arguments.value ? true : false ) : emptyNumericQuotes ? "" : NullValue();
+			case "numeric"        :
+				if ( IsNumeric( arguments.value ) ) {
+					return arguments.value;
+				}
+				return $isFeatureEnabled( "dataApiUseNullForNumerics" ) ? NullValue() : "";
 			case "none":
 			case "":
 				return arguments.value;
