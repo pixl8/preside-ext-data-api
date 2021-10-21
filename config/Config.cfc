@@ -16,6 +16,7 @@ component {
 		settings.features.restTokenAuth.enabled = true;
 
 		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
+		settings.features.dataApiUseNullForNumerics = settings.features.dataApiUseNullForNumerics ?: { enabled=true };
 	}
 
 	private void function _setupRestApis( required struct settings ) {
