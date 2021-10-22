@@ -315,16 +315,24 @@ component {
 					return arguments.value;
 				}
 				return $isFeatureEnabled( "dataApiUseNullForNumerics" ) ? NullValue() : "";
+			case "string"         :
 			case "none":
 			case "":
-				return arguments.value;
+				if ( Len( arguments.value ?: "" ) ) {
+					return arguments.value;
+				}
+				return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 		}
 
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
-			return $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
+			var renderedContent = $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
+			if ( Len( renderedContent ?: "" ) ) {
+				return renderedContent;
+			}
+
 		}
 
-		return arguments.value;
+		return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 	}
 
 	private array function _prepareSelectFields( required string entity, required string objectName, required array defaultFields, required array suppliedFields ) {

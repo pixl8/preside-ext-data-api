@@ -17,6 +17,7 @@ component {
 
 		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
 		settings.features.dataApiUseNullForNumerics = settings.features.dataApiUseNullForNumerics ?: { enabled=true };
+		settings.features.dataApiUseNullForStrings  = settings.features.dataApiUseNullForStrings  ?: { enabled=true };
 	}
 
 	private void function _setupRestApis( required struct settings ) {
