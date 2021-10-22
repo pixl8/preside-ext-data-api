@@ -8,6 +8,16 @@ The Data API extension provides developers with the power to rapidly develop API
 
 The **default** root URI of the API is `/api/data/v1/` (see _Namespaces and multiple APIs_, further below). OpenAPI v3 specification can be browsed at `/api/data/v1/docs/spec/` and HTML documentation based on the spec can be found at `/api/data/v1/docs/html/` (or `/api/data/v1/docs/swagger/`, if you prefer).
 
+## Feature flags
+
+As of **v3.3.0**, two feature flags are available that bring backward compatibility from previous versions. New default behaviour is to return `null` values for empty strings and numbers. Previously, the extension would return an empty string, `""`. To get the old behaviour back, you may set the following features to `false`:
+
+```cfc
+settings.features.dataApiUseNullForNumerics.enabled = false;
+settings.features.dataApiUseNullForStrings.enabled  = false;
+
+```
+
 ## Configuring your entities
 
 ### Object annotations

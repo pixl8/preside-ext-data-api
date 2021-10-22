@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.3.0
+
+* [#58](https://github.com/pixl8/preside-ext-data-api/issues/58) - Return `null` for empty strings and empty numeric field types
+
 ## v3.2.0
 
 * Add `dataApiIgnoreDefaultFilters` feature

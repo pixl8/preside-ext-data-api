@@ -616,6 +616,9 @@ component {
 			case "string":
 				return $getContentRendererService().getRendererForField( field );
 			break;
+			case "numeric":
+				return "numeric";
+			break;
 		}
 
 		return "none";
