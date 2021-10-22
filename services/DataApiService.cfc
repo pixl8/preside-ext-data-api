@@ -316,13 +316,12 @@ component {
 				}
 				return $isFeatureEnabled( "dataApiUseNullForNumerics" ) ? NullValue() : "";
 			case "string"         :
+			case "none":
+			case "":
 				if ( Len( arguments.value ?: "" ) ) {
 					return arguments.value;
 				}
 				return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
-			case "none":
-			case "":
-				return arguments.value;
 		}
 
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
