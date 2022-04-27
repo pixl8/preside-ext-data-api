@@ -279,12 +279,28 @@ component {
 		}
 
 		var records   = dao.selectData( argumentCollection=args );
-		var processed = [];
 
-		for( var record in records ) {
-			processed.append( _processFields( record, fieldSettings ) );
+		var event               = $getRequestContext();
+		var cacheKey =		event.getValue( name="cacheKey", default ="", private=true );
+		var cachedProcessed=		queryCache.get( "dataApi_#cacheKey#" );
+
+		var getFromCache =		false;
+		if ( !IsNull( local.cachedProcessed ) ) {
+			getFromCache = true
 		}
-		$announceInterception( "postDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity, data=processed } );
+
+		getFromCache = getFromCache && event.getValue( name="getFromCache", default =false, private=true );
+
+		if(getFromCache){
+			var processed =	local.cachedProcessed;
+		}else{
+			var processed = [];
+			for( var record in records ) {
+				processed.append( _processFields( record, fieldSettings ) );
+			}
+			$announceInterception( "postDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity, data=processed } );
+			queryCache.set( "dataApi_#cacheKey#", processed);
+		}
 
 		return processed;
 	}

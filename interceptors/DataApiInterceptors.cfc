@@ -165,4 +165,21 @@ component extends="coldbox.system.Interceptor" {
 
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
 	}
+
+
+
+	public void function onCreateSelectDataCacheKey( event, interceptData ) {
+		if ( !_applicationLoaded ) return;
+
+		var objectName = interceptData.objectName ?: "";
+		event.setValue( name="cacheKey", value=interceptData.cacheKey ?: "", private=true );
+		event.setValue( name="getFromCache", value=false, private=true );
+
+		var cachedResult = queryCache.get( interceptData.cacheKey );
+			//writeDump(interceptData);abort;
+		if ( !IsNull( local.cachedResult ) ) {
+				event.setValue( name="getFromCache", value=true, private=true );
+		}
+	}
+
 }
