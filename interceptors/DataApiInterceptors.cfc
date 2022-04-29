@@ -4,6 +4,7 @@ component extends="coldbox.system.Interceptor" {
 	property name="dataApiQueueService"         inject="delayedInjector:dataApiQueueService";
 	property name="dataApiConfigurationService" inject="delayedInjector:dataApiConfigurationService";
 	property name="interceptorService"          inject="coldbox:InterceptorService";
+	property name="queryCache"                         inject="cachebox:DefaultQueryCache";
 
 	variables._applicationLoaded = false;
 
@@ -176,9 +177,8 @@ component extends="coldbox.system.Interceptor" {
 		event.setValue( name="getFromCache", value=false, private=true );
 
 		var cachedResult = queryCache.get( interceptData.cacheKey );
-			//writeDump(interceptData);abort;
 		if ( !IsNull( local.cachedResult ) ) {
-				event.setValue( name="getFromCache", value=true, private=true );
+			event.setValue( name="getFromCache", value=true, private=true );
 		}
 	}
 
