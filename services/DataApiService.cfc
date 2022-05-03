@@ -282,14 +282,14 @@ component {
 
 		var event               = $getRequestContext();
 		var cacheKey =		event.getValue( name="cacheKey", default ="", private=true );
+		var useCache =		event.getValue( name="#objectName#_useCache", default =false, private=true );
 		var cachedProcessed=		queryCache.get( "dataApi_#cacheKey#" );
 
-		var getFromCache =		false;
-		if ( !IsNull( local.cachedProcessed ) ) {
-			getFromCache = true
+		if ( useCache && !IsNull( local.cachedProcessed ) ) {
+			useCache = true
 		}
 
-		getFromCache = getFromCache && event.getValue( name="getFromCache", default =false, private=true );
+		var getFromCache = useCache && event.getValue( name="getFromCache", default =false, private=true );
 
 		if(getFromCache){
 			var processed =	local.cachedProcessed;

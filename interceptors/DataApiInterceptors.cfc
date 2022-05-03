@@ -175,6 +175,7 @@ component extends="coldbox.system.Interceptor" {
 		var objectName = interceptData.objectName ?: "";
 		event.setValue( name="cacheKey", value=interceptData.cacheKey ?: "", private=true );
 		event.setValue( name="getFromCache", value=false, private=true );
+		event.setValue( name="#objectName#_useCache", value=true, private=true );
 
 		var cachedResult = queryCache.get( interceptData.cacheKey );
 		if ( !IsNull( local.cachedResult ) ) {
