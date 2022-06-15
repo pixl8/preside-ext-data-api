@@ -330,7 +330,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.by.id.params.recordId", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
@@ -403,7 +403,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.params.recordId", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
@@ -447,7 +447,7 @@ component {
 							name        = "recordId"
 						  , in          = "path"
 						  , required    = true
-						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.params.queueId", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.params.recordId", defaultValue="", data=[ entitySingular ] ) )
+						  , description = _i18nNamespaced( uri="dataapi:operation.#entityName#.delete.params.recordId", defaultValue=_i18nNamespaced( uri="dataapi:operation.delete.params.recordId", defaultValue="", data=[ entitySingular ] ) )
 						  , schema      = { type="string" }
 					  } ]
 				};
