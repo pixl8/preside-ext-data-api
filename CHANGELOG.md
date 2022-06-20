@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.3.1
+
+* [#61](https://github.com/pixl8/preside-ext-data-api/issues/61) - Fix bad i18n keys being used for documenting field descriptions
+
 ## v3.3.0
 
 * [#58](https://github.com/pixl8/preside-ext-data-api/issues/58) - Return `null` for empty strings and empty numeric field types
