@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.3.2
+
+* [#62](https://github.com/pixl8/preside-ext-data-api/issues/62)- Fix issues with bad content renderers for data with page links
+
 ## v3.3.1
 
 * [#61](https://github.com/pixl8/preside-ext-data-api/issues/61) - Fix bad i18n keys being used for documenting field descriptions

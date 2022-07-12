@@ -6,5 +6,7 @@ component {
 		if ( pageId.len() ) {
 			return event.buildLink( page=pageId );
 		}
+
+		return "";
 	}
 }
