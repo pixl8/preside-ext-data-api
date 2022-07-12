@@ -1,6 +1,6 @@
 component {
 
-	private string function default( event, rc, prc, args={} ){
+	private array function default( event, rc, prc, args={} ){
 		var pages = ListToArray( args.data ?: "" );
 
 		for( var i=1; i<=pages.len(); i++ ) {

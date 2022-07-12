@@ -325,13 +325,19 @@ component {
 		}
 
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
-			var renderedContent = $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
-			if ( Len( renderedContent ?: "" ) ) {
-				return renderedContent;
+			try {
+				var renderedContent = $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
+				if ( Len( renderedContent ?: "" ) ) {
+					return renderedContent;
+				}
+			} catch( any e ) {
+				$raiseError( e );
 			}
-
 		}
 
+		if ( Len( arguments.value ?: "" ) ) {
+			return arguments.value;
+		}
 		return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 	}
 
