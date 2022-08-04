@@ -606,6 +606,9 @@ component {
 				}
 				return "datetime";
 			break;
+			case "time":
+				return "time";
+			break;
 			case "boolean":
 				if ( _isTrue( field.required ?: "" ) ) {
 					return "strictboolean";
