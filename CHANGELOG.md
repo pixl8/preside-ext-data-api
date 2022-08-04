@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.4.0
+
+* Time values now have default formatting of HH:mm
+
 ## v3.3.2
 
 * [#62](https://github.com/pixl8/preside-ext-data-api/issues/62)- Fix issues with bad content renderers for data with page links
