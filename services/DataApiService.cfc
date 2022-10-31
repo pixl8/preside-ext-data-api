@@ -194,6 +194,8 @@ component {
 					, ignoreMissing = arguments.ignoreMissing
 				);
 
+				$announceInterception( "postValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data, validation=validation } );
+
 				if ( validation.validated() ) {
 					result.validationResults.append({
 						  record        = record
@@ -218,11 +220,15 @@ component {
 		var prepped = _prepRecordForInsertAndUpdate( arguments.entity, arguments.data, arguments.isUpdate );
 		$announceInterception( "preValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data } );
 
-		return _translateValidationErrors( $getValidationEngine().validate(
+		var validation = $getValidationEngine().validate(
 			  ruleset       = ruleset
 			, data          = prepped
 			, ignoreMissing = arguments.ignoreMissing
-		) );
+		);
+
+		$announceInterception( "postValidateUpsertData#namespace#", { validateUpsertDataArgs=prepped, entity=arguments.entity, data=arguments.data, validation=validation } );
+
+		return _translateValidationErrors( validation );
 	}
 
 	public string function i18nNamespaced(
