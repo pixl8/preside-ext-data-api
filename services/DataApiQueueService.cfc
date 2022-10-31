@@ -259,45 +259,31 @@ component {
 				if ( !configService.objectIsApiEnabled( objectName, namespace ) || !configService.isObjectQueueEnabled( objectName, namespace ) ) {
 					continue;
 				}
-				var subscribers = getSubscribers( arguments.objectName, "delete", namespace );
 
-				if ( subscribers.len() ) {
-					var queueSettings = configService.getQueueForObject( objectName, namespace );
-					var dao = $getPresideObject( "data_api_queue" );
-					for( var subscriber in subscribers ) {
-						var deletedInserts = !queueSettings.atomicChanges && dao.deleteData( filter = {
-							  is_checked_out = false
-							, subscriber     = subscriber
-							, namespace      = namespace
-							, queue_name     = queueSettings.name
-							, operation      = "insert"
-							, object_name    = arguments.objectName
-							, record_id      = arguments.id
-						} );
+				var dao           = $getPresideObject( "data_api_queue" );
+				var queueSettings = configService.getQueueForObject( objectName, namespace );
+				var subscribers   = getSubscribers( arguments.objectName, "delete", namespace );
 
-						if ( !deletedInserts ) {
-							dao.insertData( {
-								  object_name = arguments.objectName
-								, record_id   = arguments.id
-								, subscriber  = subscriber
-								, namespace   = namespace
-								, queue_name  = queueSettings.name
-								, operation   = "delete"
-							} );
+				for( var subscriber in subscribers ) {
+					dao.insertData( {
+						  object_name = arguments.objectName
+						, record_id   = arguments.id
+						, subscriber  = subscriber
+						, namespace   = namespace
+						, queue_name  = queueSettings.name
+						, operation   = "delete"
+					} );
+				}
 
-							if ( !queueSettings.atomicChanges ) {
-								dao.deleteData( filter = {
-									  is_checked_out = false
-									, subscriber     = subscriber
-									, namespace      = namespace
-									, queue_name     = queueSettings.name
-									, operation      = "update"
-									, object_name    = arguments.objectName
-									, record_id      = arguments.id
-								} );
-							}
-						}
-					}
+				if ( !queueSettings.atomicChanges ) {
+					dao.deleteData( filter = {
+						  is_checked_out = false
+						, namespace      = namespace
+						, queue_name     = queueSettings.name
+						, operation      = [ "update", "insert" ]
+						, object_name    = arguments.objectName
+						, record_id      = arguments.id
+					} );
 				}
 			}
 		}
