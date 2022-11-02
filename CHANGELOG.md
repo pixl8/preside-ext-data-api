@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.5.0
+
+* [#64](https://github.com/pixl8/preside-ext-data-api/issues/64) Change to way delete operations queue when there are outstanding insert/update operations in the queue
+* [#67](https://github.com/pixl8/preside-ext-data-api/issues/67) New `postValidateUpsertData` interception point
+
 ## v3.4.0
 
 * Time values now have default formatting of HH:mm

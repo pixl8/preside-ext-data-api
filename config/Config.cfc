@@ -54,6 +54,7 @@ component {
 			, "preDataApiSelectData"
 			, "postDataApiSelectData"
 			, "preValidateUpsertData"
+			, "postValidateUpsertData"
 		];
 		conf.interceptorSettings.customInterceptionPoints.append( conf.settings.dataApiInterceptionPoints, true );
 	}
