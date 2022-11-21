@@ -302,6 +302,8 @@ component {
 			var renderer = fieldSettings[ field ].renderer ?: "none";
 			var alias    = fieldSettings[ field ].alias ?: field;
 
+			fieldSettings[ field ].record = record;
+
 			processed[ alias ] = _renderField( record[ field ], renderer, fieldSettings[ field ] );
 		}
 
