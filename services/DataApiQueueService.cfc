@@ -348,15 +348,22 @@ component {
 	){
 		var values = [];
 
-		arguments.selectFields = [ "id" ];
+		if ( queueRequired( arguments.objectName ) ) {
+			var po = $getPresideObject( arguments.objectName );
+			var idField = po.getIdField();
 
-		try{
-			var queuedObj = $getPresideObject( objectName ).selectData( argumentCollection=arguments );
-			if( queuedObj.recordcount ) {
-				values = valueArray( queuedObj, "id" );
+			if ( Len( idField ) ) {
+				arguments.selectFields = [ idField ];
+
+				try {
+					var records = po.selectData( argumentCollection=arguments );
+					if ( records.recordcount ) {
+						values = QueryColumnData( records, idField );
+					}
+				} catch( any e ) {
+					values = [];
+				}
 			}
-		} catch( any e ) {
-			values = [];
 		}
 
 		return values;

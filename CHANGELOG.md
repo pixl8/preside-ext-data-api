@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.2
+
+* [#68](https://github.com/pixl8/preside-ext-data-api/issues/68) Fix for issue where background errors recorded when deleting records without an id field
+
 ## v3.5.1
 
 * [DATAAPI-16](https://projects.pixl8.london/browse/DATAAPI-16) - Pass complete record through to renderer
