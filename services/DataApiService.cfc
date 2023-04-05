@@ -278,6 +278,10 @@ component {
 			return dao.selectData( argumentCollection=args );
 		}
 
+		if ( !ArrayLen( args.selectFields ) ) {
+			throw( "Invaid select field" );
+		}
+
 		var records   = dao.selectData( argumentCollection=args );
 		var processed = [];
 
