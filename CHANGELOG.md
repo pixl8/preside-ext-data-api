@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.2.1
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.2.0
 
 * Add `dataApiIgnoreDefaultFilters` feature
