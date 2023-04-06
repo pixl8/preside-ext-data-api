@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.3.3
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.3.2
 
 * [#62](https://github.com/pixl8/preside-ext-data-api/issues/62)- Fix issues with bad content renderers for data with page links
