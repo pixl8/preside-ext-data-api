@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.4.1
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.4.0
 
 * Time values now have default formatting of HH:mm
