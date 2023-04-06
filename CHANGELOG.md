@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.4
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.1.3
 
 * Add property’s name to data returned by field settings
