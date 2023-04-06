@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.3
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.5.2
 
 * [#68](https://github.com/pixl8/preside-ext-data-api/issues/68) Fix for issue where background errors recorded when deleting records without an id field
