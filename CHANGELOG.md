@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.23
+
+* [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
+
 ## v3.0.22
 
 * Explicitly pass args through to documentation view (Preside 10.14 compatibility)
