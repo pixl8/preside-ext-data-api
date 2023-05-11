@@ -1,3 +1,6 @@
+/**
+ * @singleton
+ */
 component {
 
 	public string function renderHighlights( required string text ) {
