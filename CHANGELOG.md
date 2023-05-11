@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.5
+
+* [#71](https://github.com/pixl8/preside-ext-data-api/issues/71) Remove unecessary helper methods
+* [#72](https://github.com/pixl8/preside-ext-data-api/issues/72) Make HtmlDocumentationSyntaxHighlighter a singleton
+
 ## v3.1.4
 
 * [#70](https://github.com/pixl8/preside-ext-data-api/issues/70) API call returns all fields when only invalid fields provided in fields parameter
