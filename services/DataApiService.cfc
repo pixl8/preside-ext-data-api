@@ -336,6 +336,10 @@ component {
 				return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 		}
 
+		if ( !Len( arguments.value ?: "" ) ) {
+			return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
+		}
+
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
 			try {
 				var renderedContent = $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
