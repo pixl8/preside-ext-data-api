@@ -127,13 +127,13 @@ component {
 		} );
 	}
 
-	public array function getEntityFormulaFields( required string entity, boolean aliases=false ) {
+	public array function getEntityGeneratedFields( required string entity, boolean aliases=false ) {
 		var args     = arguments;
-		var cacheKey = "getEntityFormulaFields" & _getDataApiNamespace() & args.entity & args.aliases;
+		var cacheKey = "getEntityGeneratedFields" & _getDataApiNamespace() & args.entity & args.aliases;
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities = getEntities();
-			var fields   = entities[ args.entity ].formulaFields ?: [];
+			var fields   = entities[ args.entity ].generatedFields ?: [];
 
 			if ( !args.aliases ) {
 				return fields;
@@ -256,8 +256,8 @@ component {
 
 					entities[ entityName ].upsertFields = _cleanupUpsertFields( objectName, entities[ entityName ].upsertFields, entities[ entityName ].allowIdInsert );
 
-					if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
-						entities[ entityName ].formulaFields = _formulaFields( objectName, namespace );
+					if ( $isFeatureEnabled( "dataApiGeneratedFieldsForAtomic" ) ) {
+						entities[ entityName ].generatedFields = _generatedFields( objectName, namespace );
 					}
 
 					if ( excludeFields.len() ) {
@@ -673,13 +673,15 @@ component {
 		return fields;
 	}
 
-	private array function _formulaFields( required string objectName, required string namespace ) {
+	private array function _generatedFields( required string objectName, required string namespace ) {
 		var props          = $getPresideObjectService().getObjectProperties( arguments.objectName );
 		var propEnabledKey = "dataApiEnabled#arguments.namespace#";
 		var fields         = [];
 
 		for( var fieldName in props ) {
-			if ( len( trim( props[ fieldName ].formula ?: "" ) ) && ( !isBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) || !props[ fieldName ][ propEnabledKey ] ) ) {
+			if ( ( len( trim( props[ fieldName ].formula ?: "" ) ) || len( trim( props[ fieldName ].default ?: "" ) ) ) &&
+				 ( !isBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) || !props[ fieldName ][ propEnabledKey ] )
+			) {
 				arrayAppend( fields, fieldName );
 			}
 		}
