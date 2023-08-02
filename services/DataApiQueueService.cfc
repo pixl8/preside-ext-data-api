@@ -72,7 +72,17 @@ component {
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
 							try {
-								dataEntry.record = _aliasFields( record.object_name, DeserializeJson( record.data ) );
+								var recordData = deserializeJson( record.data );
+
+								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
+									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
+
+									if ( arrayLen( formulaFields ) ) {
+										structAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ) );
+									}
+								}
+
+								dataEntry.record = _aliasFields( record.object_name, recordData );
 							} catch( any e ) {
 								dataEntry.record = record.data;
 							}
@@ -391,7 +401,7 @@ component {
 		var configService = _getConfigService();
 		for( var key in arguments.data ) {
 			var alias = configService.getAliasForPropertyName( arguments.objectName, key );
-			aliased[ alias ] = arguments.data[ key ];
+			aliased[ alias ] = arguments.data[ key ] ?: nullValue();
 		}
 
 		return aliased;
