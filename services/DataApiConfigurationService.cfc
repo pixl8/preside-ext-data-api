@@ -142,7 +142,7 @@ component {
 			var aliases       = [];
 			var fieldSettings = getFieldSettings( args.entity );
 			for( var field in fields ) {
-				aliases.append( fieldSettings[ field ].alias ?: field );
+				ArrayAppend( aliases, fieldSettings[ field ].alias ?: field );
 			}
 			return aliases;
 		} );

@@ -53,7 +53,7 @@ component {
 
 				switch( record.operation ) {
 					case "delete":
-						returnStruct.data.append( {
+						StructAppend( returnStruct.data, {
 							  operation = "delete"
 							, entity    = entity
 							, recordId  = record.record_id
@@ -72,13 +72,13 @@ component {
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
 							try {
-								var recordData = deserializeJson( record.data );
+								var recordData = DeserializeJson( record.data );
 
 								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
 									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
 
-									if ( arrayLen( formulaFields ) ) {
-										structAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ), false );
+									if ( ArrayLen( formulaFields ) ) {
+										StructAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ), false );
 									}
 								}
 
@@ -89,7 +89,7 @@ component {
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
 						}
-						returnStruct.data.append( dataEntry );
+						StructAppend( returnStruct.data, dataEntry );
 				}
 			}
 		}
