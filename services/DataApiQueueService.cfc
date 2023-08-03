@@ -53,7 +53,7 @@ component {
 
 				switch( record.operation ) {
 					case "delete":
-						returnStruct.data.append( {
+						StructAppend( returnStruct.data, {
 							  operation = "delete"
 							, entity    = entity
 							, recordId  = record.record_id
@@ -72,14 +72,24 @@ component {
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
 							try {
-								dataEntry.record = _aliasFields( record.object_name, DeserializeJson( record.data ) );
+								var recordData = DeserializeJson( record.data );
+
+								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
+									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
+
+									if ( ArrayLen( formulaFields ) ) {
+										StructAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ), false );
+									}
+								}
+
+								dataEntry.record = _aliasFields( record.object_name, recordData );
 							} catch( any e ) {
 								dataEntry.record = record.data;
 							}
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
 						}
-						returnStruct.data.append( dataEntry );
+						StructAppend( returnStruct.data, dataEntry );
 				}
 			}
 		}
@@ -391,7 +401,7 @@ component {
 		var configService = _getConfigService();
 		for( var key in arguments.data ) {
 			var alias = configService.getAliasForPropertyName( arguments.objectName, key );
-			aliased[ alias ] = arguments.data[ key ];
+			aliased[ alias ] = arguments.data[ key ] ?: nullValue();
 		}
 
 		return aliased;

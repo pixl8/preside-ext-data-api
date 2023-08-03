@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.5
+
+* [#73](https://github.com/pixl8/preside-ext-data-api/issues/73) Exit early from field rendering to avoid needless handler invocation
+
 ## v3.5.4
 
 * [#71](https://github.com/pixl8/preside-ext-data-api/issues/71) Remove unecessary helper methods
