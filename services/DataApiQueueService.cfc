@@ -74,8 +74,8 @@ component {
 							try {
 								var recordData = deserializeJson( record.data );
 
-								if ( $isFeatureEnabled( "dataApiGeneratedFieldsForAtomic" ) ) {
-									var formulaFields = configSvc.getEntityGeneratedFields( entity=entity );
+								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
+									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
 
 									if ( arrayLen( formulaFields ) ) {
 										structAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ), false );
