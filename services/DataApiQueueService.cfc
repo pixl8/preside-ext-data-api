@@ -53,7 +53,7 @@ component {
 
 				switch( record.operation ) {
 					case "delete":
-						StructAppend( returnStruct.data, {
+						ArrayAppend( returnStruct.data, {
 							  operation = "delete"
 							, entity    = entity
 							, recordId  = record.record_id
@@ -89,7 +89,7 @@ component {
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
 						}
-						StructAppend( returnStruct.data, dataEntry );
+						ArrayAppend( returnStruct.data, dataEntry );
 				}
 			}
 		}
@@ -194,7 +194,7 @@ component {
 				if ( isEmpty( subscribers ) ) {
 					continue;
 				}
-				
+
 				var queueSettings = configService.getQueueForObject( objectName, namespace );
 				var dao = $getPresideObject( "data_api_queue" );
 				var objDao = $getPresideObject( objectName );
@@ -205,13 +205,13 @@ component {
 					if ( savedFilters.len() && !objDao.dataExists( id=recordId, savedFilters=savedFilters ) ) {
 						continue;
 					}
-					
+
 					var relevantRecordFieldChanges = _calculateRelevantFieldChanges( entity=objEntity, namespace=namespace, changedFields=actualChanges[ recordId ] );
-					
+
 					if ( isEmpty( relevantRecordFieldChanges ) ) {
 						continue;
 					}
-					
+
 					for( var subscriber in subscribers ) {
 
 						var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
@@ -406,23 +406,23 @@ component {
 
 		return aliased;
 	}
-	
+
 	private struct function _calculateRelevantFieldChanges( required string entity, required string namespace, required struct changedFields ) {
-	
+
 		var relevantFields = _getConfigService().getRelevantQueueFields( entity=arguments.entity, namespace=arguments.namespace );
-		
+
 		if ( isEmpty( relevantFields ) ) {
 			return arguments.changedFields;
 		}
-		
+
 		var relevantChangedFields = {};
-		
+
 		for ( var field in arguments.changedFields ) {
 			if ( relevantFields.findNoCase( field ) ) {
 				relevantChangedFields[ field ] = arguments.changedFields[ field ];
 			}
 		}
-		
+
 		return relevantChangedFields;
 	}
 
