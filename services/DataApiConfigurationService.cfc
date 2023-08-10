@@ -679,9 +679,15 @@ component {
 		var fields         = [];
 
 		for( var fieldName in props ) {
-			if ( ( len( trim( props[ fieldName ].formula ?: "" ) ) || len( trim( props[ fieldName ].default ?: "" ) ) ) &&
-				 ( !isBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) || !props[ fieldName ][ propEnabledKey ] )
-			) {
+			var isFormulaFields = Len( Trim( props[ fieldName ].formula  ?: "" ) ) ||
+			                      Len( Trim( props[ fieldName ].default  ?: "" ) ) ||
+			                      (
+			                           Len( Trim( props[ fieldName ].generate ?: "" ) ) &&
+			                           ArrayFindNoCase( [ "insert", "always" ], props[ fieldName ].generate ) &&
+			                           !ArrayFindNoCase( [ "UUID", "none" ], props[ fieldName ].generator ?: "" )
+			                      );
+
+			if ( isFormulaFields && ( !isBoolean( props[ fieldName ][ propEnabledKey ] ?: "" ) || !props[ fieldName ][ propEnabledKey ] ) ) {
 				arrayAppend( fields, fieldName );
 			}
 		}
