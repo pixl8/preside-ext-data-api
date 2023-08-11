@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.6
+
+* Queue with atomic changes do not include default value or generated value fields for INSERT
+* Update twgit release version generator
+
 ## v3.1.5
 
 * [#71](https://github.com/pixl8/preside-ext-data-api/issues/71) Remove unecessary helper methods
