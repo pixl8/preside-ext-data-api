@@ -53,7 +53,7 @@ component {
 
 				switch( record.operation ) {
 					case "delete":
-						returnStruct.data.append( {
+						ArrayAppend( returnStruct.data, {
 							  operation = "delete"
 							, entity    = entity
 							, recordId  = record.record_id
@@ -72,14 +72,24 @@ component {
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
 							try {
-								dataEntry.record = _aliasFields( record.object_name, DeserializeJson( record.data ) );
+								var recordData = DeserializeJson( record.data );
+
+								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
+									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
+
+									if ( ArrayLen( formulaFields ) ) {
+										StructAppend( recordData, apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=formulaFields ), false );
+									}
+								}
+
+								dataEntry.record = _aliasFields( record.object_name, recordData );
 							} catch( any e ) {
 								dataEntry.record = record.data;
 							}
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
 						}
-						returnStruct.data.append( dataEntry );
+						ArrayAppend( returnStruct.data, dataEntry );
 				}
 			}
 		}
@@ -184,7 +194,7 @@ component {
 				if ( isEmpty( subscribers ) ) {
 					continue;
 				}
-				
+
 				var queueSettings = configService.getQueueForObject( objectName, namespace );
 				var dao = $getPresideObject( "data_api_queue" );
 				var objDao = $getPresideObject( objectName );
@@ -195,13 +205,13 @@ component {
 					if ( savedFilters.len() && !objDao.dataExists( id=recordId, savedFilters=savedFilters ) ) {
 						continue;
 					}
-					
+
 					var relevantRecordFieldChanges = _calculateRelevantFieldChanges( entity=objEntity, namespace=namespace, changedFields=actualChanges[ recordId ] );
-					
+
 					if ( isEmpty( relevantRecordFieldChanges ) ) {
 						continue;
 					}
-					
+
 					for( var subscriber in subscribers ) {
 
 						var alreadyQueued = !queueSettings.atomicChanges && dao.dataExists( filter={
@@ -391,28 +401,28 @@ component {
 		var configService = _getConfigService();
 		for( var key in arguments.data ) {
 			var alias = configService.getAliasForPropertyName( arguments.objectName, key );
-			aliased[ alias ] = arguments.data[ key ];
+			aliased[ alias ] = arguments.data[ key ] ?: nullValue();
 		}
 
 		return aliased;
 	}
-	
+
 	private struct function _calculateRelevantFieldChanges( required string entity, required string namespace, required struct changedFields ) {
-	
+
 		var relevantFields = _getConfigService().getRelevantQueueFields( entity=arguments.entity, namespace=arguments.namespace );
-		
+
 		if ( isEmpty( relevantFields ) ) {
 			return arguments.changedFields;
 		}
-		
+
 		var relevantChangedFields = {};
-		
+
 		for ( var field in arguments.changedFields ) {
 			if ( relevantFields.findNoCase( field ) ) {
 				relevantChangedFields[ field ] = arguments.changedFields[ field ];
 			}
 		}
-		
+
 		return relevantChangedFields;
 	}
 
