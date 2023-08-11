@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.5.6
+
+* Queue with atomic changes do not include default value or generated value fields for INSERT
+* Update twgit release version generator
+
 ## v3.5.5
 
 * [#73](https://github.com/pixl8/preside-ext-data-api/issues/73) Exit early from field rendering to avoid needless handler invocation
