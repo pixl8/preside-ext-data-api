@@ -360,16 +360,17 @@ component {
 	private array function _prepareSelectFields( required string entity, required string objectName, required array defaultFields, required array suppliedFields ) {
 		var filtered = [];
 		var props    = $getPresideObjectService().getObjectProperties( arguments.objectName );
+		var idField  = $getPresideObjectService().getIdField( arguments.objectName );
 
-		if ( !suppliedFields.len() ) {
+		if ( ArrayIsEmpty( suppliedFields ) ) {
 			filtered = arguments.defaultFields;
 		} else {
 			for( var field in suppliedFields ) {
 				var propName = _getConfigService().getPropertyNameFromFieldAlias( arguments.entity, field );
-				if ( defaultFields.find( LCase( field ) ) ) {
-					filtered.append( field );
-				} else if ( defaultFields.find( LCase( propName ) ) ) {
-					filtered.append( propName );
+				if ( ArrayFind( defaultFields, LCase( field ) ) ) {
+					ArrayAppend( filtered, field );
+				} else if ( ArrayFind( defaultFields, LCase( propName ) ) ) {
+					ArrayAppend( filtered, propName );
 				}
 			}
 		}
@@ -377,10 +378,14 @@ component {
 		var prepared = [];
 		for( var field in filtered ) {
 			if ( ( props[ field ].relationship ?: "" ) == "many-to-many" ) {
-				prepared.append( "group_concat( distinct `#field#`.`id` ) as `#field#`" );
+				ArrayAppend( prepared, "group_concat( distinct `#field#`.`id` ) as `#field#`" );
 			} else {
-				prepared.append( field );
+				ArrayAppend( prepared, field );
 			}
+		}
+
+		if ( !ArrayFindNoCase( prepared, idField ) ) {
+			ArrayPrepend( prepared, idField );
 		}
 
 		return prepared;
