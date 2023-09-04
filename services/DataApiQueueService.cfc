@@ -84,7 +84,7 @@ component {
 
 								dataEntry.record = _aliasFields( record.object_name, recordData );
 							} catch( any e ) {
-								dataEntry.record = record.data;
+								dataEntry.record = isStruct( recordData ?: "" ) ? _aliasFields( record.object_name, recordData ) : record.data;
 							}
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
