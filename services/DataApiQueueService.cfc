@@ -71,9 +71,9 @@ component {
 							, timestamp = _unixTimestamp( record.dateCreated )
 						};
 						if ( queueSettings.atomicChanges && Len( Trim( record.data ) ) ) {
-							try {
-								var recordData = DeserializeJson( record.data );
+							var recordData = IsJson( record.data ) ? DeserializeJson( record.data ) : record.data;
 
+							if ( IsStruct( recordData ) ) {
 								if ( $isFeatureEnabled( "dataApiFormulaFieldsForAtomic" ) ) {
 									var formulaFields = configSvc.getEntityFormulaFields( entity=entity );
 
@@ -83,8 +83,8 @@ component {
 								}
 
 								dataEntry.record = _aliasFields( record.object_name, recordData );
-							} catch( any e ) {
-								dataEntry.record = isStruct( recordData ?: "" ) ? _aliasFields( record.object_name, recordData ) : record.data;
+							} else {
+								dataEntry.record = recordData;
 							}
 						} else {
 							dataEntry.record = apiSvc.getSingleRecord( entity=entity, recordId=record.record_id, fields=[] )
