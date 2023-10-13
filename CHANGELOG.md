@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.5.7
+
+* Always return id field in entity GETs
+* Stop silent try/catch that could lead to inconsistent return form of atomic data api queue items
+
 ## v3.5.6
 
 * Queue with atomic changes do not include default value or generated value fields for INSERT
