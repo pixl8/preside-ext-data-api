@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.8
+
+* Validated data not passed through on update single record - PUT
+
 ## v3.5.7
 
 * Always return id field in entity GETs

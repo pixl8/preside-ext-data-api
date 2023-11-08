@@ -74,7 +74,7 @@ component {
 		var updated = dataApiService.updateSingleRecord(
 			  entity   = entity
 			, recordId = recordId
-			, data     = body
+			, data     = validationData
 		);
 
 		if ( updated ) {
