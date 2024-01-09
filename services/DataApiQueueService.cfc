@@ -174,8 +174,9 @@ component {
 			var actualChanges = {};
 
 			for( var recordId in arguments.changedData ) {
-				if ( arguments.changedData[ recordId ].count() ) {
-					actualChanges[ recordId ] = arguments.changedData[ recordId ];
+				var recordChanges = arguments.changedData[ recordId ];
+				if ( isStruct( recordChanges ) && !structIsEmpty( recordChanges ) ) {
+					actualChanges[ recordId ] = recordChanges;
 				}
 			}
 
