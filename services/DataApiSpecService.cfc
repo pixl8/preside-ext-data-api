@@ -72,7 +72,7 @@ component {
 			  , version     = _i18nNamespaced( uri="dataapi:api.version" )
 			  , "x-favicon" = _i18nNamespaced( uri="dataapi:api.favicon", defaultValue="" )
 		};
-		spec.servers    = [ { url="#protocol#://#domain#/api#route#" } ];
+		spec.servers    = [ { url="#protocol#://#domain#/api#ReReplace( route, "/docs$", "" )#" } ];
 		spec.components = {
 			  schemas         = {}
 			, headers         = {}
