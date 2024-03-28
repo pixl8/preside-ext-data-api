@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.3.6
+
+* [DATAAPI-27](https://projects.pixl8.london/browse/DATAAPI-27) - Function count does not exist in the object
+* [DATAAPI-28](https://projects.pixl8.london/browse/DATAAPI-28) - Swagger docs expand api to invalid endpoint url
+
 ## v3.3.5
 
 * Queue with atomic changes do not include default value or generated value fields for INSERT
