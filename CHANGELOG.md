@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.25
+
+* [DATAAPI-27](https://projects.pixl8.london/browse/DATAAPI-27) - Function count does not exist in the object
+* [DATAAPI-28](https://projects.pixl8.london/browse/DATAAPI-28) - Swagger docs expand api to invalid endpoint url
+
 ## v3.0.24
 
 * [#71](https://github.com/pixl8/preside-ext-data-api/issues/71) Remove unecessary helper methods
