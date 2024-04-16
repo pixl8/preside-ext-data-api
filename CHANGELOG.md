@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.10
+
+* Add flag option to allow renderers to process empty values (fix for certain implementations with changes made in 3.5.5)
+
 ## v3.5.9
 
 * [DATAAPI-27](https://projects.pixl8.london/browse/DATAAPI-27) - Function count does not exist in the object
