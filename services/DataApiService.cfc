@@ -336,7 +336,7 @@ component {
 				return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 		}
 
-		if ( !Len( arguments.value ?: "" ) ) {
+		if ( !Len( arguments.value ?: "" ) && !arguments.fieldSettings.renderEmptyValues ) {
 			return $isFeatureEnabled( "dataApiUseNullForStrings" )  ? NullValue() : "";
 		}
 
