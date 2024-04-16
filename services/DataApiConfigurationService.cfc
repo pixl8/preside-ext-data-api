@@ -199,14 +199,16 @@ component {
 
 			for( var field in props ) {
 				fieldSettings[ field ] = {
-					  alias             = props[ field ][ "dataApiAlias#namespace#"      ] ?: field
-					, renderer          = props[ field ][ "dataApiRenderer#namespace#"   ] ?: _getDefaultRendererForField( props[ field ] ?: {} )
-					, renderEmptyValues = props[ field ][ "dataApiRenderEmptyValues#namespace#"   ] ?: false
-					, type              = props[ field ][ "dataApiType#namespace#"       ] ?: ""
-					, format            = props[ field ][ "dataApiFormat#namespace#"     ] ?: ""
-					, derivative        = props[ field ][ "dataApiDerivative#namespace#" ] ?: ""
+					  alias             = props[ field ][ "dataApiAlias#namespace#"             ] ?: field
+					, renderer          = props[ field ][ "dataApiRenderer#namespace#"          ] ?: _getDefaultRendererForField( props[ field ] ?: {} )
+					, renderEmptyValues = props[ field ][ "dataApiRenderEmptyValues#namespace#" ] ?: false
+					, type              = props[ field ][ "dataApiType#namespace#"              ] ?: ""
+					, format            = props[ field ][ "dataApiFormat#namespace#"            ] ?: ""
+					, derivative        = props[ field ][ "dataApiDerivative#namespace#"        ] ?: ""
 					, name              = field
 				};
+
+				fieldSettings[ field ].renderEmptyValues = IsBoolean( fieldSettings[ field ].renderEmptyValues ) && fieldSettings[ field ].renderEmptyValues;
 			}
 
 			return fieldSettings;
