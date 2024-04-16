@@ -63,6 +63,7 @@ Object properties support the following _optional_ annotations:
 * `dataApiFormat`: For the documentation. The format for the property, e.g. 'Email address'.
 * `dataApiEnabled`: Whether or not this property should be included in the API
 * `dataApiUpsertEnabled`: Whether or not this property should be included in the POST/PUT operations.
+* `dataApiRenderEmptyValues`: Whether to force always calling a custom render when the value being processed is empty or null
 
 ## Custom renderers
 
@@ -71,6 +72,8 @@ If you specify a non-default renderer for an object property, it will be rendere
 ```
 property name="my_prop" dataApiAlias="myProp" dataApiRenderer="myCustomRenderer";
 ```
+
+By default for performance reasons, empty/null values are skipped, to force always calling the custom renderer, set the following property `dataApiRenderEmptyValues=true`.
 
 To implement this, you will need a corresponding _viewlet_ at `renderers.content.myCustomRenderer.dataapi` **or** `renderers.content.myCustomRenderer.default` (a renderer _context_ of `dataapi` will be used and the system will fallback to the default renderer if that context is not implemented).
 
