@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.5.11
+
+* [#83](https://github.com/pixl8/preside-ext-data-api/issues/83) Fix sort order in docs
+* [#84](https://github.com/pixl8/preside-ext-data-api/issues/84) Minimize database table generation based on feature flags
+
 ## v3.5.10
 
 * Add flag option to allow renderers to process empty values (fix for certain implementations with changes made in 3.5.5)
