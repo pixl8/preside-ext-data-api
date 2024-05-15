@@ -1,6 +1,7 @@
 /**
  * @versioned false
  * @nolabel   true
+ * @feature   restTokenAuth
  */
 component {
 	property name="user" relatedto="rest_user" relationship="many-to-one" required=true uniqueindexes="userobject|1";

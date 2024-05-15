@@ -15,7 +15,7 @@ component {
 		settings.features.apiManager.enabled    = true;
 		settings.features.restTokenAuth.enabled = true;
 
-		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true };
+		settings.features.dataApiQueue = settings.features.dataApiQueue ?: { enabled=true, dependsOn=[ "restTokenAuth" ] };
 		settings.features.dataApiUseNullForNumerics     = settings.features.dataApiUseNullForNumerics     ?: { enabled=true };
 		settings.features.dataApiUseNullForStrings      = settings.features.dataApiUseNullForStrings      ?: { enabled=true };
 		settings.features.dataApiFormulaFieldsForAtomic = settings.features.dataApiFormulaFieldsForAtomic ?: { enabled=true };
