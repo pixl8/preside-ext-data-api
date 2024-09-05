@@ -574,6 +574,21 @@ component {
 		} );
 	}
 
+	public boolean function isObjectQueueDeleteDetailEnabled( required string objectName, string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "isObjectQueueDeleteDetailEnabled-#arguments.objectName#-#arguments.namespace#";
+
+		return _simpleLocalCache( cacheKey, function(){
+			if ( !isObjectQueueEnabled( args.objectName, args.namespace ) ) {
+				return false;
+			}
+
+			var queueDeleteDetailEnabled = $getPresideObjectService().getObjectAttribute( args.objectName, "dataApiQueueDeleteDetail#_getNamespaceWithSeparator( args.namespace )#" );
+
+			return _isTrue( queueDeleteDetailEnabled );
+		} );
+	}
+
 	public struct function getDefaultQueueConfig() {
 		return {
 			  name          = ""
