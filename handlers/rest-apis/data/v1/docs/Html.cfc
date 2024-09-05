@@ -15,12 +15,7 @@ component {
 
 		args.spec = variables[ "_spec#api#" ];
 
-try {
-
 		restResponse.setData( Trim( renderView( view="/dataApiHtmlDocs/index", args=args ) ) );
-} catch( any e ) {
-	WriteDump( e ); abort;
-}
 		restResponse.setMimeType( "text/html" );
 		restResponse.setRenderer( "html" );
 	}

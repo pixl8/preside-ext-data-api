@@ -3,6 +3,7 @@ component extends="coldbox.system.Interceptor" {
 	property name="dataApiService"              inject="delayedInjector:dataApiService";
 	property name="dataApiQueueService"         inject="delayedInjector:dataApiQueueService";
 	property name="dataApiConfigurationService" inject="delayedInjector:dataApiConfigurationService";
+	property name="presideObjectService"        inject="delayedInjector:presideObjectService";
 	property name="interceptorService"          inject="coldbox:InterceptorService";
 
 	variables._applicationLoaded = false;
@@ -116,6 +117,22 @@ component extends="coldbox.system.Interceptor" {
 
 		if( isEmptyString( interceptData.id ?: "" ) ){
 			interceptData.deletedIds = dataApiQueueService.getDeletedRecordIds( argumentCollection = interceptData );
+
+			if ( ArrayLen( interceptData.deletedIds ) && dataApiConfigurationService.isObjectQueueDeleteDetailEnabled( objectName=interceptData.objectName ) ) {
+				var deletedQuery = presideObjectService.selectData(
+					  objectName   = interceptData.objectName
+					, filter       = { id=interceptData.deletedIds }
+					, selectFields = dataApiConfigurationService.getSelectFields( entity=dataApiConfigurationService.getObjectEntity( objectName=interceptData.objectName ) )
+				);
+
+				if ( deletedQuery.recordcount ) {
+					interceptData.deletedRecords = {};
+
+					for ( var row in deletedQuery ) {
+						interceptData.deletedRecords[ row.id ] = row;
+					}
+				}
+			}
 		}
 	}
 

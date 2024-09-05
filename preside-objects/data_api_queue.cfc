@@ -2,6 +2,7 @@
  * @versioned      false
  * @nolabel        true
  * @noDateModified true
+ * @feature        dataApiQueue
  */
 component {
 	property name="object_name"     type="string"  dbtype="varchar" maxlength=100 required=true  indexes="object_name";

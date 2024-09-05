@@ -218,10 +218,7 @@ component {
 					parameters = [{name="queueId", in="path", required=true, description=_i18nNamespaced( "dataapi:operation.queue.delete.params.queueId" ), schema={ type="string" } } ]
 				};
 			}
-
 		}
-
-
 	}
 
 	private void function _addEntitySpecs( required struct spec ) {
@@ -453,9 +450,16 @@ component {
 				};
 			}
 		}
-
 		tags.sort( function( a, b ){
-			return a.name > b.name ? 1 : -1;
+			if ( StructKeyExists( a, "x-sort-order" ) ) {
+				if ( !StructKeyExists( b, "x-sort-order" ) ) {
+					return 1;
+				} else if ( a[ "x-sort-order" ] != b[ "x-sort-order" ] ) {
+					return a[ "x-sort-order" ] > b[ "x-sort-order" ] ? 1 : -1;
+				}
+			}
+
+			return a.name > b.name ? 1 : ( a.name < b.name ? -1 : 0 );
 		} );
 
 		spec.tags.append( tags, true );
