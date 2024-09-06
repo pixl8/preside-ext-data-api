@@ -59,6 +59,7 @@ component {
 							, recordId  = record.record_id
 							, queueId   = record.id
 							, timestamp = _unixTimestamp( record.dateCreated )
+							, record    = IsJson( record.data ) ? DeserializeJson( record.data ) : {}
 						} );
 					break;
 					case "update":
@@ -243,10 +244,11 @@ component {
 	}
 
 	public void function queueDelete(
-		  string objectName = ""
-		, string id         = ""
-		, any    filter     = {}
-		, array  deletedIds = []
+		  string objectName     = ""
+		, string id             = ""
+		, any    filter         = {}
+		, array  deletedIds     = []
+		, struct deletedRecords = {}
 	) {
 		if( !Len( filter.id ?: "" ) && !Len( filter[ "#objectName#.id" ] ?: "" ) && arrayLen( deletedIds ) ) {
 			filter = { id = deletedIds };
@@ -257,7 +259,11 @@ component {
 				value = ListToArray( value );
 			}
 			for( var id in value ) {
-				queueDelete( arguments.objectName, id );
+				queueDelete(
+					  objectName     = arguments.objectName
+					, id             = id
+					, deletedRecords = arguments.deletedRecords
+				);
 			}
 			return;
 		}
@@ -283,6 +289,7 @@ component {
 						, namespace   = namespace
 						, queue_name  = queueSettings.name
 						, operation   = "delete"
+						, data        = StructKeyExists( arguments.deletedRecords, arguments.id ) ? SerializeJSON( arguments.deletedRecords[ arguments.id ] ) : ""
 					} );
 				}
 
