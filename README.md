@@ -40,6 +40,7 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiCategory`: For the HTML documentation. Allows sub-groups of entities. Especially useful for large APIs.
 * `dataApiQueueEnabled`: Whether or not the change queue is enabled for this object
 * `dataApiQueue`: Specific queue name for this object
+* `dataApiQueueDeleteDetail`: Whether or not the deleted record detail is available in the change queue data for this object
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
 * `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
 * `dataApiIgnoreDefaultFilters`: Comma-separated list of ignore default filters to apply to all requests to this object
