@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.12
+
+* Ability to have deleted record detail in queue data
+
 ## v3.5.11
 
 * [#83](https://github.com/pixl8/preside-ext-data-api/issues/83) Fix sort order in docs
