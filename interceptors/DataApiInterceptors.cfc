@@ -5,6 +5,7 @@ component extends="coldbox.system.Interceptor" {
 	property name="dataApiConfigurationService" inject="delayedInjector:dataApiConfigurationService";
 	property name="presideObjectService"        inject="delayedInjector:presideObjectService";
 	property name="interceptorService"          inject="coldbox:InterceptorService";
+	property name="queryCache"                         inject="cachebox:DefaultQueryCache";
 
 	variables._applicationLoaded = false;
 
@@ -182,4 +183,21 @@ component extends="coldbox.system.Interceptor" {
 
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
 	}
+
+
+
+	public void function onCreateSelectDataCacheKey( event, interceptData ) {
+		if ( !_applicationLoaded ) return;
+
+		var objectName = interceptData.objectName ?: "";
+		event.setValue( name="cacheKey", value=interceptData.cacheKey ?: "", private=true );
+		event.setValue( name="getFromCache", value=false, private=true );
+		event.setValue( name="#objectName#_useCache", value=true, private=true );
+
+		var cachedResult = queryCache.get( interceptData.cacheKey );
+		if ( !IsNull( local.cachedResult ) ) {
+			event.setValue( name="getFromCache", value=true, private=true );
+		}
+	}
+
 }
