@@ -500,7 +500,7 @@ component {
 	private struct function _getEntitySchema( required string entityName, boolean forSelect=true, boolean forceIdField=false ) {
 		var schema        = { required=[], properties=StructNew( "linked" ) };
 		var confService   = _getConfigService();
-		var fields        = arguments.forSelect ? confService.getSelectFields( arguments.entityName ) : confService.getUpsertFields( arguments.entityName );
+		var fields        = Duplicate( arguments.forSelect ? confService.getSelectFields( arguments.entityName ) : confService.getUpsertFields( arguments.entityName ) );
 		var fieldSettings = confService.getFieldSettings( arguments.entityName );
 		var objectName    = confService.getEntityObject( arguments.entityName );
 		var props         = $getPresideObjectService().getObjectProperties( objectName );
