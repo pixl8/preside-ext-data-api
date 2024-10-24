@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.14
+
+* Ability to set API level defaults for allowIdInsert and allowed verbs
+
 ## v3.5.13
 
 * [#86](https://github.com/pixl8/preside-ext-data-api/issues/86) Fix issue with id field appearing as required for POST requests

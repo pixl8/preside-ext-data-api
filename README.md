@@ -305,6 +305,7 @@ settings.rest.apis[ "/myGroovyApi/v1" ] = {
 	, description      = "REST API to expose data with an alternate structure"
 	, dataApiNamespace = "myGroovyApi"
 	, dataApiQueueEnabled = true
+	, dataApiDefaults     = { allowIdInsert=true, verbs="GET" }
 	, dataApiQueues       = {
 		default = { pageSize=100, atomicChanges=true }
 	  }
