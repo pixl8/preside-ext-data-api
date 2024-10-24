@@ -229,12 +229,12 @@ component {
 				if ( _isTrue( isEnabled ) ) {
 					var namespace           = _getNamespaceWithSeparator( args.namespace );
 					var entityName          = getObjectEntity( objectName, args.namespace );
-					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", "" );
+					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
 					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
 					var excludeFields       = _getExcludedFields( objectName, namespace );
 					var upsertExcludeFields = _getExcludedFields( objectName, namespace, "upsert" );
-					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", "" );
+					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
 					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 					var category            = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
@@ -382,6 +382,7 @@ component {
 		, required boolean dataApiDocs
 		, required boolean dataApiQueueEnabled
 		, required struct  dataApiQueues
+		,          struct  dataApiDefaults = {}
 	) {
 		variables._dataApiRoutes = variables._dataApiRoutes ?: {};
 		variables._dataApiRoutes[ arguments.dataApiRoute ] = {
@@ -389,6 +390,7 @@ component {
 			, dataApiDocs         = arguments.dataApiDocs
 			, dataApiQueueEnabled = arguments.dataApiQueueEnabled
 			, dataApiQueues       = arguments.dataApiQueues
+			, dataApiDefaults     = arguments.dataApiDefaults
 		};
 		_addNamespace( arguments.dataApiNamespace );
 	}
@@ -595,6 +597,12 @@ component {
 			, pageSize      = 1
 			, atomicChanges = false
 		};
+	}
+
+	public function getDefaultConfigForApiNamespace( required string key, string namespace=_getDataApiNamespace(), any defaultValue="" ) {
+		var route = getRouteForNamespace( arguments.namespace );
+
+		return route.dataApiDefaults[ arguments.key ] ?: arguments.defaultValue;
 	}
 
 // PRIVATE HELPERS
