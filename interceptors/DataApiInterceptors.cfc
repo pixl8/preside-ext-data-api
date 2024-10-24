@@ -21,6 +21,7 @@ component extends="coldbox.system.Interceptor" {
 		var dataApiNamespace   = "";
 		var dataApiDocs        = false;
 		var dataApiQueues      = {};
+		var dataApiDefaults    = {};
 		var base               = [];
 
 		for( var apiRoute in apiSettings ) {
@@ -29,6 +30,7 @@ component extends="coldbox.system.Interceptor" {
 				dataApiDocs   = isTrue( apiSettings[ apiRoute ].dataApiDocs ?: "" );
 				dataApiQueueEnabled = isTrue( apiSettings[ apiRoute ].dataApiQueueEnabled ?: !dataApiDocs );
 				dataApiQueues = apiSettings[ apiRoute ].dataApiQueues ?: {};
+				dataApiDefaults = apiSettings[ apiRoute ].dataApiDefaults ?: {};
 
 				dataApiConfigurationService.addDataApiRoute(
 					  dataApiRoute        = apiRoute
@@ -36,6 +38,7 @@ component extends="coldbox.system.Interceptor" {
 					, dataApiDocs         = dataApiDocs
 					, dataApiQueueEnabled = dataApiQueueEnabled
 					, dataApiQueues       = dataApiQueues
+					, dataApiDefaults     = dataApiDefaults
 				);
 
 				base = duplicate( dataApiDocs ? apis[ "/data/v1/docs" ] : apis[ "/data/v1" ] );
@@ -52,7 +55,8 @@ component extends="coldbox.system.Interceptor" {
 			, dataApiNamespace    = ""
 			, dataApiDocs         = false
 			, dataApiQueueEnabled = IsTrue( apiSettings[ "/data/v1" ].dataApiQueueEnabled ?: true )
-			, dataApiQueues       = apiSettings[ "/data/v1" ].dataApiQueues ?: {}
+			, dataApiQueues       = apiSettings[ "/data/v1" ].dataApiQueues   ?: {}
+			, dataApiDefaults     = apiSettings[ "/data/v1" ].dataApiDefaults ?: {}
 		);
 		dataApiConfigurationService.addDataApiRoute(
 			  dataApiRoute        = "/data/v1/docs"

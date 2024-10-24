@@ -27,6 +27,7 @@ component {
 			, description  = "Generic Preside REST API for external systems to interact with Preside data"
 			, configHandler = "dataApiManager"
 			, dataApiQueues = { default={ pageSize=1, name="", atomicChanges=false } }
+			, dataApiDefaults = { allowIdInsert=false }
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
 			  description     = "Documentation for REST APIs (no authentication required)"
