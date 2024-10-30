@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.15
+
+* Non string renderers: respect returned data when it is an empty array or struct for rendering in results
+
 ## v3.5.14
 
 * Ability to set API level defaults for allowIdInsert and allowed verbs
