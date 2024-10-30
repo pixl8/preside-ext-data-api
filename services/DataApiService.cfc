@@ -343,7 +343,7 @@ component {
 		if ( $getContentRendererService().rendererExists( renderer, "dataapi" ) ) {
 			try {
 				var renderedContent = $renderContent( renderer, arguments.value, "dataapi", arguments.fieldSettings );
-				if ( Len( renderedContent ?: "" ) ) {
+				if ( !IsSimpleValue( renderedContent ) || Len( renderedContent ?: "" ) ) {
 					return renderedContent;
 				}
 			} catch( any e ) {
