@@ -3,9 +3,13 @@
  * @nolabel        true
  * @noDateModified true
  * @feature        dataApiQueue
+ *
+ * @dataManagerEnabled              true
+ * @datamanagerAllowedOperations    read
+ * @datamanagerDefaultSortOrder     order_number desc
  */
 component {
-	property name="object_name"     type="string"  dbtype="varchar" maxlength=100 required=true  indexes="object_name";
+	property name="object_name"     type="string"  dbtype="varchar" maxlength=100 required=true  indexes="object_name" renderer="DataApiQueueObjectName";
 	property name="namespace"       type="string"  dbtype="varchar" maxlength=50  required=false indexes="namespace";
 	property name="queue_name"      type="string"  dbtype="varchar" maxlength=50  required=false indexes="queuename";
 	property name="record_id"       type="string"  dbtype="varchar" maxlength=100 required=true  indexes="record_id";

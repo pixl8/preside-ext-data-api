@@ -1,7 +1,8 @@
 component extends="preside.system.base.AdminHandler" {
 
 	property name="dataApiUserConfigurationService" inject="dataApiUserConfigurationService";
-	property name="messagebox" inject="messagebox@cbmessagebox";
+	property name="dataApiConfig"                   inject="coldbox:setting:rest.apis";
+	property name="messagebox"                      inject="messagebox@cbmessagebox";
 
 	function prehandler( event, rc, prc ) {
 		super.preHandler( argumentCollection = arguments );
@@ -186,6 +187,37 @@ component extends="preside.system.base.AdminHandler" {
 
 	}
 
+	public void function queueListing( event, rc, prc ) {
+		if ( Len( Trim( rc.apiRoute ?: "" ) ) && StructKeyExists( dataApiConfig, rc.apiRoute ) ) {
+			prc.filterNamespace = dataApiConfig[ rc.apiRoute ].dataApiNamespace ?: "";
+
+			event.addAdminBreadCrumb(
+				  title = translateResource( uri="cms:apiManager.configureauth.page.breadcrumbTitle", data=[ rc.apiRoute ] )
+				, link  = event.buildAdminLink( linkTo = "apimanager.configureAuth", queryString="id=#rc.apiRoute#" )
+			);
+		}
+
+		event.addAdminBreadCrumb(
+			  title = translateResource( "cms:apiQueueListing.breadcrumbTitle" )
+			, link  = event.buildAdminLink( linkTo="dataApiManager.queueListing" )
+		);
+
+		prc.pageIcon     = "fa-stream";
+		prc.pageTitle    = translateResource( "cms:apiQueueListing.page.title" );
+		prc.pageSubtitle = translateResource( "cms:apiQueueListing.page.subtitle" );
+
+		prc.activeRestUser = rc.restUser ?: "";
+		prc.queueRestUsers = getPresideObject( "data_api_user_settings" ).selectData(
+			  groupBy      = "user.name"
+			, filter       = "subscribe_to_deletes = :trueValue OR subscribe_to_updates = :trueValue OR subscribe_to_inserts = :trueValue"
+			, filterParams = { trueValue={ type="cf_sql_bit", value=true } }
+			, selectFields = [ "user.id", "user.name" ]
+		);
+
+		if ( isEmptyString( prc.activeRestUser ) ) {
+			prc.activeRestUser = prc.queueRestUsers.id ?: "";
+		}
+	}
 
 	private boolean function _checkPermissions( required any event, required string key, boolean throwOnError=true ) {
 		var hasPermission = hasCmsPermission( "apiManager." & arguments.key );
