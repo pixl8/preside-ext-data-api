@@ -188,8 +188,14 @@ component extends="preside.system.base.AdminHandler" {
 	}
 
 	public void function queueListing( event, rc, prc ) {
+		var restUserQueryFilter = "subscribe_to_deletes = :trueValue OR subscribe_to_updates = :trueValue OR subscribe_to_inserts = :trueValue";
+		var restUserQueryParams = { trueValue={ type="cf_sql_bit", value=true } };
+
 		if ( Len( Trim( rc.apiRoute ?: "" ) ) && StructKeyExists( dataApiConfig, rc.apiRoute ) ) {
 			prc.filterNamespace = dataApiConfig[ rc.apiRoute ].dataApiNamespace ?: "";
+
+			restUserQueryFilter           = "( #restUserQueryFilter# ) AND namespace = :namespace";
+			restUserQueryParams.namespace = prc.filterNamespace;
 
 			event.addAdminBreadCrumb(
 				  title = translateResource( uri="cms:apiManager.configureauth.page.breadcrumbTitle", data=[ rc.apiRoute ] )
@@ -209,8 +215,8 @@ component extends="preside.system.base.AdminHandler" {
 		prc.activeRestUser = rc.restUser ?: "";
 		prc.queueRestUsers = getPresideObject( "data_api_user_settings" ).selectData(
 			  groupBy      = "user.name"
-			, filter       = "subscribe_to_deletes = :trueValue OR subscribe_to_updates = :trueValue OR subscribe_to_inserts = :trueValue"
-			, filterParams = { trueValue={ type="cf_sql_bit", value=true } }
+			, filter       = restUserQueryFilter
+			, filterParams = restUserQueryParams
 			, selectFields = [ "user.id", "user.name" ]
 		);
 
