@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.0
+
+* Added a UI to show records in the DATA API change queue per subscribed API client
+
 ## v3.5.15
 
 * Non string renderers: respect returned data when it is an empty array or struct for rendering in results
