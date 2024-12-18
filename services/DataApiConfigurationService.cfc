@@ -40,6 +40,22 @@ component {
 		} );
 	}
 
+	public boolean function entitySkipValidationOnInsert( required string entity ) {
+		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipValidationOnInsert" );
+	}
+
+	public boolean function entitySkipValidationOnUpdate( required string entity ) {
+		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipValidationOnUpdate" );
+	}
+
+	public boolean function entitySkipRecordResponseOnInsert( required string entity ) {
+		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipRecordResponseOnInsert" );
+	}
+
+	public boolean function entitySkipRecordResponseOnUpdate( required string entity ) {
+		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipRecordResponseOnUpdate" );
+	}
+
 	public string function getEntityObject( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "getEntityObject" & args.namespace & args.entity;
@@ -227,27 +243,35 @@ component {
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
-					var namespace           = _getNamespaceWithSeparator( args.namespace );
-					var entityName          = getObjectEntity( objectName, args.namespace );
-					var supportedVerbs      = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
-					var selectFields        = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
-					var upsertFields        = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
-					var excludeFields       = _getExcludedFields( objectName, namespace );
-					var upsertExcludeFields = _getExcludedFields( objectName, namespace, "upsert" );
-					var allowIdInsert       = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
-					var allowQueue          = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
-					var queueName           = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
-					var category            = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
+					var namespace                  = _getNamespaceWithSeparator( args.namespace );
+					var entityName                 = getObjectEntity( objectName, args.namespace );
+					var supportedVerbs             = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
+					var selectFields               = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
+					var upsertFields               = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
+					var excludeFields              = _getExcludedFields( objectName, namespace );
+					var upsertExcludeFields        = _getExcludedFields( objectName, namespace, "upsert" );
+					var allowIdInsert              = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
+					var skipValidationOnInsert     = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnInsert", namespace ) );
+					var skipValidationOnUpdate     = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnUpdate", namespace ) );
+					var skipRecordResponseOnInsert = poService.getObjectAttribute( objectName, "dataApiSkipRecordResponseOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipRecordResponseOnInsert", namespace ) );
+					var skipRecordResponseOnUpdate = poService.getObjectAttribute( objectName, "dataApiSkipRecordResponseOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipRecordResponseOnUpdate", namespace ) );
+					var allowQueue                 = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
+					var queueName                  = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
+					var category                   = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
 
 					entities[ entityName ] = {
-						  objectName    = objectName
-						, category      = category
-						, verbs         = ListToArray( LCase( supportedVerbs ) )
-						, selectFields  = ListToArray( LCase( selectFields ) )
-						, upsertFields  = ListToArray( LCase( upsertFields ) )
-						, allowIdInsert = _isTrue( allowIdInsert )
-						, allowQueue    = _isTrue( allowQueue    )
-						, queueName     = queueName
+						  objectName                 = objectName
+						, category                   = category
+						, verbs                      = ListToArray( LCase( supportedVerbs ) )
+						, selectFields               = ListToArray( LCase( selectFields ) )
+						, upsertFields               = ListToArray( LCase( upsertFields ) )
+						, allowIdInsert              = _isTrue( allowIdInsert )
+						, skipValidationOnInsert     = _isTrue( skipValidationOnInsert )
+						, skipValidationOnUpdate     = _isTrue( skipValidationOnUpdate )
+						, skipRecordResponseOnInsert = _isTrue( skipRecordResponseOnInsert )
+						, skipRecordResponseOnUpdate = _isTrue( skipRecordResponseOnUpdate )
+						, allowQueue                 = _isTrue( allowQueue    )
+						, queueName                  = queueName
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -794,6 +818,18 @@ component {
 		}
 
 		return excluded.toList();
+	}
+
+	private boolean function _entityIsBooleanConfigOptionTrue( required string entity, required string option ) {
+		var args     = arguments;
+		var cacheKey = "entityIsBooleanConfigOptionTrue" & _getDataApiNamespace() & args.entity & args.option;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities           = getEntities();
+			var booleanOptionValue = entities[ args.entity ].booleanOptionValue ?: "";
+
+			return _isTrue( booleanOptionValue );
+		} );
 	}
 
 // GETTERS AND SETTERS

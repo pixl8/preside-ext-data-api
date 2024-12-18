@@ -111,7 +111,7 @@ component {
 		return created;
 	}
 
-	public struct function createRecord( required string entity, required any record ) {
+	public any function createRecord( required string entity, required any record ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
 		var namespace  = _getInterceptorNamespace();
@@ -121,11 +121,16 @@ component {
 			, bypassTrivialInterceptors = true
 		};
 
-		$announceInterception( "preDataApiInsertData#namespace#", { insertDataArgs=args, entity=arguments.entity, record=arguments.record } );
-		var newId = dao.insertData( argumentCollection=args );
-		$announceInterception( "postDataApiInsertData#namespace#", { insertDataArgs=args, entity=arguments.entity, record=arguments.record, newId=newId } );
+		var interceptDataArgs = { insertDataArgs=args, entity=arguments.entity, record=arguments.record };
 
-		return getSingleRecord( arguments.entity, newId, [] );
+		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnInsert( arguments.entity ); // default config on api or object level
+
+		$announceInterception( "preDataApiInsertData#namespace#", interceptDataArgs );
+		var newId = dao.insertData( argumentCollection=args );
+		interceptDataArgs.newId = newId;
+		$announceInterception( "postDataApiInsertData#namespace#", interceptDataArgs );
+
+		return interceptDataArgs.skipRecordResponse ? newId : getSingleRecord( arguments.entity, newId, [] );
 	}
 
 	public any function batchUpdateRecords( required string entity, required array records ) {
@@ -135,19 +140,31 @@ component {
 		var updated    = [];
 		var recordId   = "";
 
+		var interceptDataArgs = { entity=arguments.entity, records=arguments.records };
+
+		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnUpdate( arguments.entity ); // default config on api or object level
+
+		$announceInterception( "preDataApiBatchUpdateRecords#namespace#", interceptDataArgs );
+
 		for( var record in records ) {
 			recordId = record[ idField ] ?: "";
 			if ( Len( Trim( recordId ) ) ) {
 				if ( updateSingleRecord( arguments.entity, record, recordId ) ) {
-					updated.append( getSingleRecord( entity, recordId, [] ) );
+					if ( !interceptDataArgs.skipRecordResponse ) {
+						ArrayAppend( updated, getSingleRecord( entity, recordId, [] ) );
+					}
 				}
 			}
 		}
 
-		return updated;
+		interceptDataArgs.updated = updated;
+
+		$announceInterception( "postDataApiBatchUpdateRecords#namespace#", interceptDataArgs );
+
+		return interceptDataArgs.skipRecordResponse ? "" : interceptDataArgs.updated;
 	}
 
-	public any function updateSingleRecord( required string entity, required struct data, required string recordId ) {
+	public any function updateSingleRecord( required string entity, required struct data, required string recordId, boolean returnRecord=false ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
 		var namespace  = _getInterceptorNamespace();
@@ -157,12 +174,19 @@ component {
 			, updateManyToManyRecords = true
 		};
 
-		$announceInterception( "preDataApiUpdateData#namespace#", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		var interceptDataArgs = { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data };
+
+		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnUpdate( arguments.entity ); // default config on api or object level
+
+		$announceInterception( "preDataApiUpdateData#namespace#", interceptDataArgs );
 		var recordsUpdated = dao.updateData( argumentCollection=args );
-		$announceInterception( "postDataApiUpdateData#namespace#", { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data } );
+		$announceInterception( "postDataApiUpdateData#namespace#", interceptDataArgs );
 
+		if ( !returnRecord || interceptDataArgs.skipRecordResponse ) {
+			return recordsUpdated;
+		}
 
-		return recordsUpdated;
+		return getSingleRecord( arguments.entity, arguments.recordId, [] );
 	}
 
 	public numeric function deleteSingleRecord( required string entity, required string recordId ) {
@@ -178,11 +202,28 @@ component {
 	}
 
 	public any function validateUpsertData( required string entity, required any data, boolean ignoreMissing=false, boolean isUpdate=false ) {
-		var ruleset   = _getConfigService().getValidationRulesetForEntity( arguments.entity );
 		var namespace = _getInterceptorNamespace();
+		var args      = arguments;
+
+		if ( args.isUpdate ) {
+			args.skipValidation = _getConfigService().entitySkipValidationOnUpdate( arguments.entity ); // default config on api or object level
+			$announceInterception( "onDataApiUpdateRecordDataValidation#namespace#", args );
+		}
+		else {
+			args.skipValidation = _getConfigService().entitySkipValidationOnInsert( arguments.entity ); // default config on api or object level
+			$announceInterception( "onDataApiInsertRecordDataValidation#namespace#", args );
+		}
+		// to skip the validation completely it could either use the default or could have been overwritten by interceptor (e.g. using a dynamic skip of validation based on a request parameter)
+
+		if ( args.skipValidation ) {
+			return IsArray( arguments.data ) ? { validated=true, validationResults=[] } : [];
+		}
+
+		var ruleset = _getConfigService().getValidationRulesetForEntity( arguments.entity );
 
 		if ( IsArray( arguments.data ) ) {
 			var result = { validated=true, validationResults=[] };
+
 			for( var record in arguments.data ) {
 
 				var prepped = _prepRecordForInsertAndUpdate( arguments.entity, record, arguments.isUpdate );

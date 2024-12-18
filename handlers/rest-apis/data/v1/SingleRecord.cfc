@@ -72,13 +72,17 @@ component {
 
 
 		var updated = dataApiService.updateSingleRecord(
-			  entity   = entity
-			, recordId = recordId
-			, data     = validationData
+			  entity       = entity
+			, recordId     = recordId
+			, data         = validationData
+			, returnRecord = true
 		);
 
-		if ( updated ) {
-			get( argumentCollection=arguments );
+		if ( IsNumeric( updated ) && updated > 0 ) {
+			// skipRecordResponseOnUpdate=true - either in the API config or in the entity definition or dynamically set by an interceptor
+			restResponse.noData();
+		} else if ( IsStruct( updated ) ) {
+			restResponse.setData( updated );
 		} else {
 			restResponse.setError(
 				  errorCode = 404

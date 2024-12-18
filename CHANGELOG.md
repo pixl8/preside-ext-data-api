@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.1
+
+* new options to skip data validation and the record response on inserts/updates, 4 new interception points added
+
 ## v3.6.0
 
 * Added a UI to show records in the DATA API change queue per subscribed API client

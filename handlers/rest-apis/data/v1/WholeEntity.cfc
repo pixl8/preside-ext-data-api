@@ -160,7 +160,11 @@ component {
 			, records = body
 		);
 
-		restResponse.setData( updated );
+		if ( IsArray( updated ) ) {
+			restResponse.setData( updated );
+		} else {
+			restResponse.noData();
+		}
 	}
 
 }
