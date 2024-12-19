@@ -223,10 +223,17 @@ component {
 
 	private void function _addEntitySpecs( required struct spec ) {
 		var configService = _getConfigService();
-		var entities = _getConfigService().getEntities();
-		var entityNames = StructKeyArray( entities );
-		var tags = [];
-		var categories = {};
+		var entities      = _getConfigService().getEntities();
+		var entityNames   = StructKeyArray( entities );
+		var tags          = [];
+		var categories    = {};
+
+		var emptyResponseContent   = { "text/plain"       = { schema={ type="string"                         } } };
+		var idArrayResponseContent = { "application/json" = { schema={ type="array", items={ type="string" } } } };
+
+		var updateSingleResponseContent = "";
+		var updateMultiResponseContent  = "";
+		var insertMultiResponseContent  = "";
 
 		entityNames.sort( "textnocase" );
 
@@ -242,6 +249,21 @@ component {
 			};
 
 			tag[ "x-sort-order" ] = _i18nNamespaced( uri="dataapi:entity.#entityName#.sort.order", defaultValue=tag.name );
+
+			var insertResponseI18nSuffix = "";
+			var updateResponseI18nSuffix = "";
+
+			if ( configService.entityUseEmptyResponseOnInsert( entityName ) ) {
+				insertResponseI18nSuffix = ".empty";
+			} else if ( configService.entityUseIdOnlyResponseOnInsert( entityName ) ) {
+				insertResponseI18nSuffix = ".idonly";
+			}
+
+			if ( configService.entityUseEmptyResponseOnUpdate( entityName ) ) {
+				updateResponseI18nSuffix = ".empty";
+			} else if ( configService.entityUseIdOnlyResponseOnUpdate( entityName ) ) {
+				updateResponseI18nSuffix = ".idonly";
+			}
 
 			if ( Len( Trim( category ) ) ) {
 				tag[ "x-category" ] = category;
@@ -349,6 +371,18 @@ component {
 			}
 
 			if ( configService.entityVerbIsSupported( entityName, "put" ) ) {
+
+				if ( configService.entityUseEmptyResponseOnUpdate( entityName ) ) {
+					updateSingleResponseContent = emptyResponseContent;
+					updateMultiResponseContent  = emptyResponseContent;
+				} else if ( configService.entityUseIdOnlyResponseOnUpdate( entityName ) ) {
+					updateSingleResponseContent = idArrayResponseContent;
+					updateMultiResponseContent  = idArrayResponseContent;
+				} else { // record (default behaviour)
+					updateSingleResponseContent = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } };
+					updateMultiResponseContent  = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } };
+				}
+
 				spec.paths[ "/entity/#entityName#/" ].put = {
 					  tags = [ entityTag ]
 					, summary = "PUT /entity/#entityName#/"
@@ -362,8 +396,8 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.200.description", defaultValue="", data=[ entitySingular ] ) )
-							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.200.description#updateResponseI18nSuffix#", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.200.description#updateResponseI18nSuffix#", defaultValue="", data=[ entitySingular ] ) )
+							, content     = updateMultiResponseContent
 						  }
 						, "422" = {
 							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.422.description", defaultValue="", data=[ entitySingular ] ) )
@@ -385,8 +419,8 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.200.description", defaultValue="", data=[ entitySingular ] ) )
-							, content     = { "application/json" = { schema={ "$ref"="##/components/schemas/#entityName#" } } }
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.200.description#updateResponseI18nSuffix#", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.200.description#updateResponseI18nSuffix#", defaultValue="", data=[ entitySingular ] ) )
+							, content     = updateSingleResponseContent
 						  }
 						, "404" = {
 							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.put.by.id.404.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.put.by.id.404.description", defaultValue="", data=[ entitySingular ] ) )
@@ -407,6 +441,15 @@ component {
 			}
 
 			if ( configService.entityVerbIsSupported( entityName, "post" ) ) {
+
+				if ( configService.entityUseEmptyResponseOnInsert( entityName ) ) {
+					insertMultiResponseContent  = emptyResponseContent;
+				} else if ( configService.entityUseIdOnlyResponseOnInsert( entityName ) ) {
+					insertMultiResponseContent  = idArrayResponseContent;
+				} else { // record (default behaviour)
+					insertMultiResponseContent  = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } };
+				}
+
 				spec.paths[ "/entity/#entityName#/" ].post = {
 					  tags = [ entityTag ]
 					, summary = "POST /entity/#entityName#/"
@@ -420,8 +463,8 @@ component {
 					  }
 					, responses = {
 						  "200" = {
-							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.200.description", defaultValue="", data=[ entitySingular ] ) )
-							, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
+							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.200.description#insertResponseI18nSuffix#", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.200.description#insertResponseI18nSuffix#", defaultValue="", data=[ entitySingular ] ) )
+							, content     = insertMultiResponseContent
 						  }
 						, "422" = {
 							  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.post.422.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.post.422.description", defaultValue="", data=[ entitySingular ] ) )

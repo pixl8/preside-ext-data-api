@@ -63,6 +63,42 @@ component {
 		return _entityConfigOption( arguments.entity, "responseTypeOnUpdate", DEFAULT_RESPONSE_TYPE );
 	}
 
+	public boolean function entityUseRecordResponseOnInsert( required string entity ) {
+		return isRecordResponseType( entityResponseTypeOnInsert( arguments.entity ) );
+	}
+
+	public boolean function entityUseIdOnlyResponseOnInsert( required string entity ) {
+		return isIdOnlyResponseType( entityResponseTypeOnInsert( arguments.entity ) );
+	}
+
+	public boolean function entityUseEmptyResponseOnInsert( required string entity ) {
+		return isEmptyResponseType( entityResponseTypeOnInsert( arguments.entity ) );
+	}
+
+	public boolean function entityUseRecordResponseOnUpdate( required string entity ) {
+		return isRecordResponseType( entityResponseTypeOnUpdate( arguments.entity ) );
+	}
+
+	public boolean function entityUseIdOnlyResponseOnUpdate( required string entity ) {
+		return isIdOnlyResponseType( entityResponseTypeOnUpdate( arguments.entity ) );
+	}
+
+	public boolean function entityUseEmptyResponseOnUpdate( required string entity ) {
+		return isEmptyResponseType( entityResponseTypeOnUpdate( arguments.entity ) );
+	}
+
+	public boolean function isRecordResponseType( required string responseType ) {
+		return arguments.responseType == VALID_RESPONSE_TYPES.RECORD;
+	}
+
+	public boolean function isIdOnlyResponseType( required string responseType ) {
+		return arguments.responseType == VALID_RESPONSE_TYPES.IDONLY;
+	}
+
+	public boolean function isEmptyResponseType( required string responseType ) {
+		return arguments.responseType == VALID_RESPONSE_TYPES.EMPTY;
+	}
+
 	public string function getEntityObject( required string entity, string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
 		var cacheKey = "getEntityObject" & args.namespace & args.entity;

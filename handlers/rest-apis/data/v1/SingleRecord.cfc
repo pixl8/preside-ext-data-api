@@ -83,7 +83,7 @@ component {
 				, title     = "Not found"
 				, message   = "No [#arguments.entity#] record was found with ID [#arguments.recordId#]"
 			);
-		} else if ( IsStruct( updated ) ) { // updated and configured to either return the full record or the id only
+		} else if ( IsStruct( updated ) || IsArray( updated ) ) { // updated and configured to either return the full record or the id only (in an array)
 			restResponse.setData( updated );
 		} else { // updated but configured to return an empty response
 			restResponse.noData();

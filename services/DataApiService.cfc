@@ -136,9 +136,9 @@ component {
 
 		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
 
-		if ( interceptDataArgs.responseType == "empty" ) {
+		if ( _getConfigService().isEmptyResponseType( interceptDataArgs.responseType ) ) {
 			return "";
-		} else if ( interceptDataArgs.responseType == "idonly" ) {
+		} else if ( _getConfigService().isIdOnlyResponseType( interceptDataArgs.responseType ) ) {
 			return newId;
 		}
 
@@ -160,13 +160,16 @@ component {
 
 		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
 
+		var isEmptyResponseType  = _getConfigService().isEmptyResponseType( interceptDataArgs.responseType );
+		var isIdOnlyResponseType = _getConfigService().isIdOnlyResponseType( interceptDataArgs.responseType );
+
 		for( var record in records ) {
 			recordId = record[ idField ] ?: "";
 			if ( Len( Trim( recordId ) ) ) {
 				if ( updateSingleRecord( arguments.entity, record, recordId ) ) {
-					if ( interceptDataArgs.responseType == "empty" ) {
+					if ( isEmptyResponseType ) {
 						continue;
-					} else if ( interceptDataArgs.responseType == "idonly" ) {
+					} else if ( isIdOnlyResponseType ) {
 						ArrayAppend( updated, recordId );
 					} else {
 						ArrayAppend( updated, getSingleRecord( entity, recordId, [] ) );
@@ -181,7 +184,7 @@ component {
 
 		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
 
-		return interceptDataArgs.responseType == "empty" ? "" : interceptDataArgs.updated;
+		return _getConfigService().isEmptyResponseType( interceptDataArgs.responseType ) ? "" : interceptDataArgs.updated;
 	}
 
 	public any function updateSingleRecord( required string entity, required struct data, required string recordId, boolean returnResponse=false ) {
@@ -208,11 +211,11 @@ component {
 			if ( recordsUpdated == 0 ) {
 				return 0;
 			}
-			else if ( interceptDataArgs.responseType == "record" ) {
+			else if ( _getConfigService().isRecordResponseType( interceptDataArgs.responseType ) ) {
 				return getSingleRecord( arguments.entity, arguments.recordId, [] );
 			}
-			else if ( interceptDataArgs.responseType == "idonly" ) {
-				return { id=arguments.recordId };
+			else if ( _getConfigService().isIdOnlyResponseType( interceptDataArgs.responseType ) ) {
+				return [ arguments.recordId ];
 			}
 			else { // empty
 				return "";
