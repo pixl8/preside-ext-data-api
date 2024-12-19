@@ -101,14 +101,18 @@ component {
 		return _selectData( arguments.entity, { filter={ id=listToArray( arguments.recordIds ) } }, arguments.fields );
 	}
 
-	public array function createRecords( required string entity, required array records ) {
+	public any function createRecords( required string entity, required array records ) {
 		var created = [];
+		var result  = "";
 
 		for( var record in records ) {
-			created.append( createRecord( entity, record ) );
+			result = createRecord( entity, record );
+			if ( !IsEmpty( result ) ) {
+				ArrayAppend( created, result );
+			}
 		}
 
-		return created;
+		return ArrayLen( created ) ? created : "";
 	}
 
 	public any function createRecord( required string entity, required any record ) {
@@ -123,14 +127,22 @@ component {
 
 		var interceptDataArgs = { insertDataArgs=args, entity=arguments.entity, record=arguments.record };
 
-		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnInsert( arguments.entity ); // default config on api or object level
+		interceptDataArgs.responseType = _getConfigService().entityResponseTypeOnInsert( arguments.entity ); // default config on api or object level
 
 		$announceInterception( "preDataApiInsertData#namespace#", interceptDataArgs );
 		var newId = dao.insertData( argumentCollection=args );
 		interceptDataArgs.newId = newId;
 		$announceInterception( "postDataApiInsertData#namespace#", interceptDataArgs );
 
-		return interceptDataArgs.skipRecordResponse ? newId : getSingleRecord( arguments.entity, newId, [] );
+		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
+
+		if ( interceptDataArgs.responseType == "empty" ) {
+			return "";
+		} else if ( interceptDataArgs.responseType == "idonly" ) {
+			return newId;
+		}
+
+		return getSingleRecord( arguments.entity, newId, [] );
 	}
 
 	public any function batchUpdateRecords( required string entity, required array records ) {
@@ -142,15 +154,21 @@ component {
 
 		var interceptDataArgs = { entity=arguments.entity, records=arguments.records };
 
-		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnUpdate( arguments.entity ); // default config on api or object level
+		interceptDataArgs.responseType = _getConfigService().entityResponseTypeOnUpdate( arguments.entity ); // default config on api or object level
 
 		$announceInterception( "preDataApiBatchUpdateRecords#namespace#", interceptDataArgs );
+
+		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
 
 		for( var record in records ) {
 			recordId = record[ idField ] ?: "";
 			if ( Len( Trim( recordId ) ) ) {
 				if ( updateSingleRecord( arguments.entity, record, recordId ) ) {
-					if ( !interceptDataArgs.skipRecordResponse ) {
+					if ( interceptDataArgs.responseType == "empty" ) {
+						continue;
+					} else if ( interceptDataArgs.responseType == "idonly" ) {
+						ArrayAppend( updated, recordId );
+					} else {
 						ArrayAppend( updated, getSingleRecord( entity, recordId, [] ) );
 					}
 				}
@@ -161,10 +179,12 @@ component {
 
 		$announceInterception( "postDataApiBatchUpdateRecords#namespace#", interceptDataArgs );
 
-		return interceptDataArgs.skipRecordResponse ? "" : interceptDataArgs.updated;
+		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
+
+		return interceptDataArgs.responseType == "empty" ? "" : interceptDataArgs.updated;
 	}
 
-	public any function updateSingleRecord( required string entity, required struct data, required string recordId, boolean returnRecord=false ) {
+	public any function updateSingleRecord( required string entity, required struct data, required string recordId, boolean returnResponse=false ) {
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
 		var namespace  = _getInterceptorNamespace();
@@ -176,17 +196,30 @@ component {
 
 		var interceptDataArgs = { updateDataArgs=args, entity=arguments.entity, recordId=arguments.recordId, data=arguments.data };
 
-		interceptDataArgs.skipRecordResponse = _getConfigService().entitySkipRecordResponseOnUpdate( arguments.entity ); // default config on api or object level
+		interceptDataArgs.responseType = _getConfigService().entityResponseTypeOnUpdate( arguments.entity ); // default config on api or object level
 
 		$announceInterception( "preDataApiUpdateData#namespace#", interceptDataArgs );
 		var recordsUpdated = dao.updateData( argumentCollection=args );
 		$announceInterception( "postDataApiUpdateData#namespace#", interceptDataArgs );
 
-		if ( !returnRecord || interceptDataArgs.skipRecordResponse ) {
-			return recordsUpdated;
+		interceptDataArgs.responseType = _getConfigService().validateResponseType( interceptDataArgs.responseType );
+
+		if ( arguments.returnResponse ) {
+			if ( recordsUpdated == 0 ) {
+				return 0;
+			}
+			else if ( interceptDataArgs.responseType == "record" ) {
+				return getSingleRecord( arguments.entity, arguments.recordId, [] );
+			}
+			else if ( interceptDataArgs.responseType == "idonly" ) {
+				return { id=arguments.recordId };
+			}
+			else { // empty
+				return "";
+			}
 		}
 
-		return getSingleRecord( arguments.entity, arguments.recordId, [] );
+		return recordsUpdated;
 	}
 
 	public numeric function deleteSingleRecord( required string entity, required string recordId ) {

@@ -54,8 +54,8 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiQueueRelevantFields`: Fields that are relevant to trigger a record update to be queued. If not used, then any data change will be queued. If used then only the specified fields will be examined and in case of atomic-changes for the queue only the relevant field changes will be included in the queue item. Inserts and deletes are always queued, only during updates this annotation is evaluated.
 * `dataApiSkipValidationOnInsert`: Whether or not to skip data validation when inserting new records (defaults to `false`)
 * `dataApiSkipValidationOnUpdate`: Whether or not to skip data validation when updating records (defaults to `false`)
-* `dataApiSkipRecordResponseOnInsert`: Whether or not to skip returning the full record(s) data as the response on inserts (defaults to `false`)
-* `dataApiSkipRecordResponseOnUpdate`: Whether or not to skip returning the full record(s) data as the response on updates (defaults to `false`)
+* `dataApiResponseTypeOnInsert`: Could be `record`, `idonly` or `empty` (defaults to `record`)
+* `dataApiResponseTypeOnUpdate`: Could be `record`, `idonly` or `empty` (defaults to `record`)
 
 ### Property annotations
 
@@ -195,7 +195,7 @@ Fires before inserting data through the API. Receives the following keys in the 
 * `insertDataArgs`: Arguments that will be passed to the `insertData()` call
 * `entity`: Name of the entity being operated on
 * `record`: The data that will be inserted (struct)
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 
 ### `postDataApiInsertData`
 
@@ -205,7 +205,7 @@ Fires after inserting data through the API. Receives the following keys in the `
 * `entity`: Name of the entity being operated on
 * `record`: The data that will be inserted (struct)
 * `newId`: Newly created record ID
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 
 ### `preDataApiUpdateData`
 
@@ -215,7 +215,7 @@ Fires before updating data through the API. Receives the following keys in the `
 * `entity`: Name of the entity being operated on
 * `recordId`: ID of the record to be updated
 * `data`: The data that will be inserted (struct)
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 
 ### `postDataApiUpdateData`
 
@@ -225,7 +225,7 @@ Fires after updating data through the API. Receives the following keys in the `i
 * `entity`: Name of the entity being operated on
 * `recordId`: ID of the record to be updated
 * `data`: The data that will be inserted (struct)
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 
 ### `preDataApiDeleteData`
 
@@ -265,7 +265,7 @@ Fires before batch updating multiple records. Receives the following keys in the
 
 * `entity`: Name of the entity being operated on
 * `records`: Array of record data to be batch updated
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 
 ### `postDataApiBatchUpdateRecords`
 
@@ -273,7 +273,7 @@ Fires after multiple records have been batch updated. Receives the following key
 
 * `entity`: Name of the entity being operated on
 * `records`: Array of record data to be batch updated
-* `skipRecordResponse`: Whether the API request should skip returning the record data in the response. Defaults to the API or object definition, but can be overwritten here.
+* `responseType`: Whether the API response should be `empty`, contain the full `record` or `idonly`. Defaults to the API or object definition (or if not defined `record`), but can be overwritten here.
 * `updated`: Array of the full record data that was updated (or empty array in case skipRecordResponse=true was already set in `preDataApiBatchUpdateRecords`)
 
 ## Data Change Queue(s)

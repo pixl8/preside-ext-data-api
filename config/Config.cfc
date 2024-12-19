@@ -28,11 +28,11 @@ component {
 			, configHandler = "dataApiManager"
 			, dataApiQueues = { default={ pageSize=1, name="", atomicChanges=false } }
 			, dataApiDefaults = {
-				  allowIdInsert              = false
-				, skipValidationOnInsert     = false
-				, skipValidationOnUpdate     = false
-				, skipRecordResponseOnInsert = false
-				, skipRecordResponseOnUpdate = false
+				  allowIdInsert          = false
+				, skipValidationOnInsert = false
+				, skipValidationOnUpdate = false
+				, responseTypeOnInsert   = "record" // "empty", "idonly" or "record" (default)
+				, responseTypeOnUpdate   = "record" // "empty", "idonly" or "record" (default)
 			}
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {

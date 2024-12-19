@@ -1,8 +1,8 @@
 # Changelog
 
-## v3.6.1
+## v3.7.0
 
-* new options to skip data validation and the record response on inserts/updates, 4 new interception points added
+* new options to skip data validation and customize the response type on inserts/updates, also 4 new interception points added
 
 ## v3.6.0
 

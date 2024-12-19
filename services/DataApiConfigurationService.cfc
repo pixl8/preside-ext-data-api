@@ -4,6 +4,13 @@
  */
 component {
 
+	VALID_RESPONSE_TYPES = {
+		  EMPTY  = "empty"
+		, IDONLY = "idonly"
+		, RECORD = "record"
+	};
+	DEFAULT_RESPONSE_TYPE = VALID_RESPONSE_TYPES.RECORD;
+
 // CONSTRUCTOR
 	/**
 	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
@@ -48,12 +55,12 @@ component {
 		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipValidationOnUpdate" );
 	}
 
-	public boolean function entitySkipRecordResponseOnInsert( required string entity ) {
-		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipRecordResponseOnInsert" );
+	public string function entityResponseTypeOnInsert( required string entity ) {
+		return _entityConfigOption( arguments.entity, "responseTypeOnInsert", DEFAULT_RESPONSE_TYPE );
 	}
 
-	public boolean function entitySkipRecordResponseOnUpdate( required string entity ) {
-		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipRecordResponseOnUpdate" );
+	public string function entityResponseTypeOnUpdate( required string entity ) {
+		return _entityConfigOption( arguments.entity, "responseTypeOnUpdate", DEFAULT_RESPONSE_TYPE );
 	}
 
 	public string function getEntityObject( required string entity, string namespace=_getDataApiNamespace() ) {
@@ -243,35 +250,35 @@ component {
 			for( var objectName in objects ) {
 				var isEnabled = objectIsApiEnabled( objectName, args.namespace );
 				if ( _isTrue( isEnabled ) ) {
-					var namespace                  = _getNamespaceWithSeparator( args.namespace );
-					var entityName                 = getObjectEntity( objectName, args.namespace );
-					var supportedVerbs             = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
-					var selectFields               = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
-					var upsertFields               = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
-					var excludeFields              = _getExcludedFields( objectName, namespace );
-					var upsertExcludeFields        = _getExcludedFields( objectName, namespace, "upsert" );
-					var allowIdInsert              = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
-					var skipValidationOnInsert     = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnInsert", namespace ) );
-					var skipValidationOnUpdate     = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnUpdate", namespace ) );
-					var skipRecordResponseOnInsert = poService.getObjectAttribute( objectName, "dataApiSkipRecordResponseOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipRecordResponseOnInsert", namespace ) );
-					var skipRecordResponseOnUpdate = poService.getObjectAttribute( objectName, "dataApiSkipRecordResponseOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipRecordResponseOnUpdate", namespace ) );
-					var allowQueue                 = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
-					var queueName                  = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
-					var category                   = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
+					var namespace              = _getNamespaceWithSeparator( args.namespace );
+					var entityName             = getObjectEntity( objectName, args.namespace );
+					var supportedVerbs         = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
+					var selectFields           = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
+					var upsertFields           = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
+					var excludeFields          = _getExcludedFields( objectName, namespace );
+					var upsertExcludeFields    = _getExcludedFields( objectName, namespace, "upsert" );
+					var allowIdInsert          = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
+					var skipValidationOnInsert = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnInsert", namespace ) );
+					var skipValidationOnUpdate = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnUpdate", namespace ) );
+					var responseTypeOnInsert   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnInsert#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnInsert", namespace ) );
+					var responseTypeOnUpdate   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnUpdate#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnUpdate", namespace ) );
+					var allowQueue             = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
+					var queueName              = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
+					var category               = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
 
 					entities[ entityName ] = {
-						  objectName                 = objectName
-						, category                   = category
-						, verbs                      = ListToArray( LCase( supportedVerbs ) )
-						, selectFields               = ListToArray( LCase( selectFields ) )
-						, upsertFields               = ListToArray( LCase( upsertFields ) )
-						, allowIdInsert              = _isTrue( allowIdInsert )
-						, skipValidationOnInsert     = _isTrue( skipValidationOnInsert )
-						, skipValidationOnUpdate     = _isTrue( skipValidationOnUpdate )
-						, skipRecordResponseOnInsert = _isTrue( skipRecordResponseOnInsert )
-						, skipRecordResponseOnUpdate = _isTrue( skipRecordResponseOnUpdate )
-						, allowQueue                 = _isTrue( allowQueue    )
-						, queueName                  = queueName
+						  objectName             = objectName
+						, category               = category
+						, verbs                  = ListToArray( LCase( supportedVerbs ) )
+						, selectFields           = ListToArray( LCase( selectFields ) )
+						, upsertFields           = ListToArray( LCase( upsertFields ) )
+						, allowIdInsert          = _isTrue( allowIdInsert )
+						, skipValidationOnInsert = _isTrue( skipValidationOnInsert )
+						, skipValidationOnUpdate = _isTrue( skipValidationOnUpdate )
+						, responseTypeOnInsert   = isValidResponseType( responseTypeOnInsert ) ? responseTypeOnInsert : DEFAULT_RESPONSE_TYPE
+						, responseTypeOnUpdate   = isValidResponseType( responseTypeOnUpdate ) ? responseTypeOnUpdate : DEFAULT_RESPONSE_TYPE
+						, allowQueue             = _isTrue( allowQueue    )
+						, queueName              = queueName
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -629,7 +636,31 @@ component {
 		return route.dataApiDefaults[ arguments.key ] ?: arguments.defaultValue;
 	}
 
+	public boolean function isValidResponseType( required string responseType ) {
+		return ArrayFindNoCase( _getValidResponseTypes(), arguments.responseType ) > 0;
+	}
+
+	public string function getDefaultResponseType() {
+		return DEFAULT_RESPONSE_TYPE;
+	}
+
+	public string function validateResponseType( required string responseType ) {
+		return isValidResponseType( arguments.responseType ) ? arguments.responseType : DEFAULT_RESPONSE_TYPE;
+	}
+
 // PRIVATE HELPERS
+	public array function _getValidResponseTypes() {
+		return _simpleLocalCache( "validResponseTypes", function(){
+			var result = [];
+
+			for ( var key in VALID_RESPONSE_TYPES ) {
+				ArrayAppend( result, VALID_RESPONSE_TYPES[ key ] );
+			}
+
+			return result;
+		} );
+	}
+
 	private any function _simpleLocalCache( required string cacheKey, required any generator ) {
 		if ( !_localCache.keyExists( arguments.cacheKey ) ) {
 			_localCache[ cacheKey ] = generator();
@@ -826,9 +857,20 @@ component {
 
 		return _simpleLocalCache( cacheKey, function(){
 			var entities           = getEntities();
-			var booleanOptionValue = entities[ args.entity ].booleanOptionValue ?: "";
+			var booleanOptionValue = entities[ args.entity ][ args.option ] ?: "";
 
 			return _isTrue( booleanOptionValue );
+		} );
+	}
+
+	private any function _entityConfigOption( required string entity, required string option, string defaultValue="" ) {
+		var args     = arguments;
+		var cacheKey = "entityConfigOption" & _getDataApiNamespace() & args.entity & args.option & args.defaultValue;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities();
+
+			return entities[ args.entity ][ args.option ] ?: args.defaultValue;
 		} );
 	}
 

@@ -70,25 +70,23 @@ component {
 			return;
 		}
 
-
 		var updated = dataApiService.updateSingleRecord(
-			  entity       = entity
-			, recordId     = recordId
-			, data         = validationData
-			, returnRecord = true
+			  entity         = entity
+			, recordId       = recordId
+			, data           = validationData
+			, returnResponse = true
 		);
 
-		if ( IsNumeric( updated ) && updated > 0 ) {
-			// skipRecordResponseOnUpdate=true - either in the API config or in the entity definition or dynamically set by an interceptor
-			restResponse.noData();
-		} else if ( IsStruct( updated ) ) {
-			restResponse.setData( updated );
-		} else {
+		if ( IsNumeric( updated ) && updated == 0 ) {
 			restResponse.setError(
 				  errorCode = 404
 				, title     = "Not found"
 				, message   = "No [#arguments.entity#] record was found with ID [#arguments.recordId#]"
 			);
+		} else if ( IsStruct( updated ) ) { // updated and configured to either return the full record or the id only
+			restResponse.setData( updated );
+		} else { // updated but configured to return an empty response
+			restResponse.noData();
 		}
 	}
 
