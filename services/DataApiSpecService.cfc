@@ -314,6 +314,23 @@ component {
 						, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
 						, schema      = _getFieldSchema( entityName, field )
 					} );
+
+					if ( _isDateField( entityName, field ) ) {
+						params.append( {
+							  name        = "filter.#field#.min"
+							, in          = "query"
+							, required    = false
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, schema      = _getFieldSchema( entityName, field )
+						} );
+						params.append( {
+							  name        = "filter.#field#.max"
+							, in          = "query"
+							, required    = false
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, schema      = _getFieldSchema( entityName, field )
+						} );
+					}
 				}
 
 				spec.paths[ "/entity/#entityName#/" ].get = {
@@ -661,6 +678,15 @@ component {
 		);
 
 		return generator == "UUID";
+	}
+
+	private boolean function _isDateField( required string entity, required string field ) {
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
+		var dbtype        = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
+
+		return ReFindNoCase( "^date", dbtype );
 	}
 
 // GETTERS AND SETTERS
