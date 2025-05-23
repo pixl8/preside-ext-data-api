@@ -750,7 +750,7 @@ component {
 		var objectName    = getEntityObject( arguments.entity );
 		var selectFields  = getSelectFields( arguments.entity );
 		var props         = $getPresideObjectService().getObjectProperties( objectName );
-		var acceptedTypes = [ "boolean" ];
+		var acceptedTypes = [ "boolean", "date", "datetime" ];
 
 		for( var propName in props ) {
 			if ( !selectFields.find( propName ) ) {
