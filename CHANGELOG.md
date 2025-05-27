@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.16
+
+* Always respect returned value from custom field renderer
+
 ## v3.5.15
 
 * Non string renderers: respect returned data when it is an empty array or struct for rendering in results
