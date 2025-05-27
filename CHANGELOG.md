@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.1
+
+* Always respect returned value from custom field renderer
+
 ## v3.6.0
 
 * Added a UI to show records in the DATA API change queue per subscribed API client
