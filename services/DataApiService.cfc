@@ -423,6 +423,7 @@ component {
 				if ( !IsSimpleValue( renderedContent ) || Len( renderedContent ?: "" ) ) {
 					return renderedContent;
 				}
+				return $isFeatureEnabled( "dataApiUseNullForStrings" ) ? NullValue() : "";
 			} catch( any e ) {
 				$raiseError( e );
 			}
