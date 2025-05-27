@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.1
+
+* Always respect returned value from custom field renderer
+
 ## v3.7.0
 
 * new options to skip data validation and customize the response type on inserts/updates, also 4 new interception points added
