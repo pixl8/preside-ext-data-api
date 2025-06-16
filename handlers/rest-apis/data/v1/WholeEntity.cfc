@@ -85,6 +85,7 @@ component {
 			, data          = body
 			, ignoreMissing = false
 		);
+
 		if ( IsArray( body ) ) {
 			if ( !validationResult.validated ) {
 				restResponse.setError(
@@ -110,7 +111,11 @@ component {
 			, records = IsArray( body ) ? body : [ body ]
 		);
 
-		restResponse.setData( created );
+		if ( IsArray( created ) ) {
+			restResponse.setData( created );
+		} else {
+			restResponse.noData();
+		}
 	}
 
 	private void function put( required string entity ) {
@@ -160,7 +165,10 @@ component {
 			, records = body
 		);
 
-		restResponse.setData( updated );
+		if ( IsArray( updated ) ) {
+			restResponse.setData( updated );
+		} else {
+			restResponse.noData();
+		}
 	}
-
 }
