@@ -137,6 +137,7 @@ component {
 	}
 
 	public any function batchUpdateRecords( required string entity, required array records ) {
+		var namespace  = _getInterceptorNamespace();
 		var objectName = _getConfigService().getEntityObject( arguments.entity );
 		var dao        = $getPresideObject( objectName );
 		var idField    = $getPresideObjectService().getIdField( objectName );
