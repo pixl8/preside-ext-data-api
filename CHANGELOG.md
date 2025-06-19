@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.2
+
+* Add missing namespace variable to batch update method
+
 ## v3.7.1
 
 * Always respect returned value from custom field renderer
