@@ -95,7 +95,7 @@ component extends="coldbox.system.Interceptor" {
 		if ( !IsSimpleValue( restRequest ) ) {
 			var api      = restRequest.getApi();
 			var resource = restRequest.getResource();
-			var regex    = "^data\.v1\.(WholeEntity|SingleRecord|Queue)";
+			var regex    = "^data\.v1\.(WholeEntity|SingleRecord|Queue|Docs)";
 
 			if ( api == "/data/v1" && reFindNoCase( regex, resource.handler ?: "" ) && resource.count() ) {
 				dataApiService.onRestRequest( restRequest, restResponse );
