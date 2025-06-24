@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.3
+
+* Support extending api endpoints for the default /api/data/v1 endpoint
+
 ## v3.7.2
 
 * Add missing namespace variable to batch update method
