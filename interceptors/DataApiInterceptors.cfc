@@ -95,15 +95,16 @@ component extends="coldbox.system.Interceptor" {
 		if ( !IsSimpleValue( restRequest ) ) {
 			var api      = restRequest.getApi();
 			var resource = restRequest.getResource();
+			var regex    = "^data\.v1\.(WholeEntity|SingleRecord|Queue|Docs)";
 
-			if ( api == "/data/v1" && resource.count() ) {
+			if ( api == "/data/v1" && reFindNoCase( regex, resource.handler ?: "" ) && resource.count() ) {
 				dataApiService.onRestRequest( restRequest, restResponse );
 				return;
 			}
 
 			var dataApiRoutes = dataApiConfigurationService.getDataApiRoutes();
 			for( var apiRoute in dataApiRoutes ) {
-				if ( api == apiRoute && reFindNoCase( "^data\.v1", resource.handler ?: "" ) ) {
+				if ( api == apiRoute && reFindNoCase( regex, resource.handler ?: "" ) ) {
 					event.setValue( "dataApiRoute"    , apiRoute );
 					event.setValue( "dataApiHandler"  , apiRoute.changeDelims( ".", "/" ) );
 					event.setValue( "dataApiNamespace", dataApiRoutes[ apiRoute ].dataApiNamespace );
