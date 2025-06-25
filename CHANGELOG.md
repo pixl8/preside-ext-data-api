@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.4
+
+* Ability to filter date fields on date range (min & max)
+
 ## v3.7.3
 
 * Support extending api endpoints for the default /api/data/v1 endpoint

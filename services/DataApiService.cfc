@@ -51,10 +51,11 @@ component {
 		,          struct  filters = {}
 	) {
 		var args = {
-			  maxRows  = pageSize
-			, startRow = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
-			, orderby  = "datemodified"
-			, filter   = {}
+			  maxRows      = pageSize
+			, startRow     = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
+			, orderby      = "datemodified"
+			, filter       = {}
+			, extraFilters = []
 		};
 		if ( args.maxRows < 1 ) {
 			args.maxRows = 100;
@@ -63,17 +64,7 @@ component {
 			args.startRow = 1;
 		}
 
-		if ( arguments.filters.count() ) {
-			var configService = _getConfigService();
-			var filterFields = configService.getFilterFields( arguments.entity );
-
-			for( var field in filterFields ) {
-				var propName = configService.getPropertyNameFromFieldAlias( arguments.entity, field );
-				if ( StructKeyExists( arguments.filters, field ) || StructKeyExists( arguments.filters, propName ) ) {
-					args.filter[ propName ] = arguments.filters[ field ] ?: arguments.filters[ propName ];
-				}
-			}
-		}
+		_prepareFilters( arguments.entity, arguments.filters, args );
 
 		var result = {
 			records = _selectData( arguments.entity, args, arguments.fields )
@@ -506,6 +497,47 @@ component {
 		}
 
 		return translated;
+	}
+
+	private function _prepareFilters( entity, filters, args ) {
+		if ( StructCount( arguments.filters ) ) {
+			var configService = _getConfigService();
+			var objectName    = configService.getEntityObject( arguments.entity );
+			var dbAdapter     = $getPresideObjectService().getDbAdapterForObject( objectName );
+			var filterFields  = configService.getFilterFields( arguments.entity );
+
+			for( var field in filterFields ) {
+				var propName  = configService.getPropertyNameFromFieldAlias( arguments.entity, field );
+				var fieldType = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
+
+				if ( StructKeyExists( arguments.filters, field ) || StructKeyExists( arguments.filters, propName ) ) {
+					args.filter[ propName ] = arguments.filters[ field ] ?: arguments.filters[ propName ];
+				}
+
+				if ( ReFindNoCase( "^date", fieldType ) ) {
+					if ( StructKeyExists( arguments.filters, field & ".min" ) || StructKeyExists( arguments.filters, propName & ".min" ) ) {
+						var value = arguments.filters[ field & ".min" ] ?: arguments.filters[ propName & ".min" ];
+						ArrayAppend( args.extraFilters, {
+							  filter       = "#dbAdapter.escapeEntity( '#objectName#.#propName#' )# >= :#propName#__min"
+							, filterParams = { "#propName#__min" = {
+								  type  = dbAdapter.sqlDataTypeToCfSqlDatatype( fieldType )
+								, value = value
+							  } }
+						} );
+					}
+					if ( StructKeyExists( arguments.filters, field & ".max" ) || StructKeyExists( arguments.filters, propName & ".max" ) ) {
+						var value = arguments.filters[ field & ".max" ] ?: arguments.filters[ propName & ".max" ];
+						ArrayAppend( args.extraFilters, {
+							  filter       = "#dbAdapter.escapeEntity( '#objectName#.#propName#' )# <= :#propName#__max"
+							, filterParams = { "#propName#__max" = {
+								  type  = dbAdapter.sqlDataTypeToCfSqlDatatype( fieldType )
+								, value = value
+							  } }
+						} );
+					}
+				}
+			}
+		}
 	}
 
 // GETTERS AND SETTERS
