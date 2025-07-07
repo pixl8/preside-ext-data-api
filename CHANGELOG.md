@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.2
+
+* Allow date fields to be filtered using lt and gt
+
 ## v3.6.1
 
 * Always respect returned value from custom field renderer
