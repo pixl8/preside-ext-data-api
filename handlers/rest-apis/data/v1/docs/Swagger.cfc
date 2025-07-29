@@ -22,6 +22,8 @@ component {
 			args.favicon = event.buildLink( systemStaticAsset="/extension/preside-ext-data-api/assets/favicon-32x32.png" );
 		}
 
+		event?.setContentSecurityPolicy( "default-src 'self'; style-src 'self' 'unsafe-inline' 'nonce-#event?.getRequestNonce()#'" );
+
 		restResponse.setData( Trim( renderView( view="/swaggerLayout", args=args ) ) );
 		restResponse.setMimeType( "text/html" );
 		restResponse.setRenderer( "html" );
