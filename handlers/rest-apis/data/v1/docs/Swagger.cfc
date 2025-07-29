@@ -22,7 +22,7 @@ component {
 			args.favicon = event.buildLink( systemStaticAsset="/extension/preside-ext-data-api/assets/favicon-32x32.png" );
 		}
 
-		event?.setContentSecurityPolicy( "default-src 'self'; style-src 'self' 'unsafe-inline' 'nonce-#event?.getRequestNonce()#'" );
+		event?.setContentSecurityPolicy( "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:;" );
 
 		restResponse.setData( Trim( renderView( view="/swaggerLayout", args=args ) ) );
 		restResponse.setMimeType( "text/html" );
