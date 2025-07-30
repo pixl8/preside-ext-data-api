@@ -18,6 +18,8 @@ component {
 			, pageTitle     = dataApiService.i18nNamespaced( "dataapi:api.title" ) & " " & dataApiService.i18nNamespaced( "dataapi:api.version" )
 		};
 
+		event?.setContentSecurityPolicy( "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:;" );
+
 		restResponse.setData( Trim( renderView( view="/swaggerLayout", args=args ) ) );
 		restResponse.setMimeType( "text/html" );
 		restResponse.setRenderer( "html" );
