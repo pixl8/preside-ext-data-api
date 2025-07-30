@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.3.7
+
+* Support CSP changes in Preside
+
 ## v3.3.6
 
 * [DATAAPI-27](https://projects.pixl8.london/browse/DATAAPI-27) - Function count does not exist in the object
