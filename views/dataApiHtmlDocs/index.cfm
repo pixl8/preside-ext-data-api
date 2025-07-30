@@ -14,7 +14,7 @@
 		<cfif Len( Trim( spec.info[ "x-favicon" ] ?: "" ) )>
 			<link rel="shortcut icon" href="#spec.info[ "x-favicon" ]#" type="image/x-icon" />
 		</cfif>
-		<style>
+		<style nonce="#event?.getRequestNonce()#">
 			<cfinclude template="htmlDocsCss.css" />
 		</style>
 	</head>
