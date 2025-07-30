@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.5.18
+
+* Support CSP changes in Preside
+
 ## v3.5.17
 
 * Allow date fields to be filtered  using lt and gt
