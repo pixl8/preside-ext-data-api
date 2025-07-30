@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.20
+
+Support CSP changes in Preside
+
 ## v1.0.19
 
 * Total record count should return filtered count if filter is applied
