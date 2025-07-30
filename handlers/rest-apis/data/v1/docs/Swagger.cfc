@@ -14,6 +14,8 @@ component {
 			, docsJs        = event.buildLink( systemStaticAsset="/extension/preside-ext-data-api/assets/redoc.standalone.js" )
 		};
 
+		event?.setContentSecurityPolicy( "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:;" );
+
 		restResponse.setData( Trim( renderView( view="/swaggerLayout", args=args ) ) );
 		restResponse.setMimeType( "text/html" );
 		restResponse.setRenderer( "html" );

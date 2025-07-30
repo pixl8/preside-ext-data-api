@@ -12,7 +12,7 @@
     <!--
     ReDoc doesn't change outer page styles
     -->
-    <style>
+    <style nonce="#event?.getRequestNonce()#">
       body {
         margin: 0;
         padding: 0;
