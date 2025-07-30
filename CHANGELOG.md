@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.5
+
+* Support CSP changes in Preside
+
 ## v3.7.4
 
 * Ability to filter date fields on date range (min & max)
