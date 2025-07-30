@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.3
+
+Support CSP changes in Preside
+
 ## v2.0.2
 
 * Fix path to docs
