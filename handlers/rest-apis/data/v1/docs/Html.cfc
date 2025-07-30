@@ -15,6 +15,8 @@ component {
 
 		args.spec = variables[ "_spec#api#" ];
 
+		event?.setContentSecurityPolicy( "default-src 'self'; style-src 'self' 'unsafe-inline' 'nonce-#event?.getRequestNonce()#'" );
+
 		restResponse.setData( Trim( renderView( view="/dataApiHtmlDocs/index", args=args ) ) );
 		restResponse.setMimeType( "text/html" );
 		restResponse.setRenderer( "html" );
