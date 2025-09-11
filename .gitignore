@@ -11,3 +11,4 @@
 npm-debug.log
 /tests/server*.json
 /modules
+.vscode/settings.json
