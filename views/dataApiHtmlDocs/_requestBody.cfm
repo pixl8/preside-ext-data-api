@@ -7,7 +7,7 @@
 
 <cfoutput>
 	<cfloop collection="#schemas#" item="schema" index="schemaName">
-		<cfif schemaName == "application/json"><!-- TODO: support more schemas -->
+		<cfif ArrayFindNoCase( ["application/json", "multipart/form-data" ], schemaName )><!-- TODO: support more schemas -->
 			<div class="api-doc-method-params api-doc-method-params-request-body">
 				<h4 class="api-doc-params-title">#title#: <span class="api-docs-params-title-schema">#schemaName#</span></h4>
 				<cfif Len( Trim( requestBody.description ?: "" ) )>
