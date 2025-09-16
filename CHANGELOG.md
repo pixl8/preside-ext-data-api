@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.6
+
+* [#94](https://github.com/pixl8/preside-ext-data-api/issues/94) Support output of multipart/form-data post body specs in the HTML docs
+
 ## v3.7.5
 
 * Support CSP changes in Preside
