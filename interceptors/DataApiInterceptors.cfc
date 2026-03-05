@@ -118,7 +118,7 @@ component extends="coldbox.system.Interceptor" {
 	}
 
 	public void function preDeleteObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
+		if ( _skipQueue( interceptData ) ) return;
 
 		if( isEmptyString( interceptData.id ?: "" ) ){
 			interceptData.deletedIds = dataApiQueueService.getDeletedRecordIds( argumentCollection = interceptData );
@@ -142,20 +142,13 @@ component extends="coldbox.system.Interceptor" {
 	}
 
 	public void function postDeleteObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
-
-		var skipDataApiQueue = IsBoolean( interceptData.skipDataApiQueue ?: "" ) && interceptData.skipDataApiQueue;
-		var skipSyncQueue    = IsBoolean( interceptData.skipSyncQueue    ?: "" ) && interceptData.skipSyncQueue;
-
-		skipDataApiQueue = skipDataApiQueue || ( skipSyncQueue && dataApiConfigurationService.skipApiQueueWhenSkipSyncQueue( interceptData.objectName ) );
-
-		if( skipDataApiQueue ) return;
+		if ( _skipQueue( interceptData ) ) return;
 
 		dataApiQueueService.queueDelete( argumentCollection=interceptData );
 	}
 
 	public void function preUpdateObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
+		if ( _skipQueue( interceptData ) ) return;
 
 		if ( dataApiQueueService.queueRequired( argumentCollection=interceptData ) ) {
 			interceptData.calculateChangedData = true;
@@ -163,28 +156,27 @@ component extends="coldbox.system.Interceptor" {
 	}
 
 	public void function postUpdateObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
-
-		var skipDataApiQueue = IsBoolean( interceptData.skipDataApiQueue ?: "" ) && interceptData.skipDataApiQueue;
-		var skipSyncQueue    = IsBoolean( interceptData.skipSyncQueue    ?: "" ) && interceptData.skipSyncQueue;
-
-		skipDataApiQueue = skipDataApiQueue || ( skipSyncQueue && dataApiConfigurationService.skipApiQueueWhenSkipSyncQueue( interceptData.objectName ) );
-
-		if( skipDataApiQueue ) return;
+		if ( _skipQueue( interceptData ) ) return;
 
 		dataApiQueueService.queueUpdate( argumentCollection=interceptData );
 	}
 
 	public void function postInsertObjectData( event, interceptData ) {
-		if ( !_applicationLoaded ) return;
-
-		var skipDataApiQueue = IsBoolean( interceptData.skipDataApiQueue ?: "" ) && interceptData.skipDataApiQueue;
-		var skipSyncQueue    = IsBoolean( interceptData.skipSyncQueue    ?: "" ) && interceptData.skipSyncQueue;
-
-		skipDataApiQueue = skipDataApiQueue || ( skipSyncQueue && dataApiConfigurationService.skipApiQueueWhenSkipSyncQueue( interceptData.objectName ) );
-
-		if( skipDataApiQueue ) return;
+		if ( _skipQueue( interceptData ) ) return;
 
 		dataApiQueueService.queueInsert( argumentCollection=interceptData );
+	}
+
+	private boolean function _skipQueue( interceptData ) {
+
+		if ( !_applicationLoaded ) {
+			return true;
+		}
+
+		if ( IsTrue( interceptData.skipDataApiQueue ?: "" ) ) {
+			return true;
+		}
+
+		return IsTrue( interceptData.skipSyncQueue ?: "" ) && dataApiConfigurationService.skipApiQueueWhenSkipSyncQueue( interceptData.objectName );
 	}
 }
