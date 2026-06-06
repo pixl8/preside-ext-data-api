@@ -696,10 +696,6 @@ component {
 		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
 		var dbtype        = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
 
-		if ( arguments.field == "datemodified" ) {
-			dump( dbtype );abort;
-		}
-
 		return ReFindNoCase( "^date", dbtype );
 	}
 
