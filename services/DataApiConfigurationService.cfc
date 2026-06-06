@@ -75,7 +75,30 @@ component {
 	}
 
 	public boolean function isValidPaginationMode( required string mode ) {
-		return ArrayFindNoCase( [ VALID_PAGINATION_MODES.FULL, VALID_PAGINATION_MODES.OFFSET, VALID_PAGINATION_MODES.CURSOR ], arguments.mode ) > 0;
+		return ArrayFindNoCase( _getValidPaginationModes(), arguments.mode ) > 0;
+	}
+
+	public array function getPaginationModesInUse( string namespace=_getDataApiNamespace() ) {
+		var args     = arguments;
+		var cacheKey = "getPaginationModesInUse" & args.namespace;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities( args.namespace );
+			var inUse    = {};
+
+			for( var entityName in entities ) {
+				inUse[ entities[ entityName ].paginationMode ?: DEFAULT_PAGINATION_MODE ] = true;
+			}
+
+			var ordered = [];
+			for( var mode in _getValidPaginationModes() ) {
+				if ( inUse.keyExists( mode ) ) {
+					ArrayAppend( ordered, mode );
+				}
+			}
+
+			return ordered;
+		} );
 	}
 
 	public string function entityResponseTypeOnInsert( required string entity ) {
@@ -720,6 +743,10 @@ component {
 
 			return result;
 		} );
+	}
+
+	public array function _getValidPaginationModes() {
+		return [ VALID_PAGINATION_MODES.FULL, VALID_PAGINATION_MODES.OFFSET, VALID_PAGINATION_MODES.CURSOR ];
 	}
 
 	private any function _simpleLocalCache( required string cacheKey, required any generator ) {
