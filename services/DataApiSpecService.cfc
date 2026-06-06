@@ -286,13 +286,21 @@ component {
 
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
 				var fieldsFilterList = configService.getSelectFields( entityName, true ).toList( ", " );
-				var params = [ {
+				var isCursorMode     = configService.entityUsesCursorPagination( entityName );
+				var firstParam       = isCursorMode ? {
+					name        = "cursor"
+				  , in          = "query"
+				  , required    = false
+				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.cursor", defaultValue="", data=[ entityTag ] )
+				  , schema      = { type="string" }
+				} : {
 					name        = "page"
 				  , in          = "query"
 				  , required    = false
 				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.page", defaultValue="", data=[ entityTag ] )
 				  , schema      = { type="integer" }
-				},{
+				};
+				var params = [ firstParam, {
 					name        = "pageSize"
 				  , in          = "query"
 				  , required    = false
@@ -333,6 +341,12 @@ component {
 					}
 				}
 
+				var getResponseHeaders = { "Link" = { "$ref"="##/components/headers/Link" } };
+				if ( !isCursorMode ) {
+					getResponseHeaders[ "X-Total-Records" ] = { "$ref"="##/components/headers/XTotalRecords" };
+					getResponseHeaders[ "X-Total-Pages"   ] = { "$ref"="##/components/headers/XTotalPages" };
+				}
+
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
 					, summary = "GET /entity/#entityName#/"
@@ -341,11 +355,7 @@ component {
 					, responses = { "200" = {
 						  description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.200.description", defaultValue=_i18nNamespaced( uri="dataapi:operation.get.200.description", defaultValue="", data=[ entitySingular ] ) )
 						, content     = { "application/json" = { schema={ type="array", items={"$ref"="##/components/schemas/#entityName#" } } } }
-						, headers     = {
-							  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
-							, "X-Total-Pages"   = { "$ref"="##/components/headers/XTotalPages" }
-							, "Link"            = { "$ref"="##/components/headers/Link" }
-						  }
+						, headers     = getResponseHeaders
 					  } }
 				};
 
@@ -685,6 +695,10 @@ component {
 		var objectName    = configService.getEntityObject( arguments.entity );
 		var propName      = configService.getPropertyNameFromFieldAlias( arguments.entity, arguments.field );
 		var dbtype        = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
+
+		if ( arguments.field == "datemodified" ) {
+			dump( dbtype );abort;
+		}
 
 		return ReFindNoCase( "^date", dbtype );
 	}

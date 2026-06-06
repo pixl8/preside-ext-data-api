@@ -42,6 +42,7 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiQueue`: Specific queue name for this object
 * `dataApiQueueDeleteDetail`: Whether or not the deleted record detail is available in the change queue data for this object
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
+* `dataApiPaginationMode`: Pagination strategy for GET list requests. One of `full` (default), `offset` or `cursor`. See [Pagination](##pagination), below.
 * `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
 * `dataApiIgnoreDefaultFilters`: Comma-separated list of ignore default filters to apply to all requests to this object
 * `dataApiVerbs`: Supported REST HTTP Verbs. If not supplied, all verbs and operations are supported (i.e. GET, POST, PUT and DELETE)
@@ -69,6 +70,34 @@ Object properties support the following _optional_ annotations:
 * `dataApiEnabled`: Whether or not this property should be included in the API
 * `dataApiUpsertEnabled`: Whether or not this property should be included in the POST/PUT operations.
 * `dataApiRenderEmptyValues`: Whether to force always calling a custom render when the value being processed is empty or null
+
+## Pagination
+
+GET list requests (`GET /entity/{entity}/`) support three pagination modes, configured per object with the `dataApiPaginationMode` annotation (or per API namespace via the `paginationMode` default). The default is `full` so existing integrations are unaffected.
+
+* `full` (default): page based (`page` + `pageSize`). Returns the `X-Total-Records` and `X-Total-Pages` response headers as well as `Link` (`next`/`prev`). The total record count requires a `COUNT` query, which can be slow on very large tables.
+* `offset`: page based (`page` + `pageSize`), but without the total record count. The `X-Total-*` headers are omitted; `Link` (`next`/`prev`) is still returned (the next page is detected by over-fetching a single extra row). Use this when you want page based navigation without paying for the count.
+* `cursor`: keyset pagination. The `page` parameter is ignored; instead, pass the opaque `cursor` returned in the `Link` header of the previous response. This is the most performant option for very large tables as it never counts and never uses a growing `OFFSET`.
+
+Example, enabling cursor pagination on an object:
+
+```
+/**
+ * @dataApiEnabled        true
+ * @dataApiPaginationMode cursor
+ *
+ */
+component {
+	// ...
+}
+```
+
+### Notes and limitations of cursor pagination
+
+* Navigation is **forward only** (`Link: rel="next"`). There is no `prev` link.
+* The cursor is keyset based on the object's `dataApiSortOrder` (default: date last modified) plus the unique `id` as a tie-breaker, so ordering is always deterministic.
+* The primary sort column should be **non-null** and have **second (or coarser) precision** for fully reliable results. The default `datemodified`/`datecreated` fields satisfy this. A custom `dataApiSortOrder` pointing at a nullable or sub-second column may skip or duplicate rows at page boundaries.
+* The cursor is opaque and stateless. If a row's sort value changes between requests, the client simply continues from the encoded position (acceptable for sync style consumers).
 
 ## Custom renderers
 

@@ -11,6 +11,13 @@ component {
 	};
 	DEFAULT_RESPONSE_TYPE = VALID_RESPONSE_TYPES.RECORD;
 
+	VALID_PAGINATION_MODES = {
+		  FULL   = "full"
+		, OFFSET = "offset"
+		, CURSOR = "cursor"
+	};
+	DEFAULT_PAGINATION_MODE = VALID_PAGINATION_MODES.FULL;
+
 // CONSTRUCTOR
 	/**
 	 * @presideFieldRuleGenerator.inject presideFieldRuleGenerator
@@ -53,6 +60,22 @@ component {
 
 	public boolean function entitySkipValidationOnUpdate( required string entity ) {
 		return _entityIsBooleanConfigOptionTrue( arguments.entity, "skipValidationOnUpdate" );
+	}
+
+	public string function getEntityPaginationMode( required string entity ) {
+		return _entityConfigOption( arguments.entity, "paginationMode", DEFAULT_PAGINATION_MODE );
+	}
+
+	public boolean function entityUsesCursorPagination( required string entity ) {
+		return getEntityPaginationMode( arguments.entity ) == VALID_PAGINATION_MODES.CURSOR;
+	}
+
+	public boolean function entityCountsTotalRecords( required string entity ) {
+		return getEntityPaginationMode( arguments.entity ) == VALID_PAGINATION_MODES.FULL;
+	}
+
+	public boolean function isValidPaginationMode( required string mode ) {
+		return ArrayFindNoCase( [ VALID_PAGINATION_MODES.FULL, VALID_PAGINATION_MODES.OFFSET, VALID_PAGINATION_MODES.CURSOR ], arguments.mode ) > 0;
 	}
 
 	public string function entityResponseTypeOnInsert( required string entity ) {
@@ -301,6 +324,7 @@ component {
 					var allowQueue             = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName              = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 					var category               = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
+					var paginationMode         = poService.getObjectAttribute( objectName, "dataApiPaginationMode#namespace#", getDefaultConfigForApiNamespace( "paginationMode", namespace, DEFAULT_PAGINATION_MODE ) );
 
 					entities[ entityName ] = {
 						  objectName             = objectName
@@ -315,6 +339,7 @@ component {
 						, responseTypeOnUpdate   = isValidResponseType( responseTypeOnUpdate ) ? responseTypeOnUpdate : DEFAULT_RESPONSE_TYPE
 						, allowQueue             = _isTrue( allowQueue    )
 						, queueName              = queueName
+						, paginationMode         = isValidPaginationMode( paginationMode ) ? LCase( paginationMode ) : DEFAULT_PAGINATION_MODE
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
