@@ -458,7 +458,7 @@ component {
 			throw( "Invaid select field" );
 		}
 
-		var records    = dao.selectData( argumentCollection=args );
+		var records    = Duplicate( dao.selectData( argumentCollection=args ) );
 		var hasNext    = ArrayLen( records ) > arguments.pageSize;
 		var processed  = [];
 		var nextCursor = "";

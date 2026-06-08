@@ -31,7 +31,16 @@ component {
 		}
 
 		if ( dataApiConfigurationService.entityUsesCursorPagination( arguments.entity ) ) {
-			_getCursorPage( entity=arguments.entity, pageSize=arguments.pageSize, fields=arguments.fields, cursor=arguments.cursor, filters=filters, filterQs=filterQs, handler=handler );
+			_getCursorPage(
+				  argumentCollection = arguments
+				, entity             = arguments.entity
+				, pageSize           = arguments.pageSize
+				, fields             = arguments.fields
+				, cursor             = arguments.cursor
+				, filters            = filters
+				, filterQs           = filterQs
+				, handler            = handler
+			);
 			return;
 		}
 
@@ -86,6 +95,7 @@ component {
 		, required struct  filters
 		, required string  filterQs
 		, required string  handler
+		, required any     restResponse
 	) {
 		var result = "";
 
