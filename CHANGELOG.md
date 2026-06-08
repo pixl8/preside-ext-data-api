@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.8
+
+* [DATAAPI-46](https://projects.pixl8.london/browse/DATAAPI-46) - Evaluate skip queue flags also before actually manipulating records
+
 ## v3.7.7
 
 * Apply translation manager CI action

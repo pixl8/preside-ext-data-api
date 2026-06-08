@@ -33,6 +33,7 @@ component {
 				, skipValidationOnUpdate = false
 				, responseTypeOnInsert   = "record" // "empty", "idonly" or "record" (default)
 				, responseTypeOnUpdate   = "record" // "empty", "idonly" or "record" (default)
+				, paginationMode         = "full"   // "full" (count + totals), "offset" (page based, no count) or "cursor" (keyset)
 			}
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
@@ -43,6 +44,7 @@ component {
 
 	private void function _setupEnums( required struct settings ) {
 		settings.enum.dataApiQueueOperation = [ "insert", "update", "delete" ];
+		settings.enum.dataApiPaginationMode = [ "full", "offset", "cursor" ];
 	}
 
 	private void function _setupInterceptors( required struct conf ) {
