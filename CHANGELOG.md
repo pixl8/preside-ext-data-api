@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.8.1
+
+* multiline i18n fix for some environments
+
 ## v3.8.0
 
 * New pagination options for better performance, see README for updated pagination settings
