@@ -4,22 +4,46 @@
  */
 component {
 
-	property name="dataApiService" inject="dataApiService";
+	property name="dataApiService"              inject="dataApiService";
+	property name="dataApiConfigurationService" inject="dataApiConfigurationService";
 
 	private void function get(
 		  required string  entity
 		,          numeric page     = 1
 		,          numeric pageSize = 100
 		,          string  fields   = ""
+		,          string  cursor   = ""
 	) {
 		var filters  = {};
 		var filterQs = "";
+		var handler  = event.getValue( name="dataApiHandler", defaultValue="data.v1" );
 
 		for( var paramName in rc ) {
 			if ( paramName.reFindNoCase( "^filter\." ) ) {
 				filters[ paramName.reReplaceNoCase( "^filter\.", "" ) ] = rc[ paramName ];
 			}
 		}
+
+		if ( !isEmpty( filters ) ) {
+			for ( var f in filters ) {
+				filterQs &= "&filter.#f#=#filters[f]#";
+			}
+		}
+
+		if ( dataApiConfigurationService.entityUsesCursorPagination( arguments.entity ) ) {
+			_getCursorPage(
+				  argumentCollection = arguments
+				, entity             = arguments.entity
+				, pageSize           = arguments.pageSize
+				, fields             = arguments.fields
+				, cursor             = arguments.cursor
+				, filters            = filters
+				, filterQs           = filterQs
+				, handler            = handler
+			);
+			return;
+		}
+
 		var result = dataApiService.getPaginatedRecords(
 			  entity   = arguments.entity
 			, page     = arguments.page
@@ -29,18 +53,16 @@ component {
 		);
 
 		restResponse.setData( result.records );
-		restResponse.setHeader( "X-Total-Records", result.totalCount );
-		restResponse.setHeader( "X-Total-Pages", result.totalPages );
+
+		if ( StructKeyExists( result, "totalCount" ) ) {
+			restResponse.setHeader( "X-Total-Records", result.totalCount );
+		}
+		if ( StructKeyExists( result, "totalPages" ) ) {
+			restResponse.setHeader( "X-Total-Pages", result.totalPages );
+		}
 
 		var linkHeader      = "";
 		var linkHeaderDelim = "";
-		var handler         = event.getValue( name="dataApiHandler"  , defaultValue="data.v1" );
-
-		if ( !isEmpty( filters ) ) {
-			for ( var f in filters ) {
-				filterQs &= "&filter.#f#=#filters[f]#";
-			}
-		}
 
 		if ( result.nextPage ) {
 			var nextLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
@@ -62,6 +84,47 @@ component {
 
 		if ( Len( linkHeader ) ) {
 			restResponse.setHeader( "Link", linkHeader );
+		}
+	}
+
+	private void function _getCursorPage(
+		  required string  entity
+		, required numeric pageSize
+		, required string  fields
+		, required string  cursor
+		, required struct  filters
+		, required string  filterQs
+		, required string  handler
+		, required any     restResponse
+	) {
+		var result = "";
+
+		try {
+			result = dataApiService.getCursorRecords(
+				  entity   = arguments.entity
+				, pageSize = arguments.pageSize
+				, fields   = ListToArray( arguments.fields )
+				, cursor   = arguments.cursor
+				, filters  = arguments.filters
+			);
+		} catch( "dataApiCursor.invalid" e ) {
+			restResponse.setError(
+				  errorCode = 400
+				, title     = "Bad request"
+				, message   = e.message
+			);
+			return;
+		}
+
+		restResponse.setData( result.records );
+
+		if ( Len( result.nextCursor ) ) {
+			var nextLink = event.buildLink( linkto="api.#arguments.handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&cursor=#URLEncodedFormat( result.nextCursor )#" );
+			if ( !isEmptyString( arguments.filterQs ) ) {
+				nextLink &= "#arguments.filterQs#";
+			}
+
+			restResponse.setHeader( "Link", "<#nextLink#>; rel=""next""" );
 		}
 	}
 

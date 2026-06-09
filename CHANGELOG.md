@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.8.0
+
+* New pagination options for better performance, see README for updated pagination settings
+
 ## v3.7.8
 
 * [DATAAPI-46](https://projects.pixl8.london/browse/DATAAPI-46) - Evaluate skip queue flags also before actually manipulating records

@@ -50,7 +50,8 @@ component {
 		, required array   fields
 		,          struct  filters = {}
 	) {
-		var args = {
+		var countTotalRecords = _getConfigService().entityCountsTotalRecords( arguments.entity );
+		var args              = {
 			  maxRows      = pageSize
 			, startRow     = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
 			, orderby      = "datemodified"
@@ -67,19 +68,66 @@ component {
 		_prepareFilters( arguments.entity, arguments.filters, args );
 
 		var result = {
-			records = _selectData( arguments.entity, args, arguments.fields )
+			  prevPage = arguments.page - 1
+			, nextPage = 0
 		};
 
-		args.recordCountOnly = true;
-		structDelete( args, "maxRows" );
+		if ( countTotalRecords ) {
+			result.records = _selectData( arguments.entity, args, arguments.fields );
 
-		result.totalCount = _selectData( arguments.entity, args, arguments.fields )
+			args.recordCountOnly = true;
+			structDelete( args, "maxRows" );
 
-		result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
-		result.prevPage   = arguments.page -1;
-		result.nextPage   = arguments.page >= result.totalPages ? 0 : arguments.page+1;
+			result.totalCount = _selectData( arguments.entity, args, arguments.fields );
+			result.totalPages = Ceiling( result.totalCount / arguments.pageSize );
+			result.nextPage   = arguments.page >= result.totalPages ? 0 : arguments.page + 1;
+		} else {
+			var effectivePageSize = args.maxRows;
+
+			args.maxRows   = effectivePageSize + 1;
+			result.records = _selectData( arguments.entity, args, arguments.fields );
+
+			if ( ArrayLen( result.records ) > effectivePageSize ) {
+				ArrayDeleteAt( result.records, ArrayLen( result.records ) );
+				result.nextPage = arguments.page + 1;
+			}
+		}
 
 		return result;
+	}
+
+	public struct function getCursorRecords(
+		  required string  entity
+		, required numeric pageSize
+		, required array   fields
+		,          string  cursor  = ""
+		,          struct  filters = {}
+	) {
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var idField       = $getPresideObjectService().getIdField( objectName );
+		var sort          = _resolveCursorSort( arguments.entity, idField );
+		var pageSize      = arguments.pageSize < 1 ? 100 : arguments.pageSize;
+
+		var args = {
+			  maxRows      = pageSize + 1
+			, filter       = {}
+			, extraFilters = []
+		};
+
+		_prepareFilters( arguments.entity, arguments.filters, args );
+
+		if ( Len( Trim( arguments.cursor ) ) ) {
+			_appendKeysetFilter( objectName, sort, _decodeCursor( arguments.cursor, sort ), args );
+		}
+
+		return _selectCursorPage(
+			  entity   = arguments.entity
+			, args     = args
+			, fields   = arguments.fields
+			, sort     = sort
+			, pageSize = pageSize
+		);
 	}
 
 	public any function getSingleRecord( required string entity, required string recordId, required array fields ) {
@@ -337,15 +385,23 @@ component {
 		var namespace     = _getInterceptorNamespace();
 		var fieldSettings = configService.getFieldSettings( arguments.entity );
 
-		args.selectFields            = _prepareSelectFields( arguments.entity, objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
+		args.recordCountOnly = args.recordCountOnly ?: false;
+
+		if ( args.recordCountOnly ) {
+			args.selectFields = [ "1" ];
+			args.distinct     = false;
+			args.autoGroupBy  = false;
+		} else {
+			args.selectFields = _prepareSelectFields( arguments.entity, objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
+			args.orderBy      = configService.getSelectSortOrder( arguments.entity );
+			args.distinct     = true;
+			args.autoGroupBy  = true;
+		}
+
 		args.fromVersionTable        = false;
-		args.orderBy                 = configService.getSelectSortOrder( arguments.entity );
 		args.savedFilters            = configService.getSavedFilters( arguments.entity );
 		args.ignoreDefaultFilters    = configService.getIgnoreDefaultFilters( arguments.entity );
 		args.allowDraftVersions      = false;
-		args.autoGroupBy             = true;
-		args.distinct                = true;
-		args.recordCountOnly         = args.recordCountOnly ?: false;
 
 		$announceInterception( "preDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity } );
 
@@ -366,6 +422,138 @@ component {
 		$announceInterception( "postDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity, data=processed } );
 
 		return processed;
+	}
+
+	private struct function _selectCursorPage(
+		  required string  entity
+		, required struct  args
+		, required array   fields
+		, required struct  sort
+		, required numeric pageSize
+	) {
+		var configService = _getConfigService();
+		var objectName    = configService.getEntityObject( arguments.entity );
+		var dao           = $getPresideObject( objectName );
+		var namespace     = _getInterceptorNamespace();
+		var fieldSettings = configService.getFieldSettings( arguments.entity );
+		var dbAdapter     = $getPresideObjectService().getDbAdapterForObject( objectName );
+		var args          = arguments.args;
+
+		args.selectFields         = _prepareSelectFields( arguments.entity, objectName, configService.getSelectFields( arguments.entity ), arguments.fields );
+		args.fromVersionTable     = false;
+		args.savedFilters         = configService.getSavedFilters( arguments.entity );
+		args.ignoreDefaultFilters = configService.getIgnoreDefaultFilters( arguments.entity );
+		args.allowDraftVersions   = false;
+		args.distinct             = true;
+		args.autoGroupBy          = true;
+		args.recordCountOnly      = false;
+		args.returnType           = "array";
+		args.orderBy              = "#arguments.sort.field# #arguments.sort.direction#, #arguments.sort.idField# #arguments.sort.direction#";
+
+		ArrayAppend( args.selectFields, "#dbAdapter.escapeEntity( '#objectName#.#arguments.sort.field#' )# as __cursor_sort_value" );
+
+		$announceInterception( "preDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity } );
+
+		if ( !ArrayLen( args.selectFields ) ) {
+			throw( "Invaid select field" );
+		}
+
+		var records    = Duplicate( dao.selectData( argumentCollection=args ) );
+		var hasNext    = ArrayLen( records ) > arguments.pageSize;
+		var processed  = [];
+		var nextCursor = "";
+
+		if ( hasNext ) {
+			ArrayDeleteAt( records, ArrayLen( records ) );
+		}
+
+		var lastIndex = ArrayLen( records );
+		for( var i=1; i<=lastIndex; i++ ) {
+			var record = records[ i ];
+
+			if ( hasNext && i == lastIndex ) {
+				nextCursor = _encodeCursor( arguments.sort, record[ "__cursor_sort_value" ] ?: "", record[ arguments.sort.idField ] ?: "" );
+			}
+
+			StructDelete( record, "__cursor_sort_value" );
+			processed.append( _processFields( record, fieldSettings ) );
+		}
+
+		$announceInterception( "postDataApiSelectData#namespace#", { selectDataArgs=args, entity=arguments.entity, data=processed } );
+
+		return { records=processed, nextCursor=nextCursor };
+	}
+
+	private struct function _resolveCursorSort( required string entity, required string idField ) {
+		var sortOrder = _getConfigService().getSelectSortOrder( arguments.entity );
+		var firstCol  = Trim( ListFirst( sortOrder, "," ) );
+		var parts     = ListToArray( firstCol, " " );
+		var field     = ArrayLen( parts ) >= 1 ? parts[ 1 ] : arguments.idField;
+		var direction = ArrayLen( parts ) >= 2 ? LCase( parts[ 2 ] ) : "asc";
+
+		if ( direction != "desc" ) {
+			direction = "asc";
+		}
+
+		return {
+			  field     = field
+			, direction = direction
+			, idField   = arguments.idField
+		};
+	}
+
+	private void function _appendKeysetFilter( required string objectName, required struct sort, required struct cursorData, required struct args ) {
+		var poService = $getPresideObjectService();
+		var dbAdapter = poService.getDbAdapterForObject( arguments.objectName );
+		var fieldType = poService.getObjectPropertyAttribute( arguments.objectName, arguments.sort.field, "dbtype" );
+		var escSort   = dbAdapter.escapeEntity( "#arguments.objectName#.#arguments.sort.field#" );
+		var escId     = dbAdapter.escapeEntity( "#arguments.objectName#.#arguments.sort.idField#" );
+		var op        = arguments.sort.direction == "desc" ? "<" : ">";
+		var sortType  = Len( Trim( fieldType ) ) ? dbAdapter.sqlDataTypeToCfSqlDatatype( fieldType ) : "cf_sql_varchar";
+
+		ArrayAppend( arguments.args.extraFilters, {
+			  filter       = "( #escSort# #op# :cursorSortA or ( #escSort# = :cursorSortB and #escId# #op# :cursorId ) )"
+			, filterParams = {
+				  cursorSortA = { type=sortType, value=arguments.cursorData.v  }
+				, cursorSortB = { type=sortType, value=arguments.cursorData.v  }
+				, cursorId    = { type="cf_sql_varchar", value=arguments.cursorData.id }
+			  }
+		} );
+	}
+
+	private string function _encodeCursor( required struct sort, required any sortValue, required string id ) {
+		var value = arguments.sortValue;
+
+		if ( IsDate( value ) ) {
+			value = DateTimeFormat( value, "yyyy-mm-dd HH:nn:ss" );
+		}
+
+		return ToBase64( SerializeJson( {
+			  f  = arguments.sort.field
+			, d  = arguments.sort.direction
+			, v  = value
+			, id = arguments.id
+		} ) );
+	}
+
+	private struct function _decodeCursor( required string cursor, required struct sort ) {
+		var payload = "";
+
+		try {
+			payload = DeserializeJson( ToString( ToBinary( arguments.cursor ) ) );
+		} catch( any e ) {
+			throw( type="dataApiCursor.invalid", message="The supplied pagination cursor could not be decoded." );
+		}
+
+		if ( !IsStruct( payload ) || !StructKeyExists( payload, "v" ) || !StructKeyExists( payload, "id" ) ) {
+			throw( type="dataApiCursor.invalid", message="The supplied pagination cursor is not valid." );
+		}
+
+		if ( ( payload.f ?: "" ) != arguments.sort.field || ( payload.d ?: "" ) != arguments.sort.direction ) {
+			throw( type="dataApiCursor.invalid", message="The supplied pagination cursor does not match the current sort order." );
+		}
+
+		return { v=payload.v, id=payload.id };
 	}
 
 	private struct function _processFields( required struct record, required struct fieldSettings ) {
