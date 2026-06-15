@@ -1,0 +1,11 @@
+{
+    "name":"dataapitests",
+    "openbrowser":false,
+    "trayEnable":false,
+    "web":{
+        "webroot":"tests//",
+        "http":{
+            "port":"6605"
+        }
+    }
+}

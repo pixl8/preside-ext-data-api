@@ -334,20 +334,20 @@ component {
 				if ( _isTrue( isEnabled ) ) {
 					var namespace              = _getNamespaceWithSeparator( args.namespace );
 					var entityName             = getObjectEntity( objectName, args.namespace );
-					var supportedVerbs         = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", namespace ) );
+					var supportedVerbs         = poService.getObjectAttribute( objectName, "dataApiVerbs#namespace#", getDefaultConfigForApiNamespace( "verbs", args.namespace ) );
 					var selectFields           = poService.getObjectAttribute( objectName, "dataApiFields#namespace#", "" );
 					var upsertFields           = poService.getObjectAttribute( objectName, "dataApiUpsertFields#namespace#", "" );
 					var excludeFields          = _getExcludedFields( objectName, namespace );
 					var upsertExcludeFields    = _getExcludedFields( objectName, namespace, "upsert" );
-					var allowIdInsert          = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", namespace ) );
-					var skipValidationOnInsert = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnInsert", namespace ) );
-					var skipValidationOnUpdate = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnUpdate", namespace ) );
-					var responseTypeOnInsert   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnInsert#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnInsert", namespace ) );
-					var responseTypeOnUpdate   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnUpdate#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnUpdate", namespace ) );
+					var allowIdInsert          = poService.getObjectAttribute( objectName, "dataApiAllowIdInsert#namespace#", getDefaultConfigForApiNamespace( "allowIdInsert", args.namespace ) );
+					var skipValidationOnInsert = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnInsert#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnInsert", args.namespace ) );
+					var skipValidationOnUpdate = poService.getObjectAttribute( objectName, "dataApiSkipValidationOnUpdate#namespace#", getDefaultConfigForApiNamespace( "skipValidationOnUpdate", args.namespace ) );
+					var responseTypeOnInsert   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnInsert#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnInsert", args.namespace ) );
+					var responseTypeOnUpdate   = poService.getObjectAttribute( objectName, "dataApiResponseTypeOnUpdate#namespace#", getDefaultConfigForApiNamespace( "responseTypeOnUpdate", args.namespace ) );
 					var allowQueue             = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName              = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 					var category               = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
-					var paginationMode         = poService.getObjectAttribute( objectName, "dataApiPaginationMode#namespace#", getDefaultConfigForApiNamespace( "paginationMode", namespace, DEFAULT_PAGINATION_MODE ) );
+					var paginationMode         = poService.getObjectAttribute( objectName, "dataApiPaginationMode#namespace#", getDefaultConfigForApiNamespace( "paginationMode", args.namespace, DEFAULT_PAGINATION_MODE ) );
 
 					entities[ entityName ] = {
 						  objectName             = objectName
