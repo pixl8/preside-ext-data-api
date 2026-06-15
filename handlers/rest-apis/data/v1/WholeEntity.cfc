@@ -9,14 +9,16 @@ component {
 
 	private void function get(
 		  required string  entity
-		,          numeric page     = 1
-		,          numeric pageSize = 100
-		,          string  fields   = ""
-		,          string  cursor   = ""
+		,          numeric page           = 1
+		,          numeric pageSize       = 100
+		,          string  fields         = ""
+		,          string  cursor         = ""
+		,          string  paginationMode = ""
 	) {
 		var filters  = {};
 		var filterQs = "";
 		var handler  = event.getValue( name="dataApiHandler", defaultValue="data.v1" );
+		var resolvedPaginationMode = "";
 
 		for( var paramName in rc ) {
 			if ( paramName.reFindNoCase( "^filter\." ) ) {
@@ -30,7 +32,21 @@ component {
 			}
 		}
 
-		if ( dataApiConfigurationService.entityUsesCursorPagination( arguments.entity ) ) {
+		try {
+			resolvedPaginationMode = dataApiConfigurationService.resolvePaginationMode(
+				  entity        = arguments.entity
+				, requestedMode = arguments.paginationMode
+			);
+		} catch( "dataApiPaginationMode.invalid dataApiPaginationMode.notAllowed" e ) {
+			restResponse.setError(
+				  errorCode = 400
+				, title     = "Bad request"
+				, message   = e.message
+			);
+			return;
+		}
+
+		if ( dataApiConfigurationService.paginationModeUsesCursor( resolvedPaginationMode ) ) {
 			_getCursorPage(
 				  argumentCollection = arguments
 				, entity             = arguments.entity
@@ -40,16 +56,18 @@ component {
 				, filters            = filters
 				, filterQs           = filterQs
 				, handler            = handler
+				, paginationMode     = resolvedPaginationMode
 			);
 			return;
 		}
 
 		var result = dataApiService.getPaginatedRecords(
-			  entity   = arguments.entity
-			, page     = arguments.page
-			, pageSize = arguments.pageSize
-			, fields   = ListToArray( arguments.fields )
-			, filters  = filters
+			  entity         = arguments.entity
+			, page           = arguments.page
+			, pageSize       = arguments.pageSize
+			, fields         = ListToArray( arguments.fields )
+			, filters        = filters
+			, paginationMode = resolvedPaginationMode
 		);
 
 		restResponse.setData( result.records );
@@ -63,9 +81,10 @@ component {
 
 		var linkHeader      = "";
 		var linkHeaderDelim = "";
+		var paginationQs    = _paginationQueryString( resolvedPaginationMode );
 
 		if ( result.nextPage ) {
-			var nextLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.nextPage#" );
+			var nextLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="#paginationQs#&pageSize=#arguments.pageSize#&page=#result.nextPage#" );
 			if ( !isEmptyString( filterQs ) ) {
 				nextLink &= "#filterQs#";
 			}
@@ -74,7 +93,7 @@ component {
 			linkHeaderDelim = ", ";
 		}
 		if ( result.prevPage ) {
-			var prevLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&page=#result.prevPage#" );
+			var prevLink = event.buildLink( linkto="api.#handler#.entity.#arguments.entity#", queryString="#paginationQs#&pageSize=#arguments.pageSize#&page=#result.prevPage#" );
 			if ( !isEmptyString( filterQs ) ) {
 				prevLink &= "#filterQs#";
 			}
@@ -95,6 +114,7 @@ component {
 		, required struct  filters
 		, required string  filterQs
 		, required string  handler
+		, required string  paginationMode
 		, required any     restResponse
 	) {
 		var result = "";
@@ -119,13 +139,18 @@ component {
 		restResponse.setData( result.records );
 
 		if ( Len( result.nextCursor ) ) {
-			var nextLink = event.buildLink( linkto="api.#arguments.handler#.entity.#arguments.entity#", queryString="pageSize=#arguments.pageSize#&cursor=#URLEncodedFormat( result.nextCursor )#" );
+			var paginationQs = _paginationQueryString( arguments.paginationMode );
+			var nextLink     = event.buildLink( linkto="api.#arguments.handler#.entity.#arguments.entity#", queryString="#paginationQs#&pageSize=#arguments.pageSize#&cursor=#URLEncodedFormat( result.nextCursor )#" );
 			if ( !isEmptyString( arguments.filterQs ) ) {
 				nextLink &= "#arguments.filterQs#";
 			}
 
 			restResponse.setHeader( "Link", "<#nextLink#>; rel=""next""" );
 		}
+	}
+
+	private string function _paginationQueryString( required string paginationMode ) {
+		return "paginationMode=#arguments.paginationMode#";
 	}
 
 	private void function post( required string entity ) {

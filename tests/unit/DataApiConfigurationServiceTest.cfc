@@ -96,6 +96,59 @@ component extends="tests.BaseTest" {
 				expect( svc.getEntityPaginationMode( "cursor_contact" ) ).toBe( "cursor" );
 			} );
 
+			it( "should allow all pagination modes by default", function(){
+				var svc = _getConfigService();
+
+				expect( svc.getNamespaceAllowedPaginationModes() ).toBe( [ "full", "offset", "cursor" ] );
+				expect( svc.getEntityAllowedPaginationModes( "contact" ) ).toBe( [ "full", "offset", "cursor" ] );
+				expect( svc.getPaginationModesInUse() ).toBe( [ "full", "offset", "cursor" ] );
+			} );
+
+			it( "should restrict allowed pagination modes when configured for a namespace", function(){
+				var svc = _getConfigService(
+					  defaults = {
+						  paginationMode         = "offset"
+						, allowedPaginationModes = [ "offset", "cursor" ]
+					  }
+				);
+
+				expect( svc.getNamespaceAllowedPaginationModes() ).toBe( [ "offset", "cursor" ] );
+				expect( svc.getPaginationModesInUse() ).toBe( [ "offset", "cursor" ] );
+			} );
+
+			it( "should further restrict allowed pagination modes per entity", function(){
+				var svc = _getConfigService();
+
+				expect( svc.getEntityAllowedPaginationModes( "restricted_contact" ) ).toBe( [ "cursor" ] );
+			} );
+
+			it( "should resolve the requested pagination mode for an entity", function(){
+				var svc = _getConfigService();
+
+				expect( svc.resolvePaginationMode( "contact" ) ).toBe( "full" );
+				expect( svc.resolvePaginationMode( "contact", "cursor" ) ).toBe( "cursor" );
+				expect( svc.resolvePaginationMode( "cursor_contact" ) ).toBe( "cursor" );
+				expect( svc.resolvePaginationMode( "cursor_contact", "offset" ) ).toBe( "offset" );
+			} );
+
+			it( "should use configured namespace defaults when the client does not specify a mode", function(){
+				var svc = _getConfigService( defaults={ paginationMode="offset" } );
+
+				expect( svc.resolvePaginationMode( "contact" ) ).toBe( "offset" );
+			} );
+
+			it( "should reject invalid or disallowed pagination modes", function(){
+				var svc = _getConfigService();
+
+				expect( function(){
+					svc.resolvePaginationMode( "contact", "invalid" );
+				} ).toThrow( type="dataApiPaginationMode.invalid" );
+
+				expect( function(){
+					svc.resolvePaginationMode( "restricted_contact", "full" );
+				} ).toThrow( type="dataApiPaginationMode.notAllowed" );
+			} );
+
 			it( "should identify cursor pagination and total record counting behaviour", function(){
 				var svc = _getConfigService();
 
@@ -103,6 +156,9 @@ component extends="tests.BaseTest" {
 				expect( svc.entityUsesCursorPagination( "contact" ) ).toBeFalse();
 				expect( svc.entityCountsTotalRecords( "contact" ) ).toBeTrue();
 				expect( svc.entityCountsTotalRecords( "offset_contact" ) ).toBeFalse();
+				expect( svc.paginationModeUsesCursor( "cursor" ) ).toBeTrue();
+				expect( svc.paginationModeCountsTotalRecords( "full" ) ).toBeTrue();
+				expect( svc.paginationModeCountsTotalRecords( "offset" ) ).toBeFalse();
 			} );
 
 			it( "should list pagination modes in use for a namespace", function(){

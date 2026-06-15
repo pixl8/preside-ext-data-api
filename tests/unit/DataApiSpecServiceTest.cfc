@@ -51,9 +51,60 @@ component extends="tests.BaseTest" {
 				}
 
 				expect( paginationTag.description ).toInclude( bundle[ "trait.pagination.intro" ] );
+				expect( paginationTag.description ).toInclude( "paginationMode" );
 				expect( paginationTag.description ).toInclude( "X-Total-Records" );
 				expect( paginationTag.description ).toInclude( "cursor" );
 				expect( paginationTag.description ).toInclude( "pageSize" );
+			} );
+
+			it( "should expose paginationMode and page/cursor params on paginated GET endpoints", function(){
+				var bundle    = _fixtures().loadI18nProperties();
+				var configSvc = _getConfigService();
+				var apiSvc    = _getDataApiService( configSvc, "", bundle );
+				var svc       = _getSpecService( configSvc, apiSvc, "", bundle );
+				var spec      = svc.getSpec();
+				var params    = spec.paths[ "/entity/contact/" ].get.parameters;
+				var paramNames = params.map( function( param ){ return param.name; } );
+
+				expect( paramNames ).toInclude( "paginationMode" );
+				expect( paramNames ).toInclude( "page" );
+				expect( paramNames ).toInclude( "cursor" );
+				expect( paramNames ).toInclude( "pageSize" );
+
+				var paginationParam = {};
+				for ( var param in params ) {
+					if ( param.name == "paginationMode" ) {
+						paginationParam = param;
+						break;
+					}
+				}
+
+				expect( paginationParam.schema.enum ).toInclude( "full" );
+				expect( paginationParam.schema.enum ).toInclude( "offset" );
+				expect( paginationParam.schema.enum ).toInclude( "cursor" );
+				expect( paginationParam.schema.default ).toBe( "full" );
+			} );
+
+			it( "should restrict paginationMode options in docs when allowed modes are configured", function(){
+				var bundle    = _fixtures().loadI18nProperties();
+				var configSvc = _getConfigService(
+					  defaults = { allowedPaginationModes=[ "offset", "cursor" ], paginationMode="offset" }
+				);
+				var apiSvc    = _getDataApiService( configSvc, "", bundle );
+				var svc       = _getSpecService( configSvc, apiSvc, "", bundle );
+				var spec      = svc.getSpec();
+				var params    = spec.paths[ "/entity/contact/" ].get.parameters;
+				var paginationParam = {};
+
+				for ( var param in params ) {
+					if ( param.name == "paginationMode" ) {
+						paginationParam = param;
+						break;
+					}
+				}
+
+				expect( paginationParam.schema.enum ).toBe( [ "offset", "cursor" ] );
+				expect( paginationParam.schema.default ).toBe( "offset" );
 			} );
 
 			it( "should include common pagination headers and validation schema components", function(){

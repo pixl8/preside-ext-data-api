@@ -159,6 +159,50 @@ component extends="tests.BaseTest" {
 				expect( ArrayLen( result.records ) ).toBe( 2 );
 				expect( result.nextPage ).toBe( 2 );
 			} );
+
+			it( "should honour a requested pagination mode override", function(){
+				var configSvc = _getConfigService();
+				var svc       = _getDataApiService( configSvc );
+				var dao       = _sequentialSelectDataMock( [
+					  [ { id=CreateUUID(), label="One", datemodified=Now(), datecreated=Now(), is_active=true, status="" } ]
+					, 5
+				] );
+
+				svc.$( "$getPresideObject" ).$args( "test_contact" ).$results( dao );
+
+				var result = svc.getPaginatedRecords(
+					  entity         = "contact"
+					, page           = 1
+					, pageSize       = 2
+					, fields         = []
+					, filters        = {}
+					, paginationMode = "full"
+				);
+
+				expect( result.totalCount ).toBe( 5 );
+				expect( result.totalPages ).toBe( 3 );
+
+				dao = _mockPresideObject( "test_contact" );
+				dao.$( "selectData" ).$results( [
+					  { id=CreateUUID(), label="One" }
+					, { id=CreateUUID(), label="Two" }
+					, { id=CreateUUID(), label="Three" }
+				] );
+				svc.$( "$getPresideObject" ).$args( "test_contact" ).$results( dao );
+
+				result = svc.getPaginatedRecords(
+					  entity         = "contact"
+					, page           = 1
+					, pageSize       = 2
+					, fields         = []
+					, filters        = {}
+					, paginationMode = "offset"
+				);
+
+				expect( result ).notToHaveKey( "totalCount" );
+				expect( result ).notToHaveKey( "totalPages" );
+				expect( ArrayLen( result.records ) ).toBe( 2 );
+			} );
 		} );
 
 		describe( "getCursorRecords()", function(){

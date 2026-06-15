@@ -50,6 +50,20 @@ component {
 					, datecreated  = { type="date"  , dbtype="datetime" }
 				  }
 			  }
+			, restricted_contact = {
+				  attributes = {
+					  dataApiEnabled               = true
+					, dataApiEntityName            = "restricted_contact"
+					, dataApiAllowedPaginationModes = "cursor"
+					, dbFieldlist                  = "id,label,datemodified,datecreated"
+				  }
+				, properties = {
+					  id           = { type="string", dbtype="varchar" , required=true }
+					, label        = { type="string", dbtype="varchar" }
+					, datemodified = { type="date"  , dbtype="datetime" }
+					, datecreated  = { type="date"  , dbtype="datetime" }
+				  }
+			  }
 			, get_only_contact = {
 				  attributes = {
 					  dataApiEnabled    = true

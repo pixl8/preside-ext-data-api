@@ -13,6 +13,7 @@ component extends="testbox.system.BaseSpec" {
 				var fixtures = new tests.fixtures.DataApiTestFixtures();
 				var bundle   = fixtures.loadI18nProperties();
 
+				expect( bundle[ "trait.pagination.intro" ] ).toInclude( "paginationMode" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "X-Total-Records" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "X-Total-Pages" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "pageSize" );
@@ -35,6 +36,14 @@ component extends="testbox.system.BaseSpec" {
 				expect( bundle[ "trait.pagination.cursor.description" ] ).toInclude( "cursor" );
 				expect( bundle[ "trait.pagination.cursor.description" ] ).toInclude( "forward only" );
 				expect( Len( bundle[ "trait.pagination.cursor.description" ] ) ).toBeGT( 100 );
+			} );
+
+			it( "should clarify that the page parameter is ignored in cursor pagination mode", function(){
+				var fixtures = new tests.fixtures.DataApiTestFixtures();
+				var bundle   = fixtures.loadI18nProperties();
+
+				expect( bundle[ "operation.get.params.page" ] ).toInclude( "cursor" );
+				expect( bundle[ "operation.get.params.page" ] ).toInclude( "Ignored" );
 			} );
 
 			it( "should preserve multiline error handling documentation including the JSON example", function(){

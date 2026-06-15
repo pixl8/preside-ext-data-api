@@ -66,39 +66,86 @@ component {
 		return _entityConfigOption( arguments.entity, "paginationMode", DEFAULT_PAGINATION_MODE );
 	}
 
+	public string function getEntityDefaultPaginationMode( required string entity ) {
+		var defaultMode = getEntityPaginationMode( arguments.entity );
+		var allowed     = getEntityAllowedPaginationModes( arguments.entity );
+
+		if ( ArrayFindNoCase( allowed, defaultMode ) ) {
+			return defaultMode;
+		}
+
+		return allowed[ 1 ];
+	}
+
 	public boolean function entityUsesCursorPagination( required string entity ) {
-		return getEntityPaginationMode( arguments.entity ) == VALID_PAGINATION_MODES.CURSOR;
+		return paginationModeUsesCursor( getEntityDefaultPaginationMode( arguments.entity ) );
 	}
 
 	public boolean function entityCountsTotalRecords( required string entity ) {
-		return getEntityPaginationMode( arguments.entity ) == VALID_PAGINATION_MODES.FULL;
+		return paginationModeCountsTotalRecords( getEntityDefaultPaginationMode( arguments.entity ) );
+	}
+
+	public boolean function paginationModeUsesCursor( required string mode ) {
+		return LCase( arguments.mode ) == VALID_PAGINATION_MODES.CURSOR;
+	}
+
+	public boolean function paginationModeCountsTotalRecords( required string mode ) {
+		return LCase( arguments.mode ) == VALID_PAGINATION_MODES.FULL;
 	}
 
 	public boolean function isValidPaginationMode( required string mode ) {
 		return ArrayFindNoCase( _getValidPaginationModes(), arguments.mode ) > 0;
 	}
 
-	public array function getPaginationModesInUse( string namespace=_getDataApiNamespace() ) {
+	public array function getNamespaceAllowedPaginationModes( string namespace=_getDataApiNamespace() ) {
 		var args     = arguments;
-		var cacheKey = "getPaginationModesInUse" & args.namespace;
+		var cacheKey = "getNamespaceAllowedPaginationModes" & args.namespace;
 
 		return _simpleLocalCache( cacheKey, function(){
-			var entities = getEntities( args.namespace );
-			var inUse    = {};
+			var configured = getDefaultConfigForApiNamespace( "allowedPaginationModes", args.namespace, [] );
 
-			for( var entityName in entities ) {
-				inUse[ entities[ entityName ].paginationMode ?: DEFAULT_PAGINATION_MODE ] = true;
-			}
-
-			var ordered = [];
-			for( var mode in _getValidPaginationModes() ) {
-				if ( inUse.keyExists( mode ) ) {
-					ArrayAppend( ordered, mode );
-				}
-			}
-
-			return ordered;
+			return _normalizeAllowedPaginationModes( configured );
 		} );
+	}
+
+	public array function getEntityAllowedPaginationModes( required string entity ) {
+		var args     = arguments;
+		var cacheKey = "getEntityAllowedPaginationModes" & _getDataApiNamespace() & args.entity;
+
+		return _simpleLocalCache( cacheKey, function(){
+			var entities = getEntities();
+
+			if ( !entities.keyExists( args.entity ) ) {
+				return getNamespaceAllowedPaginationModes();
+			}
+
+			return entities[ args.entity ].allowedPaginationModes;
+		} );
+	}
+
+	public array function getPaginationModesInUse( string namespace=_getDataApiNamespace() ) {
+		return getNamespaceAllowedPaginationModes( arguments.namespace );
+	}
+
+	public string function resolvePaginationMode( required string entity, string requestedMode="" ) {
+		var allowedModes = getEntityAllowedPaginationModes( arguments.entity );
+		var defaultMode  = getEntityDefaultPaginationMode( arguments.entity );
+
+		if ( !Len( Trim( arguments.requestedMode ) ) ) {
+			return defaultMode;
+		}
+
+		var mode = LCase( Trim( arguments.requestedMode ) );
+
+		if ( !isValidPaginationMode( mode ) ) {
+			throw( type="dataApiPaginationMode.invalid", message="The supplied pagination mode is not valid." );
+		}
+
+		if ( ArrayFindNoCase( allowedModes, mode ) == 0 ) {
+			throw( type="dataApiPaginationMode.notAllowed", message="The supplied pagination mode is not allowed for this entity." );
+		}
+
+		return mode;
 	}
 
 	public string function entityResponseTypeOnInsert( required string entity ) {
@@ -347,7 +394,10 @@ component {
 					var allowQueue             = poService.getObjectAttribute( objectName, "dataApiQueueEnabled#namespace#", true );
 					var queueName              = poService.getObjectAttribute( objectName, "dataApiQueue#namespace#", "default" );
 					var category               = poService.getObjectAttribute( objectName, "dataApiCategory#namespace#", "" );
-					var paginationMode         = poService.getObjectAttribute( objectName, "dataApiPaginationMode#namespace#", getDefaultConfigForApiNamespace( "paginationMode", args.namespace, DEFAULT_PAGINATION_MODE ) );
+					var paginationMode               = poService.getObjectAttribute( objectName, "dataApiPaginationMode#namespace#", getDefaultConfigForApiNamespace( "paginationMode", args.namespace, DEFAULT_PAGINATION_MODE ) );
+					var namespaceAllowed             = _normalizeAllowedPaginationModes( getDefaultConfigForApiNamespace( "allowedPaginationModes", args.namespace, [] ) );
+					var entityAllowedPaginationModes = poService.getObjectAttribute( objectName, "dataApiAllowedPaginationModes#namespace#", "" );
+					var allowedPaginationModes       = Len( Trim( entityAllowedPaginationModes ) ) ? _intersectPaginationModes( namespaceAllowed, entityAllowedPaginationModes ) : namespaceAllowed;
 
 					entities[ entityName ] = {
 						  objectName             = objectName
@@ -363,6 +413,7 @@ component {
 						, allowQueue             = _isTrue( allowQueue    )
 						, queueName              = queueName
 						, paginationMode         = isValidPaginationMode( paginationMode ) ? LCase( paginationMode ) : DEFAULT_PAGINATION_MODE
+						, allowedPaginationModes = _normalizeAllowedPaginationModes( allowedPaginationModes )
 					};
 
 					if ( !entities[ entityName ].selectFields.len() ) {
@@ -747,6 +798,43 @@ component {
 
 	public array function _getValidPaginationModes() {
 		return [ VALID_PAGINATION_MODES.FULL, VALID_PAGINATION_MODES.OFFSET, VALID_PAGINATION_MODES.CURSOR ];
+	}
+
+	private array function _normalizeAllowedPaginationModes( required any configuredModes ) {
+		var modes = [];
+
+		if ( IsArray( arguments.configuredModes ) ) {
+			modes = arguments.configuredModes;
+		} else if ( IsSimpleValue( arguments.configuredModes ) && Len( Trim( arguments.configuredModes ) ) ) {
+			modes = ListToArray( LCase( Trim( arguments.configuredModes ) ) );
+		}
+
+		if ( !modes.len() ) {
+			return _getValidPaginationModes();
+		}
+
+		var allowed = [];
+
+		for ( var mode in _getValidPaginationModes() ) {
+			if ( ArrayFindNoCase( modes, mode ) ) {
+				ArrayAppend( allowed, mode );
+			}
+		}
+
+		return allowed.len() ? allowed : _getValidPaginationModes();
+	}
+
+	private array function _intersectPaginationModes( required array left, required any right ) {
+		var normalizedRight = _normalizeAllowedPaginationModes( arguments.right );
+		var intersected     = [];
+
+		for ( var mode in _normalizeAllowedPaginationModes( arguments.left ) ) {
+			if ( ArrayFindNoCase( normalizedRight, mode ) ) {
+				ArrayAppend( intersected, mode );
+			}
+		}
+
+		return intersected.len() ? intersected : normalizedRight;
 	}
 
 	private any function _simpleLocalCache( required string cacheKey, required any generator ) {

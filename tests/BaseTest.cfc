@@ -15,7 +15,8 @@ component extends="testbox.system.BaseSpec" {
 			, skipValidationOnUpdate = false
 			, responseTypeOnInsert   = "record"
 			, responseTypeOnUpdate   = "record"
-			, paginationMode         = "full"
+			, paginationMode           = "full"
+			, allowedPaginationModes   = []
 		};
 	}
 
