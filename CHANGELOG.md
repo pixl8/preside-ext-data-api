@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.8.2
+
+* namespace default settings do not work
+
 ## v3.8.1
 
 * multiline i18n fix for some environments
