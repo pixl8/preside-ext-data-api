@@ -3,7 +3,7 @@
     "openbrowser":false,
     "trayEnable":false,
     "web":{
-        "webroot":"./",
+        "webroot":"tests//",
         "http":{
             "port":"6605"
         }

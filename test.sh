@@ -6,11 +6,11 @@ if [ ! -d "$ROOT/tests/testbox" ]; then
 	cd "$ROOT" && box install
 fi
 
-cd "$ROOT/tests"
+cd "$ROOT"
 
-box server start serverConfigFile=server.json --noSaveSettings
+box server start serverConfigFile=server-dataapitests.json --noSaveSettings
 
-mkdir -p results
+cd tests
 box testbox run --verbose outputFile=results/test-results outputFormats=json,antjunit
 exitcode=$?
 

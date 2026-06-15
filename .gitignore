@@ -11,5 +11,7 @@
 /assets/js/**/*.min.map
 /build
 npm-debug.log
-/tests/server.local.json
+/tests/test-results.txt
+/tests/results/
+/server-dataapitests.local.json
 /modules
