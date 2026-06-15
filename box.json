@@ -22,6 +22,13 @@
         "cbmarkdown":"^3.2.0+27"
     },
     "installPaths":{
-        "cbmarkdown":"modules/cbmarkdown/"
+        "cbmarkdown":"modules/cbmarkdown/",
+        "testbox":"tests/testbox/"
+    },
+    "devDependencies":{
+        "testbox":"^5.0.0"
+    },
+    "testbox":{
+        "runner":"http://127.0.0.1:6605/runtests.cfm"
     }
 }

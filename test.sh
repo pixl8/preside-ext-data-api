@@ -1,20 +1,17 @@
 #!/bin/bash
 
-if [ ! -d "`dirname $0`/tests/testbox" ]; then
-  box install
+ROOT="$( cd "$( dirname "$0" )" && pwd )"
+
+if [ ! -d "$ROOT/tests/testbox" ]; then
+	cd "$ROOT" && box install
 fi
 
-cd `dirname $0`/tests
-CWD="`pwd`"
+cd "$ROOT/tests"
 
-testresults=$( box "$CWD/runTests.cfm" )
-echo $testresults
+box server start serverConfigFile=server.json --noSaveSettings
 
-exitcode=$(<.exitcode)
-rm -f .exitcode
-
-if [ $exitcode == 1 ]; then
-  box slack send message color="danger" message="${testresults}"
-fi
+mkdir -p results
+box testbox run --verbose outputFile=results/test-results outputFormats=json,antjunit
+exitcode=$?
 
 exit $exitcode

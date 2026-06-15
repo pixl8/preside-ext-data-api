@@ -1,7 +1,9 @@
 /.twgit_features_subject
 /.twgit
 /tests/testbox
+/tests/preside
 /tests/testresults.xml
+/tests/results/
 /assets/node_modules
 /assets/css/**/*.less.css
 /assets/css/**/*.min.css
@@ -9,5 +11,5 @@
 /assets/js/**/*.min.map
 /build
 npm-debug.log
-/tests/server*.json
+/tests/server.local.json
 /modules
