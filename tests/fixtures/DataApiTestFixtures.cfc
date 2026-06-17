@@ -52,10 +52,10 @@ component {
 			  }
 			, restricted_contact = {
 				  attributes = {
-					  dataApiEnabled               = true
-					, dataApiEntityName            = "restricted_contact"
+					  dataApiEnabled                = true
+					, dataApiEntityName             = "restricted_contact"
 					, dataApiAllowedPaginationModes = "cursor"
-					, dbFieldlist                  = "id,label,datemodified,datecreated"
+					, dbFieldlist                   = "id,label,datemodified,datecreated"
 				  }
 				, properties = {
 					  id           = { type="string", dbtype="varchar" , required=true }
