@@ -309,9 +309,9 @@ component {
 					, in          = "query"
 					, required    = false
 					, description = _i18nNamespaced(
-						  uri="dataapi:operation.get.params.paginationMode"
-						, defaultValue=""
-						, data=[ allowedPaginationModes.toList( ", " ), defaultPaginationMode ]
+						  uri          = "dataapi:operation.get.params.paginationMode"
+						, defaultValue = ""
+						, data         = [ allowedPaginationModes.toList( ", " ), defaultPaginationMode ]
 					  )
 					, schema      = { type="string", enum=allowedPaginationModes, default=defaultPaginationMode }
 				}, {

@@ -809,7 +809,7 @@ component {
 			modes = ListToArray( LCase( Trim( arguments.configuredModes ) ) );
 		}
 
-		if ( !modes.len() ) {
+		if ( !ArrayLen( modes ) ) {
 			return _getValidPaginationModes();
 		}
 
