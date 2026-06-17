@@ -48,9 +48,11 @@ component {
 		, required numeric page
 		, required numeric pageSize
 		, required array   fields
-		,          struct  filters = {}
+		,          struct  filters        = {}
+		,          string  paginationMode = ""
 	) {
-		var countTotalRecords = _getConfigService().entityCountsTotalRecords( arguments.entity );
+		var mode              = Len( Trim( arguments.paginationMode ) ) ? arguments.paginationMode : _getConfigService().getEntityDefaultPaginationMode( arguments.entity );
+		var countTotalRecords = _getConfigService().paginationModeCountsTotalRecords( mode );
 		var args              = {
 			  maxRows      = pageSize
 			, startRow     = ( ( arguments.page - 1 ) * arguments.pageSize ) + 1
