@@ -42,7 +42,8 @@ Additional _optional_ annotation options at the _object_ level are:
 * `dataApiQueue`: Specific queue name for this object
 * `dataApiQueueDeleteDetail`: Whether or not the deleted record detail is available in the change queue data for this object
 * `dataApiSortOrder`: Sort order for paginated results. Default is date last modified ascending.
-* `dataApiPaginationMode`: Pagination strategy for GET list requests. One of `full` (default), `offset` or `cursor`. See [Pagination](##pagination), below.
+* `dataApiPaginationMode`: Default pagination strategy for GET list requests when the client does not supply a `paginationMode` query parameter. One of `full` (default), `offset` or `cursor`. See [Pagination](##pagination), below.
+* `dataApiAllowedPaginationModes`: Optional comma-separated list restricting which pagination modes clients may request for this object (e.g. `full,offset`). When omitted, all modes are allowed.
 * `dataApiSavedFilters`: Comma-separated list of saved filters to apply to all requests to this object (e.g. only return active records)
 * `dataApiIgnoreDefaultFilters`: Comma-separated list of ignore default filters to apply to all requests to this object
 * `dataApiVerbs`: Supported REST HTTP Verbs. If not supplied, all verbs and operations are supported (i.e. GET, POST, PUT and DELETE)
@@ -73,13 +74,15 @@ Object properties support the following _optional_ annotations:
 
 ## Pagination
 
-GET list requests (`GET /entity/{entity}/`) support three pagination modes, configured per object with the `dataApiPaginationMode` annotation (or per API namespace via the `paginationMode` default). The default is `full` so existing integrations are unaffected.
+GET list requests (`GET /entity/{entity}/`) support three pagination modes. Clients choose the mode per request with the `paginationMode` query parameter. When omitted, the default for the entity (via `dataApiPaginationMode`) or API namespace (via `paginationMode` in route defaults) is used; the system default is `full` so existing integrations are unaffected.
+
+Developers can restrict which modes clients may use with `allowedPaginationModes` in API route defaults and/or `dataApiAllowedPaginationModes` on individual objects.
 
 * `full` (default): page based (`page` + `pageSize`). Returns the `X-Total-Records` and `X-Total-Pages` response headers as well as `Link` (`next`/`prev`). The total record count requires a `COUNT` query, which can be slow on very large tables.
 * `offset`: page based (`page` + `pageSize`), but without the total record count. The `X-Total-*` headers are omitted; `Link` (`next`/`prev`) is still returned (the next page is detected by over-fetching a single extra row). Use this when you want page based navigation without paying for the count.
 * `cursor`: keyset pagination. The `page` parameter is ignored; instead, pass the opaque `cursor` returned in the `Link` header of the previous response. This is the most performant option for very large tables as it never counts and never uses a growing `OFFSET`.
 
-Example, enabling cursor pagination on an object:
+Example, setting cursor pagination as the default for an object:
 
 ```
 /**
@@ -92,12 +95,57 @@ component {
 }
 ```
 
+Example, restricting an API namespace to offset and cursor pagination only:
+
+```
+settings.rest.apis[ "/data/v1" ] = {
+    // ...
+    dataApiDefaults = {
+        paginationMode         = "offset"
+      , allowedPaginationModes = [ "offset", "cursor" ]
+    }
+};
+```
+
 ### Notes and limitations of cursor pagination
 
 * Navigation is **forward only** (`Link: rel="next"`). There is no `prev` link.
 * The cursor is keyset based on the object's `dataApiSortOrder` (default: date last modified) plus the unique `id` as a tie-breaker, so ordering is always deterministic.
 * The primary sort column should be **non-null** and have **second (or coarser) precision** for fully reliable results. The default `datemodified`/`datecreated` fields satisfy this. A custom `dataApiSortOrder` pointing at a nullable or sub-second column may skip or duplicate rows at page boundaries.
 * The cursor is opaque and stateless. If a row's sort value changes between requests, the client simply continues from the encoded position (acceptable for sync style consumers).
+
+## Filtering
+
+Paginated GET requests support simple query-string filters on fields listed by `dataApiFilterFields` (defaults include foreign keys, boolean, enum and date fields):
+
+```
+GET /api/data/v1/entity/contact/?filter.is_active=true
+```
+
+### Date filters
+
+Date and datetime fields also accept inclusive range bounds:
+
+```
+GET /api/data/v1/entity/contact/?filter.datemodified.min=2024-01-01&filter.datemodified.max=2024-12-31T23:59:59
+```
+
+Relative (dynamic) date expressions are also supported, using a Grafana-compatible syntax evaluated against the server clock at request time. This is useful for automation platforms that need to pull recently changed data without calculating absolute timestamps:
+
+```
+GET /api/data/v1/entity/contact/?filter.datemodified.min=now-7d
+GET /api/data/v1/entity/contact/?filter.datecreated.min=now-1M&filter.datecreated.max=now
+GET /api/data/v1/entity/contact/?filter.datemodified.min=now/d
+```
+
+Supported forms:
+
+* `now` — the current date/time
+* `now-7d` / `now+1h` — offset from now (`+` or `-` and a numeric amount)
+* `now/d` — round to the start (or end, for `.max`) of a unit
+* `now-1d/d` — offset then round
+
+Units: `s` (seconds), `m` (minutes), `h` (hours), `d` (days), `w` (weeks), `M` (months), `y` (years). Expressions are case-insensitive for the `now` token; unit letters are case-sensitive (`m` vs `M`). Absolute ISO/SQL date strings continue to work as before. Invalid relative expressions return HTTP `400`.
 
 ## Custom renderers
 

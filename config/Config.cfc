@@ -34,6 +34,7 @@ component {
 				, responseTypeOnInsert   = "record" // "empty", "idonly" or "record" (default)
 				, responseTypeOnUpdate   = "record" // "empty", "idonly" or "record" (default)
 				, paginationMode         = "full"   // "full" (count + totals), "offset" (page based, no count) or "cursor" (keyset)
+				, allowedPaginationModes = []       // empty = all modes allowed; otherwise restrict to listed modes
 			}
 		};
 		settings.rest.apis[ "/data/v1/docs" ] = {
