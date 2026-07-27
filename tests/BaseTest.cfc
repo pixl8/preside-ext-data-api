@@ -342,8 +342,9 @@ component extends="testbox.system.BaseSpec" {
 		presideRestService.$( "extractTokensFromUri" ).$results( arguments.restTokens );
 
 		var svc = createMock( object=new dataApi.services.DataApiService(
-			  presideRestService = presideRestService
-			, configService      = configService
+			  presideRestService            = presideRestService
+			, configService                 = configService
+			, relativeDateExpressionService = new dataApi.services.RelativeDateExpressionService()
 		) );
 
 		return _wirePresideStubs( svc, namespace, {}, i18nBundle );

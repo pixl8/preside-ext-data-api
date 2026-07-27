@@ -331,11 +331,13 @@ component {
 				} ];
 
 				for( var field in configService.getFilterFields( entityName ) ) {
+					var fieldFilterDescription = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) );
+
 					params.append( {
 						  name        = "filter.#field#"
 						, in          = "query"
 						, required    = false
-						, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+						, description = fieldFilterDescription
 						, schema      = _getFieldSchema( entityName, field )
 					} );
 
@@ -344,14 +346,14 @@ component {
 							  name        = "filter.#field#.min"
 							, in          = "query"
 							, required    = false
-							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.min.description", defaultValue=_i18nNamespaced( uri="dataapi:field.date.filter.min.description", defaultValue=fieldFilterDescription ) )
 							, schema      = _getFieldSchema( entityName, field )
 						} );
 						params.append( {
 							  name        = "filter.#field#.max"
 							, in          = "query"
 							, required    = false
-							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.max.description", defaultValue=_i18nNamespaced( uri="dataapi:field.date.filter.max.description", defaultValue=fieldFilterDescription ) )
 							, schema      = _getFieldSchema( entityName, field )
 						} );
 					}
