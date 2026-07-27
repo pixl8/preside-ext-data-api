@@ -301,27 +301,37 @@ component {
 			spec.components.schemas[ entityName ] = _getEntitySchema( entityName );
 
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
-				var fieldsFilterList = configService.getSelectFields( entityName, true ).toList( ", " );
-				var isCursorMode     = configService.entityUsesCursorPagination( entityName );
-				var firstParam       = isCursorMode ? {
-					name        = "cursor"
-				  , in          = "query"
-				  , required    = false
-				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.cursor", defaultValue="", data=[ entityTag ] )
-				  , schema      = { type="string" }
-				} : {
+				var fieldsFilterList       = configService.getSelectFields( entityName, true ).toList( ", " );
+				var allowedPaginationModes = configService.getEntityAllowedPaginationModes( entityName );
+				var defaultPaginationMode  = configService.getEntityDefaultPaginationMode( entityName );
+				var params = [{
+					  name        = "paginationMode"
+					, in          = "query"
+					, required    = false
+					, description = _i18nNamespaced(
+						  uri          = "dataapi:operation.get.params.paginationMode"
+						, defaultValue = ""
+						, data         = [ allowedPaginationModes.toList( ", " ), defaultPaginationMode ]
+					  )
+					, schema      = { type="string", enum=allowedPaginationModes, default=defaultPaginationMode }
+				}, {
 					name        = "page"
 				  , in          = "query"
 				  , required    = false
 				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.page", defaultValue="", data=[ entityTag ] )
 				  , schema      = { type="integer" }
-				};
-				var params = [ firstParam, {
+				}, {
 					name        = "pageSize"
 				  , in          = "query"
 				  , required    = false
 				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.pageSize", defaultValue="", data=[ entityTag ] )
 				  , schema      = { type="integer" }
+				}, {
+					name        = "cursor"
+				  , in          = "query"
+				  , required    = false
+				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.cursor", defaultValue="", data=[ entityTag ] )
+				  , schema      = { type="string" }
 				},{
 					name        = "fields"
 				  , in          = "query"
@@ -331,11 +341,13 @@ component {
 				} ];
 
 				for( var field in configService.getFilterFields( entityName ) ) {
+					var fieldFilterDescription = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) );
+
 					params.append( {
 						  name        = "filter.#field#"
 						, in          = "query"
 						, required    = false
-						, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+						, description = fieldFilterDescription
 						, schema      = _getFieldSchema( entityName, field )
 					} );
 
@@ -344,24 +356,24 @@ component {
 							  name        = "filter.#field#.min"
 							, in          = "query"
 							, required    = false
-							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.min.description", defaultValue=_i18nNamespaced( uri="dataapi:field.date.filter.min.description", defaultValue=fieldFilterDescription ) )
 							, schema      = _getFieldSchema( entityName, field )
 						} );
 						params.append( {
 							  name        = "filter.#field#.max"
 							, in          = "query"
 							, required    = false
-							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) )
+							, description = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.max.description", defaultValue=_i18nNamespaced( uri="dataapi:field.date.filter.max.description", defaultValue=fieldFilterDescription ) )
 							, schema      = _getFieldSchema( entityName, field )
 						} );
 					}
 				}
 
-				var getResponseHeaders = { "Link" = { "$ref"="##/components/headers/Link" } };
-				if ( configService.entityCountsTotalRecords( entityName ) ) {
-					getResponseHeaders[ "X-Total-Records" ] = { "$ref"="##/components/headers/XTotalRecords" };
-					getResponseHeaders[ "X-Total-Pages"   ] = { "$ref"="##/components/headers/XTotalPages" };
-				}
+				var getResponseHeaders = {
+					  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
+					, "X-Total-Pages"   = { "$ref"="##/components/headers/XTotalPages" }
+					, "Link"            = { "$ref"="##/components/headers/Link" }
+				};
 
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
