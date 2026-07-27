@@ -61,14 +61,23 @@ component {
 			return;
 		}
 
-		var result = dataApiService.getPaginatedRecords(
-			  entity         = arguments.entity
-			, page           = arguments.page
-			, pageSize       = arguments.pageSize
-			, fields         = ListToArray( arguments.fields )
-			, filters        = filters
-			, paginationMode = resolvedPaginationMode
-		);
+		try {
+			var result = dataApiService.getPaginatedRecords(
+				  entity         = arguments.entity
+				, page           = arguments.page
+				, pageSize       = arguments.pageSize
+				, fields         = ListToArray( arguments.fields )
+				, filters        = filters
+				, paginationMode = resolvedPaginationMode
+			);
+		} catch( "dataApi.relativeDate.invalid" e ) {
+			restResponse.setError(
+				  errorCode = 400
+				, title     = "Bad request"
+				, message   = e.message
+			);
+			return;
+		}
 
 		restResponse.setData( result.records );
 
@@ -127,7 +136,7 @@ component {
 				, cursor   = arguments.cursor
 				, filters  = arguments.filters
 			);
-		} catch( "dataApiCursor.invalid" e ) {
+		} catch( "dataApiCursor.invalid dataApi.relativeDate.invalid" e ) {
 			restResponse.setError(
 				  errorCode = 400
 				, title     = "Bad request"

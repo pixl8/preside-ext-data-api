@@ -6,13 +6,19 @@ component {
 
 // CONSTRUCTOR
 	/**
-	 * @presideRestService.inject presideRestService
-	 * @configService.inject      dataApiConfigurationService
+	 * @presideRestService.inject            presideRestService
+	 * @configService.inject                 dataApiConfigurationService
+	 * @relativeDateExpressionService.inject relativeDateExpressionService
 	 *
 	 */
-	public any function init( required any presideRestService, required any configService ) {
+	public any function init(
+		  required any presideRestService
+		, required any configService
+		, required any relativeDateExpressionService
+	) {
 		_setPresideRestService( arguments.presideRestService );
 		_setConfigService( arguments.configService );
+		_setRelativeDateExpressionService( arguments.relativeDateExpressionService );
 
 		return this;
 	}
@@ -697,37 +703,69 @@ component {
 			var filterFields  = configService.getFilterFields( arguments.entity );
 
 			for( var field in filterFields ) {
-				var propName  = configService.getPropertyNameFromFieldAlias( arguments.entity, field );
-				var fieldType = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
+				var propName    = configService.getPropertyNameFromFieldAlias( arguments.entity, field );
+				var fieldType   = $getPresideObjectService().getObjectPropertyAttribute( objectName, propName, "dbtype" );
+				var isDateField = ReFindNoCase( "^date", fieldType );
 
 				if ( StructKeyExists( arguments.filters, field ) || StructKeyExists( arguments.filters, propName ) ) {
-					args.filter[ propName ] = arguments.filters[ field ] ?: arguments.filters[ propName ];
+					var equalityValue = arguments.filters[ field ] ?: arguments.filters[ propName ];
+
+					if ( isDateField ) {
+						equalityValue = _resolveDateFilterValue( equalityValue, fieldType, "floor" );
+					}
+
+					args.filter[ propName ] = equalityValue;
 				}
 
-				if ( ReFindNoCase( "^date", fieldType ) ) {
+				if ( isDateField ) {
 					if ( StructKeyExists( arguments.filters, field & ".min" ) || StructKeyExists( arguments.filters, propName & ".min" ) ) {
-						var value = arguments.filters[ field & ".min" ] ?: arguments.filters[ propName & ".min" ];
+						var minValue = arguments.filters[ field & ".min" ] ?: arguments.filters[ propName & ".min" ];
+						minValue = _resolveDateFilterValue( minValue, fieldType, "floor" );
 						ArrayAppend( args.extraFilters, {
 							  filter       = "#dbAdapter.escapeEntity( '#objectName#.#propName#' )# >= :#propName#__min"
 							, filterParams = { "#propName#__min" = {
 								  type  = dbAdapter.sqlDataTypeToCfSqlDatatype( fieldType )
-								, value = value
+								, value = minValue
 							  } }
 						} );
 					}
 					if ( StructKeyExists( arguments.filters, field & ".max" ) || StructKeyExists( arguments.filters, propName & ".max" ) ) {
-						var value = arguments.filters[ field & ".max" ] ?: arguments.filters[ propName & ".max" ];
+						var maxValue = arguments.filters[ field & ".max" ] ?: arguments.filters[ propName & ".max" ];
+						maxValue = _resolveDateFilterValue( maxValue, fieldType, "ceil" );
 						ArrayAppend( args.extraFilters, {
 							  filter       = "#dbAdapter.escapeEntity( '#objectName#.#propName#' )# <= :#propName#__max"
 							, filterParams = { "#propName#__max" = {
 								  type  = dbAdapter.sqlDataTypeToCfSqlDatatype( fieldType )
-								, value = value
+								, value = maxValue
 							  } }
 						} );
 					}
 				}
 			}
 		}
+	}
+
+	private any function _resolveDateFilterValue(
+		  required any    value
+		, required string fieldType
+		, required string roundDirection
+	) {
+		var relativeDateService = _getRelativeDateExpressionService();
+
+		if ( !IsSimpleValue( arguments.value ) || !relativeDateService.isRelativeExpression( arguments.value ) ) {
+			return arguments.value;
+		}
+
+		var resolved = relativeDateService.parse(
+			  expression     = arguments.value
+			, roundDirection = arguments.roundDirection
+		);
+
+		if ( arguments.fieldType == "date" ) {
+			return DateFormat( resolved, "yyyy-mm-dd" );
+		}
+
+		return DateTimeFormat( resolved, "yyyy-mm-dd HH:nn:ss" );
 	}
 
 // GETTERS AND SETTERS
@@ -743,6 +781,13 @@ component {
 	}
 	private void function _setConfigService( required any configService ) {
 		_configService = arguments.configService;
+	}
+
+	private any function _getRelativeDateExpressionService() {
+		return _relativeDateExpressionService;
+	}
+	private void function _setRelativeDateExpressionService( required any relativeDateExpressionService ) {
+		_relativeDateExpressionService = arguments.relativeDateExpressionService;
 	}
 
 }

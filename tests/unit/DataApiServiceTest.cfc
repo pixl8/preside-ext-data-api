@@ -318,6 +318,90 @@ component extends="tests.BaseTest" {
 				expect( result ).toBe( "" );
 			} );
 		} );
+
+		describe( "date filter resolution", function(){
+			it( "should resolve relative date expressions in min and max filters", function(){
+				var configSvc    = _getConfigService();
+				var svc          = _getDataApiService( configSvc );
+				var capturedArgs = [];
+				var dao          = _mockPresideObject( "test_contact" );
+
+				dao.$( "selectData" ).$callback( function() {
+					ArrayAppend( capturedArgs, Duplicate( arguments ) );
+					if ( ArrayLen( capturedArgs ) == 1 ) {
+						return [ { id=CreateUUID(), label="One", datemodified=Now(), datecreated=Now(), is_active=true, status="" } ];
+					}
+					return 1;
+				} );
+				svc.$( "$getPresideObject" ).$args( "test_contact" ).$results( dao );
+
+				svc.getPaginatedRecords(
+					  entity   = "contact"
+					, page     = 1
+					, pageSize = 10
+					, fields   = []
+					, filters  = { "datemodified.min"="now-7d", "datemodified.max"="now" }
+				);
+
+				expect( ArrayLen( capturedArgs ) ).toBeGT( 0 );
+				expect( ArrayLen( capturedArgs[ 1 ].extraFilters ?: [] ) ).toBe( 2 );
+
+				var minValue = capturedArgs[ 1 ].extraFilters[ 1 ].filterParams.datemodified__min.value;
+				var maxValue = capturedArgs[ 1 ].extraFilters[ 2 ].filterParams.datemodified__max.value;
+
+				expect( minValue ).notToBe( "now-7d" );
+				expect( maxValue ).notToBe( "now" );
+				expect( IsDate( minValue ) ).toBeTrue();
+				expect( IsDate( maxValue ) ).toBeTrue();
+				expect( Abs( DateDiff( "s", ParseDateTime( minValue ), DateAdd( "d", -7, Now() ) ) ) ).toBeLTE( 2 );
+				expect( Abs( DateDiff( "s", ParseDateTime( maxValue ), Now() ) ) ).toBeLTE( 2 );
+			} );
+
+			it( "should leave absolute date filter values unchanged", function(){
+				var configSvc    = _getConfigService();
+				var svc          = _getDataApiService( configSvc );
+				var capturedArgs = [];
+				var dao          = _mockPresideObject( "test_contact" );
+
+				dao.$( "selectData" ).$callback( function() {
+					ArrayAppend( capturedArgs, Duplicate( arguments ) );
+					if ( ArrayLen( capturedArgs ) == 1 ) {
+						return [ { id=CreateUUID(), label="One", datemodified=Now(), datecreated=Now(), is_active=true, status="" } ];
+					}
+					return 1;
+				} );
+				svc.$( "$getPresideObject" ).$args( "test_contact" ).$results( dao );
+
+				svc.getPaginatedRecords(
+					  entity   = "contact"
+					, page     = 1
+					, pageSize = 10
+					, fields   = []
+					, filters  = { "datemodified.min"="2024-01-01" }
+				);
+
+				expect( ArrayLen( capturedArgs ) ).toBeGT( 0 );
+				expect( capturedArgs[ 1 ].extraFilters[ 1 ].filterParams.datemodified__min.value ).toBe( "2024-01-01" );
+			} );
+
+			it( "should throw for invalid relative date expressions", function(){
+				var configSvc = _getConfigService();
+				var svc       = _getDataApiService( configSvc );
+				var dao       = _mockPresideObject( "test_contact" );
+
+				svc.$( "$getPresideObject" ).$args( "test_contact" ).$results( dao );
+
+				expect( function(){
+					svc.getPaginatedRecords(
+						  entity   = "contact"
+						, page     = 1
+						, pageSize = 10
+						, fields   = []
+						, filters  = { "datemodified.min"="now-7x" }
+					);
+				} ).toThrow( type="dataApi.relativeDate.invalid" );
+			} );
+		} );
 	}
 
 }

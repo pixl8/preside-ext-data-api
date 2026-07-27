@@ -10,6 +10,7 @@ component {
 					, dataApiCategory       = "crm"
 					, dataApiQueueEnabled   = true
 					, dataApiQueue          = "default"
+					, dataApiFilterFields   = "datemodified,datecreated,is_active,status"
 					, dbFieldlist           = "id,label,datemodified,datecreated,is_active,status"
 				  }
 				, properties = {

@@ -114,6 +114,39 @@ settings.rest.apis[ "/data/v1" ] = {
 * The primary sort column should be **non-null** and have **second (or coarser) precision** for fully reliable results. The default `datemodified`/`datecreated` fields satisfy this. A custom `dataApiSortOrder` pointing at a nullable or sub-second column may skip or duplicate rows at page boundaries.
 * The cursor is opaque and stateless. If a row's sort value changes between requests, the client simply continues from the encoded position (acceptable for sync style consumers).
 
+## Filtering
+
+Paginated GET requests support simple query-string filters on fields listed by `dataApiFilterFields` (defaults include foreign keys, boolean, enum and date fields):
+
+```
+GET /api/data/v1/entity/contact/?filter.is_active=true
+```
+
+### Date filters
+
+Date and datetime fields also accept inclusive range bounds:
+
+```
+GET /api/data/v1/entity/contact/?filter.datemodified.min=2024-01-01&filter.datemodified.max=2024-12-31T23:59:59
+```
+
+Relative (dynamic) date expressions are also supported, using a Grafana-compatible syntax evaluated against the server clock at request time. This is useful for automation platforms that need to pull recently changed data without calculating absolute timestamps:
+
+```
+GET /api/data/v1/entity/contact/?filter.datemodified.min=now-7d
+GET /api/data/v1/entity/contact/?filter.datecreated.min=now-1M&filter.datecreated.max=now
+GET /api/data/v1/entity/contact/?filter.datemodified.min=now/d
+```
+
+Supported forms:
+
+* `now` — the current date/time
+* `now-7d` / `now+1h` — offset from now (`+` or `-` and a numeric amount)
+* `now/d` — round to the start (or end, for `.max`) of a unit
+* `now-1d/d` — offset then round
+
+Units: `s` (seconds), `m` (minutes), `h` (hours), `d` (days), `w` (weeks), `M` (months), `y` (years). Expressions are case-insensitive for the `now` token; unit letters are case-sensitive (`m` vs `M`). Absolute ISO/SQL date strings continue to work as before. Invalid relative expressions return HTTP `400`.
+
 ## Custom renderers
 
 If you specify a non-default renderer for an object property, it will be rendered using Preside's content rendering system. For example, the following property definition specifies a `myCustomRenderer` renderer:
