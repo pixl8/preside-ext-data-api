@@ -116,7 +116,14 @@ component {
 				, cursor   = arguments.cursor
 				, filters  = arguments.filters
 			);
-		} catch( "dataApiCursor.invalid dataApi.relativeDate.invalid" e ) {
+		} catch( "dataApiCursor.invalid" e ) {
+			restResponse.setError(
+				  errorCode = 400
+				, title     = "Bad request"
+				, message   = e.message
+			);
+			return;
+		} catch( "dataApi.relativeDate.invalid" e ) {
 			restResponse.setError(
 				  errorCode = 400
 				, title     = "Bad request"
