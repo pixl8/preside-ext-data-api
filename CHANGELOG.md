@@ -2,6 +2,11 @@
 
 ## v3.8.2
 
+* Dynamic/relative min/max date filtering
+* Dynamic pagination modes (api client may decide)
+
+## v3.8.2
+
 * namespace default settings do not work
 
 ## v3.8.1
