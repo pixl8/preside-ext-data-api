@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.6.4
+
+* Fix build script
+
 ## v3.6.3
 
 * Support CSP changes in Preside
