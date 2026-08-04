@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.8.5
+
+* Fix build script
+
 ## v3.8.4
 
 * [DATAAPI-47](https://projects.pixl8.london/browse/DATAAPI-47) - Improve indexing to reduce timeouts with large queues
