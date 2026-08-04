@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.9
+
+* [DATAAPI-47](https://projects.pixl8.london/browse/DATAAPI-47) - Improve indexing to reduce timeouts with large queues
+
 ## v3.7.8
 
 * [DATAAPI-46](https://projects.pixl8.london/browse/DATAAPI-46) - Evaluate skip queue flags also before actually manipulating records
