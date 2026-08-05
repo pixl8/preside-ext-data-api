@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.8.6
+
+* Improved docs + spec when only one available pagination mode
+* Include spec download link in html docs
+
 ## v3.8.5
 
 * Fix build script
