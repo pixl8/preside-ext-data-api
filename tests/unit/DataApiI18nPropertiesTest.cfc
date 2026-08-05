@@ -14,6 +14,8 @@ component extends="testbox.system.BaseSpec" {
 				var bundle   = fixtures.loadI18nProperties();
 
 				expect( bundle[ "trait.pagination.intro" ] ).toInclude( "paginationMode" );
+				expect( bundle[ "trait.pagination.intro.single" ] ).toInclude( "paginated as described below" );
+				expect( bundle[ "trait.pagination.intro.single" ] ).notToInclude( "paginationMode" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "X-Total-Records" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "X-Total-Pages" );
 				expect( bundle[ "trait.pagination.full.description" ] ).toInclude( "pageSize" );
@@ -44,6 +46,10 @@ component extends="testbox.system.BaseSpec" {
 
 				expect( bundle[ "operation.get.params.page" ] ).toInclude( "cursor" );
 				expect( bundle[ "operation.get.params.page" ] ).toInclude( "Ignored" );
+				expect( bundle[ "operation.get.params.page.fixed" ] ).toInclude( "page number" );
+				expect( bundle[ "operation.get.params.page.fixed" ] ).notToInclude( "paginationMode" );
+				expect( bundle[ "operation.get.params.cursor.fixed" ] ).toInclude( "cursor" );
+				expect( bundle[ "operation.get.params.cursor.fixed" ] ).notToInclude( "pagination" );
 			} );
 
 			it( "should preserve multiline error handling documentation including the JSON example", function(){
