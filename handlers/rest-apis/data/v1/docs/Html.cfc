@@ -8,12 +8,15 @@ component {
 	property name="dataApiService"     inject="dataApiService";
 
 	public void function get() {
-		var api = event.getValue( name="dataApiNamespace", defaultValue="" );
+		var api     = event.getValue( name="dataApiNamespace", defaultValue="" );
+		var handler = event.getValue( name="dataApiHandler"  , defaultValue="data.v1.docs" );
+
 		if ( !variables.keyExists( "_spec#api#" ) ) {
 			variables[ "_spec#api#" ] = dataApiSpecService.getSpec();
 		}
 
 		args.spec = variables[ "_spec#api#" ];
+		args.specsEndpoint = event.buildLink( linkto="api.#handler#.spec" );
 
 		event?.setContentSecurityPolicy( "default-src 'self'; style-src 'self' 'unsafe-inline' 'nonce-#event?.getRequestNonce()#'" );
 
