@@ -57,6 +57,61 @@ component extends="tests.BaseTest" {
 				expect( paginationTag.description ).toInclude( "pageSize" );
 			} );
 
+			it( "should document fixed pagination without mode selection when only one mode is configured", function(){
+				var bundle    = _fixtures().loadI18nProperties();
+				var configSvc = _getConfigService(
+					  defaults = { allowedPaginationModes=[ "offset" ], paginationMode="offset" }
+				);
+				var apiSvc    = _getDataApiService( configSvc, "", bundle );
+				var svc       = _getSpecService( configSvc, apiSvc, "", bundle );
+				var spec      = svc.getSpec();
+				var paginationTag = {};
+				var params        = spec.paths[ "/entity/contact/" ].get.parameters;
+				var paramNames    = params.map( function( param ){ return param.name; } );
+				var responseHeaders = spec.paths[ "/entity/contact/" ].get.responses[ "200" ].headers;
+
+				for ( var tag in spec.tags ) {
+					if ( tag.name == bundle[ "trait.pagination.title" ] ) {
+						paginationTag = tag;
+						break;
+					}
+				}
+
+				expect( paginationTag.description ).toInclude( bundle[ "trait.pagination.intro.single" ] );
+				expect( paginationTag.description ).notToInclude( "paginationMode" );
+				expect( paginationTag.description ).toInclude( bundle[ "trait.pagination.offset.description" ] );
+				expect( paginationTag.description ).notToInclude( bundle[ "trait.pagination.full.description" ] );
+				expect( paginationTag.description ).notToInclude( bundle[ "trait.pagination.cursor.description" ] );
+
+				expect( paramNames ).notToInclude( "paginationMode" );
+				expect( paramNames ).toInclude( "page" );
+				expect( paramNames ).toInclude( "pageSize" );
+				expect( paramNames ).notToInclude( "cursor" );
+
+				expect( responseHeaders.keyExists( "Link" ) ).toBeTrue();
+				expect( responseHeaders.keyExists( "X-Total-Records" ) ).toBeFalse();
+				expect( responseHeaders.keyExists( "X-Total-Pages" ) ).toBeFalse();
+			} );
+
+			it( "should omit paginationMode and page params for cursor-only entities", function(){
+				var bundle    = _fixtures().loadI18nProperties();
+				var configSvc = _getConfigService();
+				var apiSvc    = _getDataApiService( configSvc, "", bundle );
+				var svc       = _getSpecService( configSvc, apiSvc, "", bundle );
+				var spec      = svc.getSpec();
+				var params    = spec.paths[ "/entity/restricted_contact/" ].get.parameters;
+				var paramNames = params.map( function( param ){ return param.name; } );
+				var responseHeaders = spec.paths[ "/entity/restricted_contact/" ].get.responses[ "200" ].headers;
+
+				expect( paramNames ).notToInclude( "paginationMode" );
+				expect( paramNames ).notToInclude( "page" );
+				expect( paramNames ).toInclude( "cursor" );
+				expect( paramNames ).toInclude( "pageSize" );
+
+				expect( responseHeaders.keyExists( "Link" ) ).toBeTrue();
+				expect( responseHeaders.keyExists( "X-Total-Records" ) ).toBeFalse();
+			} );
+
 			it( "should expose paginationMode and page/cursor params on paginated GET endpoints", function(){
 				var bundle    = _fixtures().loadI18nProperties();
 				var configSvc = _getConfigService();

@@ -107,7 +107,8 @@ component {
 	private string function _buildPaginationTraitDescription() {
 		var namespace = $getRequestContext().getValue( name="dataApiNamespace", defaultValue="" );
 		var modes     = _getConfigService().getPaginationModesInUse( namespace );
-		var sections  = [ _i18nNamespaced( uri="dataapi:trait.pagination.intro", defaultValue="" ) ];
+		var introUri  = ArrayLen( modes ) == 1 ? "dataapi:trait.pagination.intro.single" : "dataapi:trait.pagination.intro";
+		var sections  = [ _i18nNamespaced( uri=introUri, defaultValue="" ) ];
 
 		for( var mode in modes ) {
 			ArrayAppend( sections, _i18nNamespaced( uri="dataapi:trait.pagination.#mode#.description", defaultValue="" ) );
@@ -118,6 +119,76 @@ component {
 		} );
 
 		return ArrayToList( sections, Chr( 10 ) & Chr( 10 ) );
+	}
+
+	private array function _getListEndpointPaginationParams( required array allowedPaginationModes, required string defaultPaginationMode ) {
+		var params          = [];
+		var allowsCursor    = ArrayFindNoCase( arguments.allowedPaginationModes, "cursor" ) > 0;
+		var allowsPageBased = ArrayFindNoCase( arguments.allowedPaginationModes, "full" ) > 0
+		                   || ArrayFindNoCase( arguments.allowedPaginationModes, "offset" ) > 0;
+
+		if ( ArrayLen( arguments.allowedPaginationModes ) > 1 ) {
+			ArrayAppend( params, {
+				  name        = "paginationMode"
+				, in          = "query"
+				, required    = false
+				, description = _i18nNamespaced(
+					  uri          = "dataapi:operation.get.params.paginationMode"
+					, defaultValue = ""
+					, data         = [ arguments.allowedPaginationModes.toList( ", " ), arguments.defaultPaginationMode ]
+				  )
+				, schema      = { type="string", enum=arguments.allowedPaginationModes, default=arguments.defaultPaginationMode }
+			} );
+		}
+
+		if ( allowsPageBased ) {
+			ArrayAppend( params, {
+				  name        = "page"
+				, in          = "query"
+				, required    = false
+				, description = _i18nNamespaced(
+					  uri          = allowsCursor ? "dataapi:operation.get.params.page" : "dataapi:operation.get.params.page.fixed"
+					, defaultValue = ""
+				  )
+				, schema      = { type="integer" }
+			} );
+		}
+
+		ArrayAppend( params, {
+			  name        = "pageSize"
+			, in          = "query"
+			, required    = false
+			, description = _i18nNamespaced( uri="dataapi:operation.get.params.pageSize", defaultValue="" )
+			, schema      = { type="integer" }
+		} );
+
+		if ( allowsCursor ) {
+			ArrayAppend( params, {
+				  name        = "cursor"
+				, in          = "query"
+				, required    = false
+				, description = _i18nNamespaced(
+					  uri          = allowsPageBased ? "dataapi:operation.get.params.cursor" : "dataapi:operation.get.params.cursor.fixed"
+					, defaultValue = ""
+				  )
+				, schema      = { type="string" }
+			} );
+		}
+
+		return params;
+	}
+
+	private struct function _getListEndpointPaginationHeaders( required array allowedPaginationModes ) {
+		var headers = {
+			"Link" = { "$ref"="##/components/headers/Link" }
+		};
+
+		if ( ArrayFindNoCase( arguments.allowedPaginationModes, "full" ) > 0 ) {
+			headers[ "X-Total-Records" ] = { "$ref"="##/components/headers/XTotalRecords" };
+			headers[ "X-Total-Pages"   ] = { "$ref"="##/components/headers/XTotalPages" };
+		}
+
+		return headers;
 	}
 
 	private void function _addCommonHeaderSpecs( required struct spec ) {
@@ -303,42 +374,15 @@ component {
 			if ( configService.entityVerbIsSupported( entityName, "get" ) ) {
 				var fieldsFilterList       = configService.getSelectFields( entityName, true ).toList( ", " );
 				var allowedPaginationModes = configService.getEntityAllowedPaginationModes( entityName );
-				var defaultPaginationMode  = configService.getEntityDefaultPaginationMode( entityName );
-				var params = [{
-					  name        = "paginationMode"
+				var params                 = _getListEndpointPaginationParams( allowedPaginationModes, configService.getEntityDefaultPaginationMode( entityName ) );
+
+				params.append( {
+					  name        = "fields"
 					, in          = "query"
 					, required    = false
-					, description = _i18nNamespaced(
-						  uri          = "dataapi:operation.get.params.paginationMode"
-						, defaultValue = ""
-						, data         = [ allowedPaginationModes.toList( ", " ), defaultPaginationMode ]
-					  )
-					, schema      = { type="string", enum=allowedPaginationModes, default=defaultPaginationMode }
-				}, {
-					name        = "page"
-				  , in          = "query"
-				  , required    = false
-				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.page", defaultValue="", data=[ entityTag ] )
-				  , schema      = { type="integer" }
-				}, {
-					name        = "pageSize"
-				  , in          = "query"
-				  , required    = false
-				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.pageSize", defaultValue="", data=[ entityTag ] )
-				  , schema      = { type="integer" }
-				}, {
-					name        = "cursor"
-				  , in          = "query"
-				  , required    = false
-				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.cursor", defaultValue="", data=[ entityTag ] )
-				  , schema      = { type="string" }
-				},{
-					name        = "fields"
-				  , in          = "query"
-				  , required    = false
-				  , description = _i18nNamespaced( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, fieldsFilterList ] )
-				  , schema      = { type="string" }
-				} ];
+					, description = _i18nNamespaced( uri="dataapi:operation.get.params.fields", defaultValue="", data=[ entityTag, fieldsFilterList ] )
+					, schema      = { type="string" }
+				} );
 
 				for( var field in configService.getFilterFields( entityName ) ) {
 					var fieldFilterDescription = _i18nNamespaced( uri="dataapi:operation.#entityName#.get.params.fields.#field#.description", defaultValue=_i18nNamespaced( uri=basei18n & "field.#field#.help", defaultValue=_i18nNamespaced( uri="dataapi:field.#field#.description", defaultValue="" ) ) );
@@ -369,11 +413,7 @@ component {
 					}
 				}
 
-				var getResponseHeaders = {
-					  "X-Total-Records" = { "$ref"="##/components/headers/XTotalRecords" }
-					, "X-Total-Pages"   = { "$ref"="##/components/headers/XTotalPages" }
-					, "Link"            = { "$ref"="##/components/headers/Link" }
-				};
+				var getResponseHeaders = _getListEndpointPaginationHeaders( allowedPaginationModes );
 
 				spec.paths[ "/entity/#entityName#/" ].get = {
 					  tags = [ entityTag ]
