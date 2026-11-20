@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.8.7
+
+* Fix grunt build failed
+
 ## v3.8.6
 
 * Improved docs + spec when only one available pagination mode
