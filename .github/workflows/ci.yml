@@ -13,7 +13,7 @@ jobs:
         run: |
           branch=${GITHUB_REF##*/}
           publish=false
-          if [[ "{{ env.event.name }}" != "pull_request" ]] ; then
+          if [[ "${{ github.event_name }}" != "pull_request" ]] ; then
             if [[ $branch == release-* ]] || [[ $branch == v* ]] ; then
               publish=true
             fi
