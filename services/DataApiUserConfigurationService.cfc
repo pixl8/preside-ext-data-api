@@ -34,12 +34,7 @@ component {
 			, user      = arguments.userId
 		} );
 
-		if ( !settings.recordCount ) {
-			hasAccess = $getPresideObject( "rest_user_api_access" ).dataExists( filter={
-				  rest_user = arguments.userId
-				, api       = arguments.api
-			} );
-		} else {
+		if ( settings.recordCount ) {
 			var key = "#arguments.verb#_allowed";
 
 			if ( settings.recordCount == 1 && settings.object_name == "" ) {
@@ -224,16 +219,7 @@ component {
 
 		if ( globalConfigOnly ) {
 			if ( !settings.recordCount ) {
-				var hasAnyAccess = $getPresideObject( "rest_user_api_access" ).dataExists( filter={
-					  rest_user = arguments.userId
-					, api       = arguments.api
-				} );
-
-				if ( !hasAnyAccess ) {
-					return {};
-				}
-
-				return getDefaultAccessDetailsForFormControl( arguments.api );
+				return {};
 			} else {
 				accessDetails.all_read         = _isTrue( settings.get_allowed          );
 				accessDetails.all_insert       = _isTrue( settings.post_allowed         );
