@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.7.12
+
+* [DATAAPI-56](https://projects.pixl8.london/browse/DATAAPI-56) - Data API users with no settings rows get every entity and verb
+
 ## v3.7.11
 
 * [DATAAPI-47](https://projects.pixl8.london/browse/DATAAPI-47) - Improve indexing to reduce timeouts with large queues
