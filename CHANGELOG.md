@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.29
+
+* Fix grunt build
+
 ## v3.0.28
 
 * [DATAAPI-56](https://projects.pixl8.london/browse/DATAAPI-56) - Data API users with no settings rows get every entity and verb
